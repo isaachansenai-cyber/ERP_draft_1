@@ -455,11 +455,21 @@ describe('AC20 money reconciliation in the sales summary', () => {
     expect(row.completed_orders).toBe(Number(truth!.orders));
     expect(row.gross_sales_cents).toBe(Number(truth!.gross));
     expect(row.discount_cents).toBe(Number(truth!.disc));
-    expect(row.net_sales_cents).toBe(Number(truth!.gross) - Number(truth!.disc) - Number(row.refund_cents));
-    expect(row.tax_cents).toBe(Number(truth!.tax));
+    // Refunds (Milestone 3) reduce net sales and tax by their original line snapshots.
+    const [refund] = await sql<{ net: string; tax: string }>(
+      `select coalesce(sum(net_cents), 0)::text net, coalesce(sum(tax_cents), 0)::text tax from public.refunds
+        where location_id = $1 and kind = 'sale' and business_date = $2`,
+      [LOC, today],
+    );
+    expect(row.refund_cents).toBe(Number(refund!.net));
+    expect(row.net_sales_cents).toBe(Number(truth!.gross) - Number(truth!.disc) - Number(refund!.net));
+    expect(row.tax_cents).toBe(Number(truth!.tax) - Number(refund!.tax));
     expect(row.cogs_cents).toBe(Number(truth!.cogs));
     expect(row.gross_margin_cents).toBe(Number(row.net_sales_cents) - Number(row.cogs_cents));
-    expect(row.waste_cost_cents).toBe(Number(waste!.w));
+    // Total waste also includes posted waste reports and transit losses (Milestone 3).
+    expect((row.waste_breakdown as unknown as Record<string, number>).post_start_cancellations_cents).toBe(
+      Number(waste!.w),
+    );
     expect(Number(waste!.w)).toBeGreaterThan(0);
     // The cancelled order's cost is not also in COGS.
     const [overlap] = await sql<{ n: number }>(

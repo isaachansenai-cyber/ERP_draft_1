@@ -24,6 +24,7 @@ const VOLATILE = [
   'imported_at',
   'occurred_at',
   'confirmed_at',
+  'configured_at',
   'activated_at',
   'superseded_at',
   'mode_changed_at',
