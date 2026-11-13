@@ -1,0 +1,71 @@
+DELIVERED DATA AND DOCUMENT VALIDATION
+Version 1.0 | November 12, 2026
+
+21 checks passed on the delivered files.
+These checks validate the PRD/data package. The ERP has not been implemented; its 34 application acceptance checks remain NOT_RUN.
+
+PASS 01 Source records preserved
+45 original catalog rows; 66 BOM rows; 15 suppliers
+
+PASS 02 Catalog and barcode integrity
+47 distinct IDs and internal Code 128 contents
+
+PASS 03 Recipe and unit integrity
+Exact source BOM quantities retained; no missing or mismatched references
+
+PASS 04 Names and primary suppliers preserved
+Original 45 items unchanged in sourced fields
+
+PASS 05 Demo additions identified
+Two demo retail products; 10 customer and 10 role fixtures
+
+PASS 06 Missing real contacts not fabricated
+Five missing supplied phone numbers remain missing; demo emails are non-routable
+
+PASS 07 Opening inventory and settings
+126 physical opening rows; 141 settings; no finished-dish stock
+
+PASS 08 Pack cost arithmetic
+Synthetic base-unit costs reconcile to pack cost
+
+PASS 09 History counts and unique keys
+12,775 orders and 16,501 lines with unique import keys
+
+PASS 10 Complete six-month coverage
+184 days; 552 day/location combinations; May 1–October 31, 2026
+
+PASS 11 History references valid
+Every line has a known sellable item/order; all 10 customers occur
+
+PASS 12 Order totals reconcile
+All five order-level monetary aggregates match line sums
+
+PASS 13 Refund and discount bounds
+No over-refunds; gross/discount/net arithmetic valid
+
+PASS 14 No live tender in demo
+All historical tenders explicitly simulated
+
+PASS 15 Structured demand patterns
+Mean Saturday orders/day 98.59, Monday 50.0; 65 distinct daily order counts
+
+PASS 16 Net sales summary
+Synthetic net sales = $306,820.04, not real business results
+
+PASS 17 Reproducible data generation
+Portable generator reproduces every delivered JSON/CSV byte-for-byte with seed 401
+
+PASS 18 Workbook integrity
+Review workbook matches catalog, recipes, suppliers and daily totals
+
+PASS 19 Acceptance checklist status
+34 future application checks; none misrepresented as an app test pass
+
+PASS 20 Document sections present
+All 19 sections and 34 criterion IDs present in TXT, DOCX and PDF
+
+PASS 21 PDF bounds
+18 PDF pages; no text blocks outside safe page bounds
+
+Visual review: the PDF contact sheet was inspected for readable headings, repeating table headers, page numbers and clipping. PDF and DOCX are generated from one content source.
+Source caveats: actual supplier details, recipe yields, costs/packs/terms, taxes and opening counts require pilot verification. Exact rubric coverage remains unverified.

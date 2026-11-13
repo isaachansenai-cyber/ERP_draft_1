@@ -1,0 +1,19 @@
+# Secrets and local env (only .env.example is tracked)
+.env*
+!.env.example
+DEMO_CREDENTIALS.local.md
+
+# Supabase local state and dumps
+supabase/.temp
+*.dump
+
+# Real data must never be committed
+exports/
+pilot-data/
+
+# Build and dependencies
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
