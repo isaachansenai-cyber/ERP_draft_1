@@ -1,6 +1,6 @@
 # Pilot setup runbook
 
-This covers what exists after Milestone 1. Later milestones add steps such as opening counts, packs and terms, and the backup/restore drill. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
+This covers what exists after Milestone 2. Later milestones add steps such as the return policy, planning inputs and the backup/restore drill. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
 
 ## 1. Create the pilot database (operator)
 
@@ -53,12 +53,20 @@ Managers set their own PIN. Every grant and revoke is audited. At least one acti
 | `tax_rate_confirmed` (per location) | A tax rate entered by the owner is effective today (**Taxes & prices**) |
 | `menu_prices_confirmed` (per location) | Every active sellable item has a price effective today |
 | `recipes_verified` (per dish) | An active recipe version exists. The evidence note records the portion/yield check |
-| `supplier_master_verified` (per supplier) | Payment terms are entered. The entry screen arrives in Milestone 2 |
-| `pack_conversions_verified` (per supplier item) | Pack size and quoted/estimated cost are entered. The entry screen arrives in Milestone 2 |
-| `opening_counts_posted`, `planning_inputs_confirmed`, `return_policy_configured` | Not confirmable until their workflows ship (Milestones 2–4) |
+| `supplier_master_verified` (per supplier) | Payment terms are entered (**Purchasing → Suppliers & packs**, owner) |
+| `pack_conversions_verified` (per supplier item) | Pack size and quoted/estimated cost are entered (**Purchasing → Suppliers & packs**, owner) |
+| `opening_counts_posted` (per location) | The location's opening count is posted (**Inventory**, manager; needs `perishables_confirmed`) |
+| `planning_inputs_confirmed`, `return_policy_configured` | Not confirmable until their workflows ship (Milestones 3–4) |
 | `roles_verified`, `perishables_confirmed`, `backup_restore_tested`, `acceptance_suite_passed` | Attestation, recorded with the evidence note |
 
 Operational posting stays off until the owner runs **Enable posting**, which requires `roles_verified`, `backup_restore_tested` and `acceptance_suite_passed`. Reopening any of those three turns posting off again.
+
+## 6. Opening stock and first sale
+
+1. The owner confirms `perishables_confirmed` after reviewing which items need use-by dates (the refrigerated/frozen ingredients by default).
+2. Each location's manager physically counts stock and posts the **opening count** in **Inventory**: quantity in base units, verified unit cost, optional lot code, and a use-by date for perishables. It can be posted only once per location.
+3. The owner confirms `opening_counts_posted` for that location, and the remaining gates, then runs **Enable posting**.
+4. Staff can now take orders in **POS**. Ingredients are reserved on acceptance, issued at kitchen start, and payments are recorded as handled outside the app.
 
 ## Known limitation recorded at setup
 
