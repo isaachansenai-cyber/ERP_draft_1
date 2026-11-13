@@ -25,6 +25,24 @@ export interface SummaryRow {
   average_fulfillment_minutes?: number | null;
   fulfillment_samples?: number;
   cancelled_orders?: number;
+  recorded_refunds_cents?: number;
+  refunded_orders?: number;
+  cogs_reversed_cents?: number | null;
+  waste_breakdown?: {
+    post_start_cancellations_cents: number;
+    waste_reports_cents: number;
+    transit_loss_cents: number;
+    posted_waste_reports: number;
+  } | null;
+  waste_reports_cents?: number | null;
+  transit_loss_cents?: number | null;
+  cancellation_waste_cents?: number | null;
+  count_variance_cents?: number | null;
+  inventory_value_cents?: number | null;
+  in_transit_value_cents?: number | null;
+  supplier_outstanding_cents?: number | null;
+  supplier_overdue_cents?: number | null;
+  supplier_overdue_invoices?: number | null;
 }
 
 export interface SalesSummary {
@@ -47,10 +65,20 @@ const COLUMNS: Array<{ key: keyof SummaryRow; label: string; money?: boolean }> 
   { key: 'net_sales_cents', label: 'Net sales', money: true },
   { key: 'tax_cents', label: 'Tax (separate)', money: true },
   { key: 'recorded_tenders_cents', label: 'Recorded payments', money: true },
+  { key: 'recorded_refunds_cents', label: 'Recorded refunds paid out', money: true },
   { key: 'average_order_value_cents', label: 'Avg order value', money: true },
   { key: 'cogs_cents', label: 'COGS', money: true },
   { key: 'gross_margin_cents', label: 'Gross margin', money: true },
-  { key: 'waste_cost_cents', label: 'Waste cost', money: true },
+  { key: 'cogs_reversed_cents', label: 'Retail COGS reversed', money: true },
+  { key: 'waste_cost_cents', label: 'Waste cost (total)', money: true },
+  { key: 'cancellation_waste_cents', label: '· post-start cancellations', money: true },
+  { key: 'waste_reports_cents', label: '· posted waste reports', money: true },
+  { key: 'transit_loss_cents', label: '· transit losses', money: true },
+  { key: 'count_variance_cents', label: 'Count variance', money: true },
+  { key: 'inventory_value_cents', label: 'Inventory value (now)', money: true },
+  { key: 'in_transit_value_cents', label: 'In transit out (now)', money: true },
+  { key: 'supplier_outstanding_cents', label: 'Supplier balance (now)', money: true },
+  { key: 'supplier_overdue_cents', label: 'Supplier overdue (now)', money: true },
   { key: 'pending_preparation_cost_cents', label: 'Pending prep cost', money: true },
   { key: 'low_stock_items', label: 'Low-stock items' },
   { key: 'average_fulfillment_minutes', label: 'Avg fulfillment (min)' },
@@ -120,6 +148,16 @@ export function DashboardPage() {
         p_location_ids: locationIds,
         p_source: source,
       }),
+    // Flatten the waste breakdown into columns (display and CSV only; values come from the server).
+    select: (data) => ({
+      ...data,
+      locations: data.locations.map((r) => ({
+        ...r,
+        cancellation_waste_cents: r.waste_breakdown?.post_start_cancellations_cents,
+        waste_reports_cents: r.waste_breakdown?.waste_reports_cents,
+        transit_loss_cents: r.waste_breakdown?.transit_loss_cents,
+      })),
+    }),
   });
 
   function exportCsv() {

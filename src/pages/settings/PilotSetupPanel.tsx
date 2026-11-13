@@ -37,14 +37,17 @@ const GATE_TEXT: Record<string, { title: string; blocks: string }> = {
     title: 'Perishable list confirmed',
     blocks: 'Pilot receipts. Review which items require a use-by date.',
   },
-  return_policy_configured: { title: 'Return policy configured', blocks: 'Retail returns (available in Milestone 3).' },
+  return_policy_configured: {
+    title: 'Return policy configured',
+    blocks: 'Retail returns. Set the window and restock rule under Settings → Return policy first.',
+  },
   backup_restore_tested: { title: 'Backup and restore tested', blocks: 'Final posting switch.' },
   acceptance_suite_passed: { title: 'Acceptance suite passed', blocks: 'Final posting switch.' },
   menu_prices_confirmed: { title: 'Menu prices confirmed', blocks: 'Orders that take money at this location.' },
   tax_rate_confirmed: { title: 'Tax rate confirmed', blocks: 'Orders that take money at this location.' },
   opening_counts_posted: {
     title: 'Opening counts posted',
-    blocks: 'POS at this location (stock ledger arrives in Milestone 2).',
+    blocks: 'POS at this location. Post the opening count under Inventory.',
   },
   planning_inputs_confirmed: { title: 'Planning inputs confirmed', blocks: 'Saving ROP/EOQ settings (Milestone 4).' },
   supplier_master_verified: {
