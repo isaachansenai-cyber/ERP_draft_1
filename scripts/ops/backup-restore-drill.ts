@@ -85,7 +85,7 @@ async function totals(url: string) {
 }
 
 /** Ledger reconciliation and security controls inside one database. */
-async function integrity(url: string) {
+async function integrity(url: string): Promise<Record<string, unknown>> {
   const [r] = await query<Record<string, unknown>>(
     url,
     `select
