@@ -483,3 +483,28 @@ describe('AC13 transfers reconcile source, transit and destination', () => {
     expect(loss!.reason).toBe('TRANSIT_LOSS');
   });
 });
+
+describe('AC03 cost and custody visibility', () => {
+  it('employees see their own waste reports but never their cost; managers see the cost', async () => {
+    const e = await as('proEmployee');
+    const m = await as('proManager');
+    const { error } = await e.from('waste_reports').select('total_cost');
+    expect(error?.code).toBe('42501');
+    const { data, error: plainError } = await e.from('waste_reports').select('report_number, status');
+    expect(plainError).toBeNull();
+    expect((data ?? []).length).toBeGreaterThan(0);
+    const mine = await ok<Array<{ total_cost: string | null }>>(e, 'list_waste_reports', { p_location_id: PRO });
+    expect(mine.every((r) => r.total_cost === null)).toBe(true);
+    const all = await ok<Array<{ status: string; total_cost: string | null }>>(m, 'list_waste_reports', {
+      p_location_id: PRO,
+    });
+    expect(all.some((r) => r.status === 'posted' && r.total_cost !== null)).toBe(true);
+  });
+
+  it('only managers of the location see returned-goods custody and refunds', async () => {
+    expect(await code(await as('proEmployee'), 'list_return_custody', { p_location_id: PRO })).toBe('unauthorized');
+    expect(await code(await as('sfoManager'), 'list_return_custody', { p_location_id: PRO })).toBe('unauthorized');
+    const { data } = await (await as('proEmployee')).from('refunds').select('refund_id');
+    expect(data).toEqual([]);
+  });
+});
