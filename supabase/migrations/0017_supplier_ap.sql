@@ -691,6 +691,7 @@ begin
   return private.invoice_result(p_invoice_id) || jsonb_build_object(
     'supplier_id', v_inv.supplier_id, 'location_id', v_inv.location_id, 'invoice_date', v_inv.invoice_date,
     'record_mode', v_inv.record_mode, 'discrepancy_note', v_inv.discrepancy_note, 'void_reason', v_inv.void_reason,
+    'tax_cents', v_inv.tax_cents, 'other_cents', v_inv.other_cents, 'lines_cents', v_inv.lines_cents,
     'lines', coalesce((select jsonb_agg(jsonb_build_object('revision', l.revision, 'line_no', l.line_no,
         'receipt_line_id', l.receipt_line_id, 'item_id', l.item_id, 'description', l.description, 'quantity', l.quantity::text,
         'unit_price', l.unit_price::text, 'line_cents', l.line_cents, 'received_qty', l.received_qty::text,

@@ -2147,8 +2147,14 @@ isOneToOne: false
 "list_location_approvers":
 { Args: { "p_location_id": string }; Returns: Json
                            },
+"list_return_custody":
+{ Args: { "p_location_id": string }; Returns: Json
+                           },
 "list_staff_access":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"list_waste_reports":
+{ Args: { "p_location_id": string,"p_status"?: string }; Returns: Json
                            },
 "mark_order_ready":
 { Args: { "p_expected_version": number,"p_order_id": string,"p_request_key": string }; Returns: Json
