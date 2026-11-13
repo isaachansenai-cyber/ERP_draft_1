@@ -29,13 +29,38 @@ export function localStack(): LocalStack {
   return stack;
 }
 
-export function resetLocalDatabase(): void {
+export async function resetLocalDatabase(): Promise<void> {
   const r = spawnSync('npx', ['supabase', 'db', 'reset', '--local'], {
     cwd: ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
     encoding: 'utf8',
   });
   if (r.status !== 0) throw new Error(`supabase db reset failed: ${r.stderr}`);
+  await waitForApi(localStack());
+}
+
+/** After a reset the REST and Auth containers reconnect; wait until both answer. */
+export async function waitForApi(stack: LocalStack, timeoutMs = 90_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let consecutive = 0;
+  while (Date.now() < deadline) {
+    try {
+      const [rest, auth] = await Promise.all([
+        fetch(`${stack.apiUrl}/rest/v1/rpc/get_public_app_mode`, {
+          method: 'POST',
+          headers: { apikey: stack.anonKey, 'content-type': 'application/json' },
+          body: '{}',
+        }),
+        fetch(`${stack.apiUrl}/auth/v1/health`, { headers: { apikey: stack.anonKey } }),
+      ]);
+      consecutive = rest.ok && auth.ok ? consecutive + 1 : 0;
+      if (consecutive >= 3) return;
+    } catch {
+      consecutive = 0;
+    }
+    await new Promise((res) => setTimeout(res, 500));
+  }
+  throw new Error('local Supabase API did not become ready after reset');
 }
 
 export interface ScriptResult {

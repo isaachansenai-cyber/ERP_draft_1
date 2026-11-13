@@ -21,7 +21,7 @@ function must(label: string, r: { status: number | null; stderr: string; stdout:
 }
 
 export default async function setup({ provide }: GlobalSetupContext) {
-  resetLocalDatabase();
+  await resetLocalDatabase();
   const stack = localStack();
   const credentialsPath = join(mkdtempSync(join(tmpdir(), 'demo-creds-')), 'DEMO_CREDENTIALS.local.md');
   const env = {

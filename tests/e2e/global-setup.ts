@@ -9,7 +9,7 @@ import { localStack, resetLocalDatabase, ROOT, runScript } from '../integration/
 export const BASE_PATH = '/ERP_draft_1/';
 
 export default async function globalSetup() {
-  resetLocalDatabase();
+  await resetLocalDatabase();
   const stack = localStack();
   const dir = mkdtempSync(join(tmpdir(), 'e2e-'));
   const credentialsPath = join(dir, 'DEMO_CREDENTIALS.local.md');

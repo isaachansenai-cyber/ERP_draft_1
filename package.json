@@ -15,7 +15,7 @@
     "format": "prettier --write .",
     "test:unit": "vitest run --project unit",
     "test:db": "node scripts/db/local-reset.mjs && supabase test db",
-    "test:integration": "vitest run --project integration-pilot && vitest run --project integration-demo",
+    "test:integration": "vitest run --project integration-pilot && vitest run --project integration-ops && vitest run --project integration-demo",
     "test:secrets": "node scripts/security/scan-secrets.mjs",
     "test:e2e": "playwright test --trace off",
     "db:start": "supabase start",

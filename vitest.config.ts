@@ -24,6 +24,16 @@ export default defineConfig({
       },
       {
         test: {
+          name: 'integration-ops',
+          include: ['tests/integration/ops/**/*.test.ts'],
+          environment: 'node',
+          globalSetup: ['tests/integration/setup/ops.global.ts'],
+          testTimeout: 60_000,
+          hookTimeout: 300_000,
+        },
+      },
+      {
+        test: {
           name: 'integration-demo',
           include: ['tests/integration/demo/**/*.test.ts'],
           environment: 'node',

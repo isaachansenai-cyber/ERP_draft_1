@@ -34,6 +34,13 @@ const VOLATILE = [
   'gate_id',
   'scope_id',
   'auth_user_id',
+  'lot_id',
+  'movement_id',
+  'movement_no',
+  'opening_count_id',
+  'source_id',
+  'received_at',
+  'posted_at',
 ];
 
 /** Content fingerprint of every public table except the audit log, ignoring volatile keys. */

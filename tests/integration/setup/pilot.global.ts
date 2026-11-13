@@ -18,7 +18,7 @@ declare module 'vitest' {
 }
 
 export default async function setup({ provide }: GlobalSetupContext) {
-  resetLocalDatabase();
+  await resetLocalDatabase();
   const stack = localStack();
 
   const imported = runScript('scripts/import/import-source-master.ts', { DATABASE_URL: stack.dbUrl });
