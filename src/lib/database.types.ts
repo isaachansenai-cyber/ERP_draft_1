@@ -69,6 +69,38 @@ isOneToOne: false
       referencedColumns: ["location_id"]
     }
                   ]
+                },"cogs_reversals": {
+                  Row: {
+                    "business_date": string,"cost": number,"custody_id": string,"location_id": string,"order_id": string,"recorded_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_date"?: string,"cost": number,"custody_id": string,"location_id": string,"order_id": string,"recorded_at"?: string
+                  }
+                  Update: {
+                    "business_date"?: string,"cost"?: number,"custody_id"?: string,"location_id"?: string,"order_id"?: string,"recorded_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cogs_reversals_custody_id_fkey"
+      columns: ["custody_id"]
+isOneToOne: true
+      referencedRelation: "return_custody"
+      referencedColumns: ["custody_id"]
+    },{
+      foreignKeyName: "cogs_reversals_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "cogs_reversals_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["order_id"]
+    }
+                  ]
                 },"customers": {
                   Row: {
                     "archived_at": string | null,"created_at": string,"created_by": string | null,"created_location_id": string | null,"customer_id": string,"display_name": string,"email": string | null,"phone": string | null,"provenance": string
@@ -108,6 +140,44 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"exchanges": {
+                  Row: {
+                    "amount_due_cents": number,"applied_cents": number,"created_at": string,"created_by": string,"credit_cents": number,"exchange_id": string,"new_order_id": string,"original_order_id": string,"refunded_excess_cents": number,"return_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_due_cents": number,"applied_cents": number,"created_at"?: string,"created_by": string,"credit_cents": number,"exchange_id"?: string,"new_order_id": string,"original_order_id": string,"refunded_excess_cents": number,"return_id": string
+                  }
+                  Update: {
+                    "amount_due_cents"?: number,"applied_cents"?: number,"created_at"?: string,"created_by"?: string,"credit_cents"?: number,"exchange_id"?: string,"new_order_id"?: string,"original_order_id"?: string,"refunded_excess_cents"?: number,"return_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exchanges_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "exchanges_new_order_id_fkey"
+      columns: ["new_order_id"]
+isOneToOne: true
+      referencedRelation: "orders"
+      referencedColumns: ["order_id"]
+    },{
+      foreignKeyName: "exchanges_original_order_id_fkey"
+      columns: ["original_order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["order_id"]
+    },{
+      foreignKeyName: "exchanges_return_id_fkey"
+      columns: ["return_id"]
+isOneToOne: true
+      referencedRelation: "returns"
+      referencedColumns: ["return_id"]
+    }
                   ]
                 },"historical_sales_lines": {
                   Row: {
@@ -1095,6 +1165,82 @@ isOneToOne: false
       referencedColumns: ["item_id","item_type","base_unit"]
     }
                   ]
+                },"refund_lines": {
+                  Row: {
+                    "net_cents": number,"order_line_id": string,"quantity": number | null,"refund_id": string,"tax_cents": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "net_cents": number,"order_line_id": string,"quantity"?: number | null,"refund_id": string,"tax_cents": number
+                  }
+                  Update: {
+                    "net_cents"?: number,"order_line_id"?: string,"quantity"?: number | null,"refund_id"?: string,"tax_cents"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "refund_lines_order_line_id_fkey"
+      columns: ["order_line_id"]
+isOneToOne: false
+      referencedRelation: "order_lines"
+      referencedColumns: ["order_line_id"]
+    },{
+      foreignKeyName: "refund_lines_refund_id_fkey"
+      columns: ["refund_id"]
+isOneToOne: false
+      referencedRelation: "refunds"
+      referencedColumns: ["refund_id"]
+    }
+                  ]
+                },"refunds": {
+                  Row: {
+                    "amount_cents": number,"approved_by": string,"business_date": string,"external_reference": string | null,"kind": string,"location_id": string,"method": string,"net_cents": number,"note": string | null,"order_id": string,"paid_out_cents": number,"paid_out_method": string | null,"reason_code": string,"recorded_at": string,"recorded_by": string,"refund_id": string,"refund_mode": string,"refund_number": string,"request_key": string | null,"return_id": string | null,"tax_cents": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"approved_by": string,"business_date"?: string,"external_reference"?: string | null,"kind": string,"location_id": string,"method": string,"net_cents": number,"note"?: string | null,"order_id": string,"paid_out_cents": number,"paid_out_method"?: string | null,"reason_code": string,"recorded_at"?: string,"recorded_by": string,"refund_id"?: string,"refund_mode": string,"refund_number": string,"request_key"?: string | null,"return_id"?: string | null,"tax_cents": number
+                  }
+                  Update: {
+                    "amount_cents"?: number,"approved_by"?: string,"business_date"?: string,"external_reference"?: string | null,"kind"?: string,"location_id"?: string,"method"?: string,"net_cents"?: number,"note"?: string | null,"order_id"?: string,"paid_out_cents"?: number,"paid_out_method"?: string | null,"reason_code"?: string,"recorded_at"?: string,"recorded_by"?: string,"refund_id"?: string,"refund_mode"?: string,"refund_number"?: string,"request_key"?: string | null,"return_id"?: string | null,"tax_cents"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "refunds_approved_by_fkey"
+      columns: ["approved_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "refunds_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "refunds_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["order_id"]
+    },{
+      foreignKeyName: "refunds_reason_code_fkey"
+      columns: ["reason_code"]
+isOneToOne: false
+      referencedRelation: "reason_codes"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "refunds_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "refunds_return_fk"
+      columns: ["return_id"]
+isOneToOne: false
+      referencedRelation: "returns"
+      referencedColumns: ["return_id"]
+    }
+                  ]
                 },"reservation_allocations": {
                   Row: {
                     "allocation_id": string,"closed_at": string | null,"consumed_movement_id": string | null,"created_at": string,"item_id": string,"location_id": string,"lot_id": string,"order_id": string,"purpose": string,"quantity": number,"status": string
@@ -1139,6 +1285,152 @@ isOneToOne: false
       referencedColumns: ["order_id"]
     }
                   ]
+                },"return_custody": {
+                  Row: {
+                    "custody_id": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"item_id": string,"location_id": string,"quantity": number,"restock_lot_id": string | null,"restock_movement_id": string | null,"return_line_id": string,"status": string,"unit_issue_cost": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "custody_id"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"item_id": string,"location_id": string,"quantity": number,"restock_lot_id"?: string | null,"restock_movement_id"?: string | null,"return_line_id": string,"status"?: string,"unit_issue_cost": number
+                  }
+                  Update: {
+                    "custody_id"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"item_id"?: string,"location_id"?: string,"quantity"?: number,"restock_lot_id"?: string | null,"restock_movement_id"?: string | null,"return_line_id"?: string,"status"?: string,"unit_issue_cost"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_custody_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "return_custody_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id"]
+    },{
+      foreignKeyName: "return_custody_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "return_custody_restock_lot_id_fkey"
+      columns: ["restock_lot_id"]
+isOneToOne: false
+      referencedRelation: "lots"
+      referencedColumns: ["lot_id"]
+    },{
+      foreignKeyName: "return_custody_restock_movement_id_fkey"
+      columns: ["restock_movement_id"]
+isOneToOne: false
+      referencedRelation: "inventory_movements"
+      referencedColumns: ["movement_id"]
+    },{
+      foreignKeyName: "return_custody_return_line_id_fkey"
+      columns: ["return_line_id"]
+isOneToOne: true
+      referencedRelation: "return_lines"
+      referencedColumns: ["return_line_id"]
+    }
+                  ]
+                },"return_lines": {
+                  Row: {
+                    "condition": string,"item_id": string,"order_line_id": string,"quantity": number,"return_id": string,"return_line_id": string,"stock_returned": boolean,"unit_issue_cost": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "condition": string,"item_id": string,"order_line_id": string,"quantity": number,"return_id": string,"return_line_id"?: string,"stock_returned": boolean,"unit_issue_cost": number
+                  }
+                  Update: {
+                    "condition"?: string,"item_id"?: string,"order_line_id"?: string,"quantity"?: number,"return_id"?: string,"return_line_id"?: string,"stock_returned"?: boolean,"unit_issue_cost"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_lines_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id"]
+    },{
+      foreignKeyName: "return_lines_order_line_id_fkey"
+      columns: ["order_line_id"]
+isOneToOne: false
+      referencedRelation: "order_lines"
+      referencedColumns: ["order_line_id"]
+    },{
+      foreignKeyName: "return_lines_return_id_fkey"
+      columns: ["return_id"]
+isOneToOne: false
+      referencedRelation: "returns"
+      referencedColumns: ["return_id"]
+    }
+                  ]
+                },"return_policy": {
+                  Row: {
+                    "allow_customer_restock": boolean,"configured_at": string,"configured_by": string | null,"provenance": string,"singleton": boolean,"window_days": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allow_customer_restock"?: boolean,"configured_at"?: string,"configured_by"?: string | null,"provenance": string,"singleton"?: boolean,"window_days": number
+                  }
+                  Update: {
+                    "allow_customer_restock"?: boolean,"configured_at"?: string,"configured_by"?: string | null,"provenance"?: string,"singleton"?: boolean,"window_days"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_policy_configured_by_fkey"
+      columns: ["configured_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
+                },"returns": {
+                  Row: {
+                    "approved_by": string,"business_date": string,"location_id": string,"note": string | null,"order_id": string,"processed_at": string,"processed_by": string,"reason_code": string,"request_key": string | null,"return_id": string,"return_number": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_by": string,"business_date"?: string,"location_id": string,"note"?: string | null,"order_id": string,"processed_at"?: string,"processed_by": string,"reason_code": string,"request_key"?: string | null,"return_id"?: string,"return_number": string
+                  }
+                  Update: {
+                    "approved_by"?: string,"business_date"?: string,"location_id"?: string,"note"?: string | null,"order_id"?: string,"processed_at"?: string,"processed_by"?: string,"reason_code"?: string,"request_key"?: string | null,"return_id"?: string,"return_number"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "returns_approved_by_fkey"
+      columns: ["approved_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "returns_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "returns_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["order_id"]
+    },{
+      foreignKeyName: "returns_processed_by_fkey"
+      columns: ["processed_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "returns_reason_code_fkey"
+      columns: ["reason_code"]
+isOneToOne: false
+      referencedRelation: "reason_codes"
+      referencedColumns: ["code"]
+    }
+                  ]
                 },"stock_balances": {
                   Row: {
                     "condition": string,"item_id": string,"location_id": string,"lot_id": string,"on_hand": number,"reserved": number,"updated_at": string
@@ -1171,6 +1463,222 @@ isOneToOne: false
       referencedColumns: ["lot_id"]
     }
                   ]
+                },"stock_count_lines": {
+                  Row: {
+                    "condition": string,"count_id": string,"counted_qty": number | null,"expected_qty": number,"item_id": string,"lot_id": string,"movement_id": string | null,"unit_cost": number | null,"variance": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "condition": string,"count_id": string,"counted_qty"?: number | null,"expected_qty": number,"item_id": string,"lot_id": string,"movement_id"?: string | null,"unit_cost"?: number | null,"variance"?: never
+                  }
+                  Update: {
+                    "condition"?: string,"count_id"?: string,"counted_qty"?: number | null,"expected_qty"?: number,"item_id"?: string,"lot_id"?: string,"movement_id"?: string | null,"unit_cost"?: number | null,"variance"?: never
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_count_lines_count_id_fkey"
+      columns: ["count_id"]
+isOneToOne: false
+      referencedRelation: "stock_counts"
+      referencedColumns: ["count_id"]
+    },{
+      foreignKeyName: "stock_count_lines_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id"]
+    },{
+      foreignKeyName: "stock_count_lines_lot_id_fkey"
+      columns: ["lot_id"]
+isOneToOne: false
+      referencedRelation: "lots"
+      referencedColumns: ["lot_id"]
+    },{
+      foreignKeyName: "stock_count_lines_movement_id_fkey"
+      columns: ["movement_id"]
+isOneToOne: false
+      referencedRelation: "inventory_movements"
+      referencedColumns: ["movement_id"]
+    }
+                  ]
+                },"stock_counts": {
+                  Row: {
+                    "cancelled_at": string | null,"count_id": string,"count_number": string,"created_at": string,"created_by": string,"item_ids": (string)[],"location_id": string,"note": string | null,"posted_at": string | null,"posted_by": string | null,"reason_code": string | null,"snapshot_movement_no": number,"status": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancelled_at"?: string | null,"count_id"?: string,"count_number": string,"created_at"?: string,"created_by": string,"item_ids": (string)[],"location_id": string,"note"?: string | null,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code"?: string | null,"snapshot_movement_no": number,"status"?: string,"version"?: number
+                  }
+                  Update: {
+                    "cancelled_at"?: string | null,"count_id"?: string,"count_number"?: string,"created_at"?: string,"created_by"?: string,"item_ids"?: (string)[],"location_id"?: string,"note"?: string | null,"posted_at"?: string | null,"posted_by"?: string | null,"reason_code"?: string | null,"snapshot_movement_no"?: number,"status"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_counts_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "stock_counts_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "stock_counts_posted_by_fkey"
+      columns: ["posted_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "stock_counts_reason_code_fkey"
+      columns: ["reason_code"]
+isOneToOne: false
+      referencedRelation: "reason_codes"
+      referencedColumns: ["code"]
+    }
+                  ]
+                },"supplier_credit_reversals": {
+                  Row: {
+                    "credit_id": string,"reason": string,"request_key": string | null,"reversed_at": string,"reversed_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "credit_id": string,"reason": string,"request_key"?: string | null,"reversed_at"?: string,"reversed_by": string
+                  }
+                  Update: {
+                    "credit_id"?: string,"reason"?: string,"request_key"?: string | null,"reversed_at"?: string,"reversed_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_credit_reversals_credit_id_fkey"
+      columns: ["credit_id"]
+isOneToOne: true
+      referencedRelation: "supplier_credits"
+      referencedColumns: ["credit_id"]
+    },{
+      foreignKeyName: "supplier_credit_reversals_reversed_by_fkey"
+      columns: ["reversed_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
+                },"supplier_credits": {
+                  Row: {
+                    "amount_cents": number,"credit_id": string,"credit_memo_ref": string | null,"credit_number": string,"credited_on": string,"invoice_id": string,"location_id": string,"reason": string,"recorded_at": string,"recorded_by": string,"request_key": string | null,"supplier_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"credit_id"?: string,"credit_memo_ref"?: string | null,"credit_number": string,"credited_on": string,"invoice_id": string,"location_id": string,"reason": string,"recorded_at"?: string,"recorded_by": string,"request_key"?: string | null,"supplier_id": string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"credit_id"?: string,"credit_memo_ref"?: string | null,"credit_number"?: string,"credited_on"?: string,"invoice_id"?: string,"location_id"?: string,"reason"?: string,"recorded_at"?: string,"recorded_by"?: string,"request_key"?: string | null,"supplier_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_credits_invoice_id_fkey"
+      columns: ["invoice_id"]
+isOneToOne: false
+      referencedRelation: "supplier_invoices"
+      referencedColumns: ["invoice_id"]
+    },{
+      foreignKeyName: "supplier_credits_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "supplier_credits_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "supplier_credits_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["supplier_id"]
+    }
+                  ]
+                },"supplier_invoice_lines": {
+                  Row: {
+                    "description": string | null,"discrepancy": string | null,"invoice_id": string,"invoice_line_id": string,"item_id": string | null,"line_cents": number,"line_no": number,"price_variance_cents": number | null,"qty_variance": number | null,"quantity": number,"receipt_line_id": string | null,"receipt_unit_cost": number | null,"received_qty": number | null,"revision": number,"unit_price": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description"?: string | null,"discrepancy"?: string | null,"invoice_id": string,"invoice_line_id"?: string,"item_id"?: string | null,"line_cents": number,"line_no": number,"price_variance_cents"?: number | null,"qty_variance"?: number | null,"quantity": number,"receipt_line_id"?: string | null,"receipt_unit_cost"?: number | null,"received_qty"?: number | null,"revision": number,"unit_price": number
+                  }
+                  Update: {
+                    "description"?: string | null,"discrepancy"?: string | null,"invoice_id"?: string,"invoice_line_id"?: string,"item_id"?: string | null,"line_cents"?: number,"line_no"?: number,"price_variance_cents"?: number | null,"qty_variance"?: number | null,"quantity"?: number,"receipt_line_id"?: string | null,"receipt_unit_cost"?: number | null,"received_qty"?: number | null,"revision"?: number,"unit_price"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_invoice_lines_invoice_id_fkey"
+      columns: ["invoice_id"]
+isOneToOne: false
+      referencedRelation: "supplier_invoices"
+      referencedColumns: ["invoice_id"]
+    },{
+      foreignKeyName: "supplier_invoice_lines_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id"]
+    },{
+      foreignKeyName: "supplier_invoice_lines_receipt_line_id_fkey"
+      columns: ["receipt_line_id"]
+isOneToOne: false
+      referencedRelation: "receipt_lines"
+      referencedColumns: ["receipt_line_id"]
+    }
+                  ]
+                },"supplier_invoices": {
+                  Row: {
+                    "created_at": string,"created_by": string,"discrepancy_accepted_at": string | null,"discrepancy_accepted_by": string | null,"discrepancy_accepted_revision": number | null,"discrepancy_note": string | null,"due_date": string,"due_date_source": string,"has_discrepancy": boolean,"invoice_date": string,"invoice_id": string,"invoice_number": string,"lines_cents": number,"location_id": string,"note": string | null,"other_cents": number,"provenance": string,"record_mode": string,"revision": number,"status": string,"supplier_id": string,"tax_cents": number,"terms_days_snapshot": number | null,"total_cents": number,"version": number,"void_reason": string | null,"voided_at": string | null,"voided_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by": string,"discrepancy_accepted_at"?: string | null,"discrepancy_accepted_by"?: string | null,"discrepancy_accepted_revision"?: number | null,"discrepancy_note"?: string | null,"due_date": string,"due_date_source": string,"has_discrepancy": boolean,"invoice_date": string,"invoice_id"?: string,"invoice_number": string,"lines_cents": number,"location_id": string,"note"?: string | null,"other_cents"?: number,"provenance"?: string,"record_mode": string,"revision"?: number,"status"?: string,"supplier_id": string,"tax_cents"?: number,"terms_days_snapshot"?: number | null,"total_cents": number,"version"?: number,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"discrepancy_accepted_at"?: string | null,"discrepancy_accepted_by"?: string | null,"discrepancy_accepted_revision"?: number | null,"discrepancy_note"?: string | null,"due_date"?: string,"due_date_source"?: string,"has_discrepancy"?: boolean,"invoice_date"?: string,"invoice_id"?: string,"invoice_number"?: string,"lines_cents"?: number,"location_id"?: string,"note"?: string | null,"other_cents"?: number,"provenance"?: string,"record_mode"?: string,"revision"?: number,"status"?: string,"supplier_id"?: string,"tax_cents"?: number,"terms_days_snapshot"?: number | null,"total_cents"?: number,"version"?: number,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_invoices_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "supplier_invoices_discrepancy_accepted_by_fkey"
+      columns: ["discrepancy_accepted_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "supplier_invoices_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "supplier_invoices_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["supplier_id"]
+    },{
+      foreignKeyName: "supplier_invoices_voided_by_fkey"
+      columns: ["voided_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
                 },"supplier_items": {
                   Row: {
                     "archived_at": string | null,"cost_basis": string | null,"created_at": string,"effective_date": string | null,"is_primary": boolean,"is_purchasable": boolean,"item_id": string,"lead_time_basis": string | null,"pack_base_qty": number | null,"pack_cost_cents": number | null,"pack_description": string | null,"procurement_lead_days": number | null,"provenance": string,"source": string,"supplier_id": string,"supplier_item_id": string,"unit_cost": number | null,"updated_at": string
@@ -1191,6 +1699,70 @@ isOneToOne: false
       referencedColumns: ["item_id","is_purchasable"]
     },{
       foreignKeyName: "supplier_items_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["supplier_id"]
+    }
+                  ]
+                },"supplier_payment_reversals": {
+                  Row: {
+                    "payment_id": string,"reason": string,"request_key": string | null,"reversed_at": string,"reversed_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "payment_id": string,"reason": string,"request_key"?: string | null,"reversed_at"?: string,"reversed_by": string
+                  }
+                  Update: {
+                    "payment_id"?: string,"reason"?: string,"request_key"?: string | null,"reversed_at"?: string,"reversed_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_payment_reversals_payment_id_fkey"
+      columns: ["payment_id"]
+isOneToOne: true
+      referencedRelation: "supplier_payments"
+      referencedColumns: ["payment_id"]
+    },{
+      foreignKeyName: "supplier_payment_reversals_reversed_by_fkey"
+      columns: ["reversed_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
+                },"supplier_payments": {
+                  Row: {
+                    "amount_cents": number,"external_reference": string | null,"invoice_id": string,"location_id": string,"method": string,"note": string | null,"paid_on": string,"payment_id": string,"payment_number": string,"record_mode": string,"recorded_at": string,"recorded_by": string,"request_key": string | null,"supplier_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"external_reference"?: string | null,"invoice_id": string,"location_id": string,"method": string,"note"?: string | null,"paid_on": string,"payment_id"?: string,"payment_number": string,"record_mode": string,"recorded_at"?: string,"recorded_by": string,"request_key"?: string | null,"supplier_id": string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"external_reference"?: string | null,"invoice_id"?: string,"location_id"?: string,"method"?: string,"note"?: string | null,"paid_on"?: string,"payment_id"?: string,"payment_number"?: string,"record_mode"?: string,"recorded_at"?: string,"recorded_by"?: string,"request_key"?: string | null,"supplier_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_payments_invoice_id_fkey"
+      columns: ["invoice_id"]
+isOneToOne: false
+      referencedRelation: "supplier_invoices"
+      referencedColumns: ["invoice_id"]
+    },{
+      foreignKeyName: "supplier_payments_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "supplier_payments_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "supplier_payments_supplier_id_fkey"
       columns: ["supplier_id"]
 isOneToOne: false
       referencedRelation: "suppliers"
@@ -1243,6 +1815,152 @@ isOneToOne: false
       referencedColumns: ["employee_id"]
     }
                   ]
+                },"transfer_lines": {
+                  Row: {
+                    "dispatch_movement_id": string,"dispatched_qty": number,"in_transit_qty": number | null,"item_id": string,"lost_qty": number,"received_qty": number,"source_lot_id": string,"transfer_id": string,"transfer_line_id": string,"unit_cost": number,"use_by_date": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "dispatch_movement_id": string,"dispatched_qty": number,"in_transit_qty"?: never,"item_id": string,"lost_qty"?: number,"received_qty"?: number,"source_lot_id": string,"transfer_id": string,"transfer_line_id"?: string,"unit_cost": number,"use_by_date"?: string | null
+                  }
+                  Update: {
+                    "dispatch_movement_id"?: string,"dispatched_qty"?: number,"in_transit_qty"?: never,"item_id"?: string,"lost_qty"?: number,"received_qty"?: number,"source_lot_id"?: string,"transfer_id"?: string,"transfer_line_id"?: string,"unit_cost"?: number,"use_by_date"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transfer_lines_dispatch_movement_id_fkey"
+      columns: ["dispatch_movement_id"]
+isOneToOne: false
+      referencedRelation: "inventory_movements"
+      referencedColumns: ["movement_id"]
+    },{
+      foreignKeyName: "transfer_lines_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id"]
+    },{
+      foreignKeyName: "transfer_lines_source_lot_id_fkey"
+      columns: ["source_lot_id"]
+isOneToOne: false
+      referencedRelation: "lots"
+      referencedColumns: ["lot_id"]
+    },{
+      foreignKeyName: "transfer_lines_transfer_id_fkey"
+      columns: ["transfer_id"]
+isOneToOne: false
+      referencedRelation: "transfers"
+      referencedColumns: ["transfer_id"]
+    }
+                  ]
+                },"transfer_receipts": {
+                  Row: {
+                    "business_date": string,"condition": string,"dest_lot_id": string | null,"loss_reason_code": string | null,"lost_cost": number,"lost_qty": number,"movement_id": string | null,"note": string | null,"received_at": string,"received_by": string,"received_cost": number,"received_qty": number,"request_key": string | null,"transfer_line_id": string,"transfer_receipt_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_date"?: string,"condition": string,"dest_lot_id"?: string | null,"loss_reason_code"?: string | null,"lost_cost": number,"lost_qty": number,"movement_id"?: string | null,"note"?: string | null,"received_at"?: string,"received_by": string,"received_cost": number,"received_qty": number,"request_key"?: string | null,"transfer_line_id": string,"transfer_receipt_id"?: string
+                  }
+                  Update: {
+                    "business_date"?: string,"condition"?: string,"dest_lot_id"?: string | null,"loss_reason_code"?: string | null,"lost_cost"?: number,"lost_qty"?: number,"movement_id"?: string | null,"note"?: string | null,"received_at"?: string,"received_by"?: string,"received_cost"?: number,"received_qty"?: number,"request_key"?: string | null,"transfer_line_id"?: string,"transfer_receipt_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transfer_receipts_dest_lot_id_fkey"
+      columns: ["dest_lot_id"]
+isOneToOne: false
+      referencedRelation: "lots"
+      referencedColumns: ["lot_id"]
+    },{
+      foreignKeyName: "transfer_receipts_loss_reason_code_fkey"
+      columns: ["loss_reason_code"]
+isOneToOne: false
+      referencedRelation: "reason_codes"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "transfer_receipts_movement_id_fkey"
+      columns: ["movement_id"]
+isOneToOne: false
+      referencedRelation: "inventory_movements"
+      referencedColumns: ["movement_id"]
+    },{
+      foreignKeyName: "transfer_receipts_received_by_fkey"
+      columns: ["received_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "transfer_receipts_transfer_line_id_fkey"
+      columns: ["transfer_line_id"]
+isOneToOne: false
+      referencedRelation: "transfer_lines"
+      referencedColumns: ["transfer_line_id"]
+    }
+                  ]
+                },"transfer_requests": {
+                  Row: {
+                    "is_purchasable": boolean,"item_id": string,"quantity": number,"transfer_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "is_purchasable"?: boolean,"item_id": string,"quantity": number,"transfer_id": string
+                  }
+                  Update: {
+                    "is_purchasable"?: boolean,"item_id"?: string,"quantity"?: number,"transfer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transfer_requests_item_id_is_purchasable_fkey"
+      columns: ["item_id","is_purchasable"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id","is_purchasable"]
+    },{
+      foreignKeyName: "transfer_requests_transfer_id_fkey"
+      columns: ["transfer_id"]
+isOneToOne: false
+      referencedRelation: "transfers"
+      referencedColumns: ["transfer_id"]
+    }
+                  ]
+                },"transfers": {
+                  Row: {
+                    "closed_at": string | null,"created_at": string,"created_by": string,"dispatched_at": string | null,"dispatched_by": string | null,"from_location_id": string,"note": string | null,"status": string,"to_location_id": string,"transfer_id": string,"transfer_number": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "closed_at"?: string | null,"created_at"?: string,"created_by": string,"dispatched_at"?: string | null,"dispatched_by"?: string | null,"from_location_id": string,"note"?: string | null,"status"?: string,"to_location_id": string,"transfer_id"?: string,"transfer_number": string,"version"?: number
+                  }
+                  Update: {
+                    "closed_at"?: string | null,"created_at"?: string,"created_by"?: string,"dispatched_at"?: string | null,"dispatched_by"?: string | null,"from_location_id"?: string,"note"?: string | null,"status"?: string,"to_location_id"?: string,"transfer_id"?: string,"transfer_number"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transfers_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "transfers_dispatched_by_fkey"
+      columns: ["dispatched_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "transfers_from_location_id_fkey"
+      columns: ["from_location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "transfers_to_location_id_fkey"
+      columns: ["to_location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    }
+                  ]
                 },"units": {
                   Row: {
                     "description": string,"dimension": string,"factor_to_dimension_base": number,"is_base": boolean,"unit": string
@@ -1257,20 +1975,102 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"waste_report_lines": {
+                  Row: {
+                    "is_purchasable": boolean,"item_id": string,"line_no": number,"lot_id": string | null,"posted_cost": number | null,"quantity": number,"waste_report_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "is_purchasable"?: boolean,"item_id": string,"line_no": number,"lot_id"?: string | null,"posted_cost"?: number | null,"quantity": number,"waste_report_id": string
+                  }
+                  Update: {
+                    "is_purchasable"?: boolean,"item_id"?: string,"line_no"?: number,"lot_id"?: string | null,"posted_cost"?: number | null,"quantity"?: number,"waste_report_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "waste_report_lines_item_id_is_purchasable_fkey"
+      columns: ["item_id","is_purchasable"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id","is_purchasable"]
+    },{
+      foreignKeyName: "waste_report_lines_lot_id_fkey"
+      columns: ["lot_id"]
+isOneToOne: false
+      referencedRelation: "lots"
+      referencedColumns: ["lot_id"]
+    },{
+      foreignKeyName: "waste_report_lines_waste_report_id_fkey"
+      columns: ["waste_report_id"]
+isOneToOne: false
+      referencedRelation: "waste_reports"
+      referencedColumns: ["waste_report_id"]
+    }
+                  ]
+                },"waste_reports": {
+                  Row: {
+                    "business_date": string | null,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"location_id": string,"note": string | null,"reason_code": string,"report_number": string,"status": string,"submitted_at": string,"submitted_by": string,"total_cost": number | null,"version": number,"waste_report_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_date"?: string | null,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"location_id": string,"note"?: string | null,"reason_code": string,"report_number": string,"status"?: string,"submitted_at"?: string,"submitted_by": string,"total_cost"?: number | null,"version"?: number,"waste_report_id"?: string
+                  }
+                  Update: {
+                    "business_date"?: string | null,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"location_id"?: string,"note"?: string | null,"reason_code"?: string,"report_number"?: string,"status"?: string,"submitted_at"?: string,"submitted_by"?: string,"total_cost"?: number | null,"version"?: number,"waste_report_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "waste_reports_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "waste_reports_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "waste_reports_reason_code_fkey"
+      columns: ["reason_code"]
+isOneToOne: false
+      referencedRelation: "reason_codes"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "waste_reports_submitted_by_fkey"
+      columns: ["submitted_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "accept_order":
+            "accept_invoice_discrepancy":
+{ Args: { "p_approver_employee_id"?: string,"p_expected_version": number,"p_invoice_id": string,"p_note": string,"p_pin"?: string,"p_request_key": string }; Returns: Json
+                           },
+"accept_order":
 { Args: { "p_approver_employee_id"?: string,"p_customer_id"?: string,"p_discount_percent"?: number,"p_discount_reason"?: string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_pickup_name"?: string,"p_pin"?: string,"p_request_key": string }; Returns: Json
                            },
 "cancel_order":
-{ Args: { "p_approver_employee_id"?: string,"p_expected_version": number,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_request_key": string }; Returns: Json
+{ Args: { "p_approver_employee_id"?: string,"p_expected_version": number,"p_external_reference"?: string,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_refund_method"?: string,"p_request_key": string }; Returns: Json
                            },
 "cancel_purchase_order_balance":
 { Args: { "p_expected_version": number,"p_po_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"cancel_stock_count":
+{ Args: { "p_count_id": string,"p_expected_version": number,"p_request_key": string }; Returns: Json
+                           },
+"cancel_transfer":
+{ Args: { "p_expected_version": number,"p_request_key": string,"p_transfer_id": string }; Returns: Json
+                           },
+"change_stock_condition":
+{ Args: { "p_lot_id": string,"p_note"?: string,"p_quantity": number,"p_reason_code"?: string,"p_request_key": string,"p_to_condition": string }; Returns: Json
                            },
 "complete_order_pickup":
 { Args: { "p_expected_version": number,"p_order_id": string,"p_request_key": string }; Returns: Json
@@ -1287,14 +2087,35 @@ isOneToOne: false
 "create_purchase_order":
 { Args: { "p_expected_date": string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_request_key": string,"p_supplier_id": string }; Returns: Json
                            },
+"create_supplier_invoice":
+{ Args: { "p_due_date"?: string,"p_invoice_date": string,"p_invoice_number": string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_other_cents"?: number,"p_request_key": string,"p_supplier_id": string,"p_tax_cents"?: number }; Returns: Json
+                           },
+"create_transfer":
+{ Args: { "p_from_location_id": string,"p_lines": Json,"p_note"?: string,"p_request_key": string,"p_to_location_id": string }; Returns: Json
+                           },
+"decide_return_custody":
+{ Args: { "p_custody_id": string,"p_decision": string,"p_note"?: string,"p_request_key": string }; Returns: Json
+                           },
+"decide_waste_report":
+{ Args: { "p_decision": string,"p_expected_version": number,"p_note"?: string,"p_request_key": string,"p_waste_report_id": string }; Returns: Json
+                           },
+"dispatch_transfer":
+{ Args: { "p_expected_version": number,"p_request_key": string,"p_transfer_id": string }; Returns: Json
+                           },
 "edit_accepted_order":
 { Args: { "p_approver_employee_id"?: string,"p_discount_percent"?: number,"p_discount_reason"?: string,"p_expected_version": number,"p_lines": Json,"p_order_id": string,"p_pin"?: string,"p_request_key": string }; Returns: Json
                            },
 "enable_posting":
 { Args: { "p_evidence_note": string,"p_request_key": string }; Returns: Json
                            },
+"get_matchable_receipt_lines":
+{ Args: { "p_location_id": string,"p_supplier_id": string }; Returns: Json
+                           },
 "get_my_context":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"get_order_for_return":
+{ Args: { "p_location_id": string,"p_lookup": string }; Returns: Json
                            },
 "get_pos_menu":
 { Args: { "p_location_id": string }; Returns: Json
@@ -1310,6 +2131,12 @@ isOneToOne: false
                            },
 "get_stock_overview":
 { Args: { "p_location_id": string }; Returns: Json
+                           },
+"get_supplier_invoice":
+{ Args: { "p_invoice_id": string }; Returns: Json
+                           },
+"get_supplier_invoices":
+{ Args: { "p_location_ids"?: (string)[],"p_status"?: string }; Returns: Json
                            },
 "grant_membership":
 { Args: { "p_employee_id": string,"p_location_id": string,"p_request_key": string,"p_role": string }; Returns: Json
@@ -1329,14 +2156,44 @@ isOneToOne: false
 "post_opening_count":
 { Args: { "p_lines": Json,"p_location_id": string,"p_note"?: string,"p_request_key": string }; Returns: Json
                            },
+"post_stock_count":
+{ Args: { "p_count_id": string,"p_counts": Json,"p_expected_version": number,"p_note"?: string,"p_reason_code"?: string,"p_request_key": string }; Returns: Json
+                           },
+"process_exchange":
+{ Args: { "p_approver_employee_id"?: string,"p_excess_refund_method"?: string,"p_new_lines": Json,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_request_key": string,"p_return_lines": Json }; Returns: Json
+                           },
+"process_return":
+{ Args: { "p_approver_employee_id"?: string,"p_external_reference"?: string,"p_lines": Json,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_refund_method"?: string,"p_request_key": string }; Returns: Json
+                           },
 "receive_purchase_order":
 { Args: { "p_acknowledge_over_receipt"?: boolean,"p_expected_version": number,"p_lines": Json,"p_note"?: string,"p_packing_slip_ref": string,"p_po_id": string,"p_request_key": string }; Returns: Json
+                           },
+"receive_transfer":
+{ Args: { "p_expected_version": number,"p_lines": Json,"p_request_key": string,"p_transfer_id": string }; Returns: Json
+                           },
+"record_refund":
+{ Args: { "p_approver_employee_id"?: string,"p_external_reference"?: string,"p_lines": Json,"p_method": string,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_request_key": string }; Returns: Json
+                           },
+"record_supplier_credit":
+{ Args: { "p_amount_cents": number,"p_credit_memo_ref"?: string,"p_credited_on"?: string,"p_invoice_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"record_supplier_payment":
+{ Args: { "p_amount_cents": number,"p_external_reference"?: string,"p_invoice_id": string,"p_method": string,"p_note"?: string,"p_paid_on"?: string,"p_request_key": string }; Returns: Json
                            },
 "record_tender":
 { Args: { "p_amount_cents": number,"p_external_reference"?: string,"p_method": string,"p_order_id": string,"p_request_key": string }; Returns: Json
                            },
 "reopen_setup_gate":
 { Args: { "p_gate_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"reverse_supplier_credit":
+{ Args: { "p_credit_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"reverse_supplier_payment":
+{ Args: { "p_payment_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"revise_supplier_invoice":
+{ Args: { "p_expected_version": number,"p_invoice_id": string,"p_lines": Json,"p_note"?: string,"p_other_cents"?: number,"p_request_key": string,"p_tax_cents"?: number }; Returns: Json
                            },
 "revoke_membership":
 { Args: { "p_membership_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
@@ -1359,6 +2216,9 @@ isOneToOne: false
 "set_menu_availability":
 { Args: { "p_available": boolean,"p_item_id": string,"p_location_id": string,"p_reason"?: string,"p_request_key": string }; Returns: Json
                            },
+"set_return_policy":
+{ Args: { "p_allow_customer_restock": boolean,"p_request_key": string,"p_window_days": number }; Returns: Json
+                           },
 "set_supplier_item_pack":
 { Args: { "p_cost_basis": string,"p_pack_base_qty": number,"p_pack_cost_cents": number,"p_pack_description": string,"p_request_key": string,"p_supplier_item_id": string }; Returns: Json
                            },
@@ -1368,8 +2228,17 @@ isOneToOne: false
 "start_order_preparation":
 { Args: { "p_estimated_ready_at"?: string,"p_expected_version": number,"p_order_id": string,"p_request_key": string }; Returns: Json
                            },
+"start_stock_count":
+{ Args: { "p_item_ids"?: (string)[],"p_location_id": string,"p_request_key": string }; Returns: Json
+                           },
 "submit_purchase_order":
 { Args: { "p_expected_version": number,"p_po_id": string,"p_request_key": string }; Returns: Json
+                           },
+"submit_waste_report":
+{ Args: { "p_lines": Json,"p_location_id": string,"p_note"?: string,"p_reason_code": string,"p_request_key": string }; Returns: Json
+                           },
+"void_supplier_invoice":
+{ Args: { "p_expected_version": number,"p_invoice_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
                            }
           }
           Enums: {

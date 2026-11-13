@@ -332,6 +332,16 @@ export async function importDemoSeed(client: pg.Client, seed = loadDemoSeed()) {
       inserted.opening_stock_rows = (inserted.opening_stock_rows ?? 0) + lines.length;
     }
 
+    // Synthetic demo return policy: 30-day window; unopened shelf-stable retail
+    // units may be restocked (demo only; the pilot starts with no policy).
+    count(
+      'return_policy',
+      await client.query(
+        `insert into public.return_policy (singleton, window_days, allow_customer_restock, provenance)
+         values (true, 30, true, 'synthetic_demo_policy') on conflict do nothing`,
+      ),
+    );
+
     // Gates for the new retail supply links, then mark every gate synthetic-confirmed.
     count(
       'setup_gates',
