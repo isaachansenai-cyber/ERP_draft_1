@@ -114,3 +114,67 @@ Groundwork already verified for later checks: AC04, AC07, AC09, AC29, AC31 and A
 - Counts, waste, transfers, quarantine moves, returns, invoices, planning, labels and staff time are Milestones 3–4.
 - The dashboard does not yet show supplier balances or worked hours.
 - The `planning_inputs_confirmed` and `return_policy_configured` gates stay unconfirmable until Milestones 3–4. Posting does not depend on them.
+
+## Milestone 3 — Inventory and financial controls (2026-11-13)
+
+**Exit criteria (CLAUDE.md §10):** AC11–AC16, AC18, AC19, AC20 (waste part) and AC31 (immutability part). All are met. The refund and AP clauses left open in Milestone 2 now pass too, so AC07, AC09, AC17 and AC20 are complete.
+
+| Check | Status | Notes |
+|---|---|---|
+| AC11 Count conflict | PASS | A movement after the snapshot rejects the whole count; a fresh count posts one reason-coded adjustment; counts can't drop below reserved stock |
+| AC12 Lot eligibility | PASS | An expired reserved lot is reassigned at kitchen start, or the start is blocked with nothing issued; quarantine leaves availability until release |
+| AC13 Transfers | PASS | Source −1000, destination +600 then +350, 50 lost with a reason; received + lost + in transit = dispatched in quantity and cost |
+| AC14 Returns and exchanges | PASS | Meal refunds post no movement; retail returns are limited by units sold and the window and go to custody; a short exchange posts nothing |
+| AC15 Retail cost reversal | PASS | Demo restock at the original issue cost with exactly one COGS reversal; pilot returns gated and restock off until the owner enables it |
+| AC16 Refund limits | PASS | Snapshot allocation with an exact final remainder; per-line and per-order caps; employees need a manager PIN |
+| AC18 Invoices and payments | PASS | Normalized duplicate numbers refused; partial payment, no overpayment, reversal; overdue from the due date and the Denver business date |
+| AC19 Invoice costs | PASS | Creating and revising invoices leaves movements, valuation and COGS unchanged; discrepancies need acceptance and stay traceable by revision |
+| AC20 Reconciliation | PASS | Refunds by refund date; waste = post-start cancellations + posted waste reports + transit losses, each matching direct SQL |
+| AC31 Immutability part | PASS (check stays PARTIAL) | New money and control rows are append-only, with linked reversals. The backup/restore drill is Milestone 5 |
+| AC07, AC09, AC17 | PASS | Refund retry, refund snapshots, MANUAL_EXTERNAL/SIMULATED refund and AP records |
+
+Checklist now: **21 PASS, 5 PARTIAL (AC03, AC28, AC30, AC31, AC32), 8 NOT_RUN (Milestones 4–5).**
+
+### Test evidence (final full run)
+
+| Suite | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `supabase db lint --level warning`, Prettier check | clean |
+| `npm run test:unit` | 35 passed |
+| `npm run test:db` | 112 passed (new: `005_controls.test.sql`, 27) |
+| `npm run test:integration` | pilot 47, pilot operations 55 (27 new), demo 24 (6 new) — all passed |
+| `npm run build && npm run test:secrets` | passed |
+| `npm run test:e2e` | 18 passed (new: `controls.spec.ts`, 6) |
+
+### Delivered
+
+- **Migrations 0015–0019:** inventory controls (counts, waste reports, quarantine, transfers); refunds, returns, custody, exchanges, return policy and cancel-with-refund; supplier invoices, payments, credits and reversals; Milestone 3 reporting and demo reset; waste-cost visibility and list reads.
+- **Screens:** Inventory tabs (stock with quarantine/release, counts, waste reports, transfers); Refunds & returns (refund, retail return, exchange, returned-goods decisions); Supplier invoices (entry with receipt matching, variances, acceptance, payments, credits, reversals, corrections, void); Settings → Return policy; dashboard metrics for refunds, COGS reversal, the waste breakdown, count variance, inventory and in-transit value, and supplier balances; kitchen cancel with refund.
+- **Demo:** the seed adds a synthetic return policy (30 days, restock allowed).
+
+### Bugs found and fixed during the milestone
+
+- `post_stock_count` and `change_stock_condition` were missing the posting-enabled check. Added before the migration was committed.
+- Employees could read the cost columns of their own waste reports through the API. Column grants now hide them (0019).
+- The discrepancy-accepted flag returned `null` instead of `false` before any acceptance.
+- Several forms lost their success message when the list refreshed after a save. Confirmations now stay visible.
+- The Milestone 2 reconciliation test assumed refunds were 0. It now nets refunds and checks the cancellation part of the waste breakdown.
+
+### Decisions (ADRs 0017–0023)
+
+- 0017 Refund amounts from line snapshots with an exact final remainder; cancellation records the refund (supersedes 0012).
+- 0018 Retail returns go to custody; restock is policy-gated, and the pilot starts with no policy.
+- 0019 Exchanges are one transaction with an exchange-credit tender.
+- 0020 Count snapshots use the movement number; the whole count is rejected if stock moved.
+- 0021 Transfers: source cost, destination receipt; losses and in-transit value belong to the source.
+- 0022 Supplier invoices: variance acceptance before payment, revisions, voids, due dates from verified terms.
+- 0023 Waste reports: removal order and cost visibility.
+
+### Known limitations and open items
+
+- **Selling location only:** refunds and returns are processed at the location that made the sale. There is no cross-location return.
+- **Exchange shortfall:** an exchange with a balance still due leaves the replacement order `ready`. Staff collect the rest and complete pickup on the kitchen screen.
+- **Transfers:** a draft transfer reserves nothing until dispatch, so dispatch can still fail on a shortage (the error names the item).
+- **Invoices:** matching covers receipts from the last 180 days. There is no supplier statement reconciliation or AP aging export beyond the dashboard totals.
+- **Bundle size:** the bundle is now about 634 kB (about 180 kB gzipped). Code-splitting is still deferred.
+- **Still open:** recipe-version editing UI, planning, labels and staff time (Milestone 4); the backup/restore drill, performance and deployment (Milestone 5).

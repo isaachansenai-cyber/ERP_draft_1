@@ -39,3 +39,7 @@ To reset the demo to a reproducible state later, run `npm run demo:reset`. It wi
 ## Demo opening stock
 
 `npm run import:demo` posts the 126 synthetic opening-stock rows (42 per location) through the stock ledger: lots, opening movements, balances and weighted-average valuation. It is idempotent per location. The demo POS can therefore sell immediately. Demo payments are **simulated**: no money moves.
+
+## Demo return policy
+
+The demo seed also stores a synthetic return policy, labeled `synthetic_demo_policy`: a 30-day window, with unopened retail sauces allowed back into stock. Restocking a returned bottle restores its original issue cost and reverses that retail COGS once. Demo refunds and supplier payments are **simulated** records. The pilot never receives this policy: its owner sets one, and restocking is off by default.

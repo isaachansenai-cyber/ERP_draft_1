@@ -1,6 +1,6 @@
 # Pilot setup runbook
 
-This covers what exists after Milestone 2. Later milestones add steps such as the return policy, planning inputs and the backup/restore drill. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
+This covers what exists after Milestone 3. Later milestones add planning inputs and the backup/restore drill. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
 
 ## 1. Create the pilot database (operator)
 
@@ -56,7 +56,8 @@ Managers set their own PIN. Every grant and revoke is audited. At least one acti
 | `supplier_master_verified` (per supplier) | Payment terms are entered (**Purchasing → Suppliers & packs**, owner) |
 | `pack_conversions_verified` (per supplier item) | Pack size and quoted/estimated cost are entered (**Purchasing → Suppliers & packs**, owner) |
 | `opening_counts_posted` (per location) | The location's opening count is posted (**Inventory**, manager; needs `perishables_confirmed`) |
-| `planning_inputs_confirmed`, `return_policy_configured` | Not confirmable until their workflows ship (Milestones 3–4) |
+| `return_policy_configured` | The owner has saved a return policy (**Settings & setup → Return policy**) |
+| `planning_inputs_confirmed` | Not confirmable until planning ships (Milestone 4) |
 | `roles_verified`, `perishables_confirmed`, `backup_restore_tested`, `acceptance_suite_passed` | Attestation, recorded with the evidence note |
 
 Operational posting stays off until the owner runs **Enable posting**, which requires `roles_verified`, `backup_restore_tested` and `acceptance_suite_passed`. Reopening any of those three turns posting off again.
@@ -71,3 +72,21 @@ Operational posting stays off until the owner runs **Enable posting**, which req
 ## Known limitation recorded at setup
 
 The simplified production model records standard ingredient consumption at kitchen start. It does not track marination, braising, prepared-food batches or yields (PRD §2). Use physical counts and reason-coded waste to find differences.
+
+## 7. Returns, refunds and supplier invoices
+
+1. **Return policy (owner).** Under **Settings & setup → Return policy**, set the return window in days and decide whether unopened, shelf-stable retail returns may go back into stock. The default is **no restock**. Then confirm `return_policy_configured` with an evidence note. Retail returns are refused until then. Meals are always refunded, never returned.
+2. **Refunds.** Under **Refunds & returns**, staff find a completed order by number or pickup code. Each refund is a record of money paid back outside the app (`MANUAL_EXTERNAL`). Employees need a manager to enter their PIN. The amount comes from the original line price, discount and tax, and cannot exceed what was recorded as paid.
+3. **Cancelling a paid order.** The kitchen cancel form asks how the payment was paid back and records the refund in the same step (manager approval).
+4. **Returned goods.** Managers decide each held return under **Refunds & returns → Returned goods**: restock (only if the policy allows it) or dispose with a note.
+5. **Supplier invoices (managers).** Under **Supplier invoices**, enter the invoice against the receipt lines it bills, plus any charge lines.
+   - Until a supplier's `supplier_master_verified` gate is confirmed, the invoice's own due date must be entered.
+   - Variances against the receipt must be accepted before payment.
+   - Payments and credits are records of money handled outside the app. Mistakes are reversed, never edited.
+
+## 8. Stock controls
+
+- **Counts (managers):** **Inventory → Counts**. Start the count, physically count, enter quantities and post with a reason. If stock moved for a counted item in the meantime (a sale, receipt or waste), the count is rejected: cancel it and start again.
+- **Waste (all staff report, managers post):** **Inventory → Waste reports**.
+- **Quarantine (managers):** from the lot list on **Inventory**, quarantine suspect stock (it stays on hand but cannot be sold) and release it when cleared. Expired lots cannot be released.
+- **Transfers (managers):** **Inventory → Transfers**. The sending manager dispatches. The receiving location's manager records what arrived and any loss with a reason.
