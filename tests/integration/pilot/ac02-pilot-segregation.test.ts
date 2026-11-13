@@ -9,6 +9,7 @@ const DEMO_SCRIPTS = [
   'scripts/import/import-demo-history.ts',
   'scripts/demo/create-demo-users.ts',
   'scripts/demo/reset-demo.ts',
+  'scripts/perf/load-test.ts',
 ];
 
 describe('AC02 pilot database contains no synthetic data', () => {
@@ -61,6 +62,8 @@ describe('AC02 demo tooling cannot target the pilot', () => {
       DATABASE_URL: stack.dbUrl,
       SUPABASE_URL: stack.apiUrl,
       SUPABASE_SERVICE_ROLE_KEY: stack.serviceKey,
+      SUPABASE_ANON_KEY: stack.anonKey,
+      DEMO_CREDENTIALS_PATH: '/nonexistent/credentials.md',
       DEMO_PROJECT_REF_ALLOWLIST: 'local',
     });
     expect(r.status).toBe(2);
@@ -73,6 +76,8 @@ describe('AC02 demo tooling cannot target the pilot', () => {
       DATABASE_URL: stack.dbUrl,
       SUPABASE_URL: stack.apiUrl,
       SUPABASE_SERVICE_ROLE_KEY: stack.serviceKey,
+      SUPABASE_ANON_KEY: stack.anonKey,
+      DEMO_CREDENTIALS_PATH: '/nonexistent/credentials.md',
       DEMO_PROJECT_REF_ALLOWLIST: 'abcdefghijklmnopqrst',
     });
     expect(r.status).toBe(2);

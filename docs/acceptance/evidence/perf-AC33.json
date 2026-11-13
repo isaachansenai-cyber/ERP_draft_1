@@ -1,0 +1,256 @@
+{
+  "measured_at": "2026-11-13T21:20:23.186Z",
+  "environment": "local Supabase stack (Docker) on the build machine; API over HTTP to localhost; not a hosted project",
+  "sessions": 20,
+  "iterations_per_session": 12,
+  "wall_seconds": 15.3,
+  "volume": {
+    "inserted_lines": 0,
+    "total_lines": 50000
+  },
+  "data_volume": {
+    "operational_order_lines": 50000,
+    "operational_orders": 25000,
+    "historical_lines": 16501,
+    "movements": 126
+  },
+  "targets": {
+    "screen_queries": "95% within 2,000 ms",
+    "order_acceptance": "within 3,000 ms (p95 checked)"
+  },
+  "results": {
+    "screen_query_calls": 960,
+    "screen_queries_within_2s_pct": 100,
+    "screen_query_p95_ms": 480,
+    "order_acceptance_calls": 144,
+    "order_acceptance_p95_ms": 241,
+    "order_acceptance_max_ms": 404,
+    "unexpected_errors": 0,
+    "pass": true
+  },
+  "invariants": {
+    "bad_balances": 0,
+    "balances_not_matching_ledger": 0,
+    "completed_with_balance_due": 0,
+    "duplicate_pickup_codes": 0,
+    "leaked_reservations": 0
+  },
+  "operations": [
+    {
+      "op": "accept_order",
+      "kind": "accept",
+      "calls": 144,
+      "ok": 144,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 93,
+      "p95_ms": 241,
+      "max_ms": 404
+    },
+    {
+      "op": "complete_order_pickup",
+      "kind": "write",
+      "calls": 144,
+      "ok": 144,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 64,
+      "p95_ms": 239,
+      "max_ms": 429
+    },
+    {
+      "op": "get_demand_forecast",
+      "kind": "query",
+      "calls": 72,
+      "ok": 72,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 256,
+      "p95_ms": 592,
+      "max_ms": 681
+    },
+    {
+      "op": "get_demand_forecast_historical",
+      "kind": "query",
+      "calls": 24,
+      "ok": 24,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 312,
+      "p95_ms": 540,
+      "max_ms": 588
+    },
+    {
+      "op": "get_hours_report",
+      "kind": "query",
+      "calls": 72,
+      "ok": 72,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 10,
+      "p95_ms": 130,
+      "max_ms": 274
+    },
+    {
+      "op": "get_pos_menu",
+      "kind": "query",
+      "calls": 144,
+      "ok": 144,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 80,
+      "p95_ms": 230,
+      "max_ms": 460
+    },
+    {
+      "op": "get_replenishment_plan",
+      "kind": "query",
+      "calls": 72,
+      "ok": 72,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 412,
+      "p95_ms": 951,
+      "max_ms": 1185
+    },
+    {
+      "op": "get_sales_summary_30d",
+      "kind": "query",
+      "calls": 72,
+      "ok": 72,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 71,
+      "p95_ms": 221,
+      "max_ms": 384
+    },
+    {
+      "op": "get_sales_summary_all_30d",
+      "kind": "query",
+      "calls": 24,
+      "ok": 24,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 147,
+      "p95_ms": 236,
+      "max_ms": 545
+    },
+    {
+      "op": "get_sales_summary_day",
+      "kind": "query",
+      "calls": 48,
+      "ok": 48,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 93,
+      "p95_ms": 224,
+      "max_ms": 388
+    },
+    {
+      "op": "get_sales_summary_historical_184d",
+      "kind": "query",
+      "calls": 24,
+      "ok": 24,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 339,
+      "p95_ms": 505,
+      "max_ms": 551
+    },
+    {
+      "op": "get_serve_view",
+      "kind": "query",
+      "calls": 120,
+      "ok": 120,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 221,
+      "p95_ms": 462,
+      "max_ms": 684
+    },
+    {
+      "op": "get_stock_overview",
+      "kind": "query",
+      "calls": 72,
+      "ok": 72,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 32,
+      "p95_ms": 204,
+      "max_ms": 298
+    },
+    {
+      "op": "get_supplier_invoices",
+      "kind": "query",
+      "calls": 72,
+      "ok": 72,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 12,
+      "p95_ms": 92,
+      "max_ms": 146
+    },
+    {
+      "op": "kitchen_queue",
+      "kind": "query",
+      "calls": 144,
+      "ok": 144,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 62,
+      "p95_ms": 213,
+      "max_ms": 375
+    },
+    {
+      "op": "mark_order_ready",
+      "kind": "write",
+      "calls": 144,
+      "ok": 144,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 58,
+      "p95_ms": 205,
+      "max_ms": 410
+    },
+    {
+      "op": "record_tender",
+      "kind": "write",
+      "calls": 144,
+      "ok": 144,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 60,
+      "p95_ms": 241,
+      "max_ms": 520
+    },
+    {
+      "op": "start_order_preparation",
+      "kind": "write",
+      "calls": 103,
+      "ok": 103,
+      "business_refusals": 0,
+      "errors": 0,
+      "error_codes": [],
+      "p50_ms": 89,
+      "p95_ms": 260,
+      "max_ms": 479
+    }
+  ]
+}
