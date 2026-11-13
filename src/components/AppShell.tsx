@@ -34,7 +34,9 @@ const NAV: Array<{ to: string; label: string; end: boolean; managersOnly?: boole
   { to: '/pos', label: 'POS', end: false },
   { to: '/kitchen', label: 'Kitchen', end: false },
   { to: '/inventory', label: 'Inventory', end: false },
+  { to: '/returns', label: 'Refunds & returns', end: false },
   { to: '/purchasing', label: 'Purchasing', end: false, managersOnly: true },
+  { to: '/invoices', label: 'Supplier invoices', end: false, managersOnly: true },
   { to: '/settings', label: 'Settings & setup', end: false },
 ];
 

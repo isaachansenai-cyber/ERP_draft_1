@@ -77,6 +77,7 @@ function OrderCard({ order, locationId, isManager }: { order: KitchenOrder; loca
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
   const [approval, setApproval] = useState<Approval>(emptyApproval);
+  const [refundMethod, setRefundMethod] = useState('cash');
   const start = useRpcMutation('start_order_preparation', `start:${order.order_id}:${order.version}`, {
     onSuccess: refresh,
   });
@@ -90,7 +91,7 @@ function OrderCard({ order, locationId, isManager }: { order: KitchenOrder; loca
   const paid = order.tenders.reduce((s, t) => s + t.amount_cents, 0);
   const balance = order.total_cents - paid;
   const afterStart = order.status !== 'accepted';
-  const needsApproval = afterStart && !isManager;
+  const needsApproval = (afterStart || paid > 0) && !isManager;
   const asResult: OrderResult = { ...order, paid_cents: paid, balance_due_cents: balance };
 
   return (
@@ -211,6 +212,7 @@ function OrderCard({ order, locationId, isManager }: { order: KitchenOrder; loca
               p_expected_version: order.version,
               p_reason_code: reason,
               p_note: note || undefined,
+              p_refund_method: paid > 0 ? refundMethod : undefined,
               ...approvalArgs(approval, needsApproval),
             });
           }}
@@ -219,7 +221,24 @@ function OrderCard({ order, locationId, isManager }: { order: KitchenOrder; loca
             {afterStart
               ? 'Cooking has started: issued ingredients are recorded as waste. Nothing returns to stock. Manager approval required.'
               : 'Not started: reserved ingredients are released.'}
+            {paid > 0
+              ? ` A payment of ${formatCents(paid)} was recorded: the refund is recorded with the cancellation (handled outside the app; manager approval required).`
+              : ''}
           </p>
+          {paid > 0 ? (
+            <Field label="Refund paid back by" htmlFor={`cancel-refund-${order.order_id}`}>
+              <select
+                id={`cancel-refund-${order.order_id}`}
+                className={inputClass}
+                value={refundMethod}
+                onChange={(e) => setRefundMethod(e.target.value)}
+              >
+                <option value="cash">Cash (handled outside the app)</option>
+                <option value="card_external">Card terminal (external)</option>
+                <option value="other_external">Other external method</option>
+              </select>
+            </Field>
+          ) : null}
           <Field label="Reason" htmlFor={`cancel-reason-${order.order_id}`}>
             <select
               id={`cancel-reason-${order.order_id}`}
