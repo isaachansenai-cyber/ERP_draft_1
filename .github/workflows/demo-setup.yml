@@ -4,10 +4,11 @@
 # project ref is in DEMO_PROJECT_REF_ALLOWLIST and the database is (or becomes)
 # demo mode, so this can never run against the pilot.
 #
-# Environment "demo" needs:
-#   variables: VITE_SUPABASE_URL, DEMO_PROJECT_REF_ALLOWLIST (the demo ref)
-#   secrets:   DEMO_DATABASE_URL (Session pooler URI with the password),
-#              DEMO_SUPABASE_SERVICE_ROLE_KEY, DEMO_CREDENTIALS_PASSPHRASE
+# The demo project's URL and ref are public and set below. Repository (or
+# "demo" environment) secrets needed:
+#   DEMO_DATABASE_URL               Session pooler URI including the password
+#   DEMO_SUPABASE_SERVICE_ROLE_KEY  service-role (secret) key of the DEMO project
+#   DEMO_CREDENTIALS_PASSPHRASE     any passphrase you choose, to encrypt the demo passwords
 # The generated demo passwords never appear in logs: they are encrypted with the
 # passphrase and uploaded as a 1-day artifact (decrypt instructions in docs/demo/README.md).
 name: Demo project setup
@@ -23,8 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: demo
     env:
-      SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-      DEMO_PROJECT_REF_ALLOWLIST: ${{ vars.DEMO_PROJECT_REF_ALLOWLIST }}
+      SUPABASE_URL: https://qfvtpgxguaftrprxprof.supabase.co
+      DEMO_PROJECT_REF_ALLOWLIST: qfvtpgxguaftrprxprof
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
