@@ -101,7 +101,7 @@ select throws_ok($$select private.require_posting_enabled()$$, 'P0001', 'setup_g
   'operational posting is blocked until the final switch');
 select is(
   private.gate_precondition_failure((select g from public.pilot_setup_gates g where gate_key = 'opening_counts_posted' and scope_id = 'LOC-PRO'))->>'reason',
-  'workflow_not_yet_available', 'opening counts cannot be confirmed before the stock ledger exists');
+  'no_opening_count_posted', 'opening counts cannot be confirmed before an opening count is posted');
 
 -- ------------------------------------------------------------- idempotency
 select is(private.idem_begin('EMP-9001', 'test_rpc', '00000000-0000-0000-0000-0000000000a1'), null, 'first call proceeds');
