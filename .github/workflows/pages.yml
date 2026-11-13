@@ -1,0 +1,60 @@
+# Publish the frontend to GitHub Pages. MANUAL ONLY: an operator starts it from
+# the Actions tab and chooses the target project (demo or pilot).
+#
+# Required GitHub environment variables (Settings → Environments → demo / pilot):
+#   VITE_SUPABASE_URL       https://<ref>.supabase.co for that project
+#   VITE_SUPABASE_ANON_KEY  that project's publishable/anon key (public by design)
+# Never add a service-role key, secret key or database URL here.
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which Supabase project the build talks to'
+        required: true
+        type: choice
+        options: [demo, pilot]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build under the repository base path
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_DATA_MODE_HINT: ${{ inputs.target }}
+      - name: Refuse to publish if the bundle contains a secret (AC30)
+        run: npm run test:secrets -- --require-dist
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
