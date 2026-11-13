@@ -40,8 +40,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: https://qfvtpgxguaftrprxprof.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_D04zoHXkbSd0eFb5LtGW5g_8bXXufVb
           VITE_DATA_MODE_HINT: ${{ inputs.target }}
       - name: Refuse to publish if the bundle contains a secret (AC30)
         run: npm run test:secrets -- --require-dist
