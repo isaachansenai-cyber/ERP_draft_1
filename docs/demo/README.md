@@ -36,6 +36,6 @@ Then run, in order:
 
 To reset the demo to a reproducible state later, run `npm run demo:reset`. It wipes the demo data, re-imports everything and re-keys the demo users. The integration suite verifies that a reset rebuilds identical content.
 
-## What the demo does not contain yet
+## Demo opening stock
 
-The 126 synthetic opening-stock rows in `demo_seed.json` are validated, but not yet posted. Opening stock is posted through the stock ledger delivered in Milestone 2 (see ADR 0006).
+`npm run import:demo` posts the 126 synthetic opening-stock rows (42 per location) through the stock ledger: lots, opening movements, balances and weighted-average valuation. It is idempotent per location. The demo POS can therefore sell immediately. Demo payments are **simulated**: no money moves.

@@ -73,7 +73,15 @@ export interface DemoSeed {
     reorder_applicable: boolean;
     provenance: string;
   }>;
-  opening_inventory: unknown[];
+  opening_inventory: Array<{
+    location_id: string;
+    item_id: string;
+    quantity_base: number;
+    unit_cost: number;
+    internal_lot_id: string;
+    use_by_date: string | null;
+    provenance: string;
+  }>;
 }
 
 export function loadDemoSeed(path = DEMO_SEED_PATH): DemoSeed {
@@ -302,6 +310,28 @@ export async function importDemoSeed(client: pg.Client, seed = loadDemoSeed()) {
       );
     }
 
+    // Synthetic opening stock, posted once per location through the stock ledger
+    // (lots, movements, balances and weighted-average valuation).
+    for (const locationId of [...new Set(seed.opening_inventory.map((o) => o.location_id))].sort()) {
+      const exists = await client.query('select 1 from public.opening_counts where location_id = $1', [locationId]);
+      if (exists.rowCount) continue;
+      const lines = seed.opening_inventory
+        .filter((o) => o.location_id === locationId)
+        .map((o) => ({
+          item_id: o.item_id,
+          quantity_base: String(o.quantity_base),
+          unit_cost: String(o.unit_cost),
+          lot_code: o.internal_lot_id,
+          use_by_date: o.use_by_date,
+        }));
+      await client.query(
+        `select private.post_opening_count($1, $2::jsonb, null, 'synthetic_demo_opening', null,
+           'Synthetic demo opening stock (not a physical count)')`,
+        [locationId, JSON.stringify(lines)],
+      );
+      inserted.opening_stock_rows = (inserted.opening_stock_rows ?? 0) + lines.length;
+    }
+
     // Gates for the new retail supply links, then mark every gate synthetic-confirmed.
     count(
       'setup_gates',
@@ -329,10 +359,6 @@ export async function importDemoSeed(client: pg.Client, seed = loadDemoSeed()) {
       dataset_id: seed.dataset_id,
       inserted,
       changed,
-      deferred: {
-        opening_inventory_rows: seed.opening_inventory.length,
-        reason: 'Opening stock is posted through the stock ledger delivered in Milestone 2.',
-      },
       totals: await demoTotals(client),
     };
   } catch (err) {
@@ -351,7 +377,9 @@ export async function demoTotals(client: pg.Client) {
            (select count(*) from public.location_item_settings)::int as location_item_settings,
            (select count(*) from public.location_item_prices)::int as location_item_prices,
            (select count(*) from public.location_tax_rates)::int as location_tax_rates,
-           (select count(*) from public.pilot_setup_gates where status = 'open')::int as open_gates`);
+           (select count(*) from public.pilot_setup_gates where status = 'open')::int as open_gates,
+           (select count(*) from public.opening_count_lines)::int as opening_stock_rows,
+           (select count(*) from public.inventory_movements where movement_type = 'opening')::int as opening_movements`);
   return rows[0];
 }
 
