@@ -22,6 +22,11 @@ describe('AC30 secret scanner', () => {
     expect(findSecrets('SUPABASE_SERVICE_ROLE_KEY=\nNEXT=1')).toEqual([]);
   });
 
+  it('accepts a GitHub Actions secret reference but not a literal key', () => {
+    expect(findSecrets('SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY }}')).toEqual([]);
+    expect(findSecrets('SUPABASE_SERVICE_ROLE_KEY: abcdefghijklmnop1234')).toHaveLength(1);
+  });
+
   it('is stricter for the production bundle', () => {
     expect(findSecrets('role:"service_role"', { bundle: true })).toHaveLength(1);
     expect(findSecrets('import.meta.env.DATABASE_URL', { bundle: true })).toHaveLength(1);

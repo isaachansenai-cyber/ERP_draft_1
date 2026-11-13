@@ -49,7 +49,12 @@ export function findSecrets(text, { bundle = false } = {}) {
     if (!PLACEHOLDER.test(m[2])) findings.push('database connection string with an inline password');
   }
   for (const m of text.matchAll(/SUPABASE_(?:SERVICE_ROLE|SECRET)_KEY[ \t]*[=:][ \t]*["']?([^\s"'`\]]+)/g)) {
-    if (!PLACEHOLDER.test(m[1]) && !m[1].startsWith('process.env') && !m[1].startsWith('stack.')) {
+    if (
+      !PLACEHOLDER.test(m[1]) &&
+      !m[1].startsWith('process.env') &&
+      !m[1].startsWith('stack.') &&
+      !m[1].startsWith('${{')
+    ) {
       findings.push('service-role key assignment');
     }
   }
