@@ -1,6 +1,6 @@
 # Pilot setup runbook
 
-This covers what exists after Milestone 4. Milestone 5 adds the backup/restore drill and the final acceptance run. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
+This is the complete runbook for taking the pilot live (Milestones 1–5). Sections 1–11 set it up; section 12 is the go-live checklist. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
 
 ## 1. Create the pilot database (operator)
 
@@ -108,3 +108,27 @@ The simplified production model records standard ingredient consumption at kitch
 ## 11. Labels
 
 Print the item labels from **Labels** (filter by category if needed). Use the **Scanner test** field to check that each scanner reads the code back correctly before go-live.
+
+## 12. Go-live checklist (owner)
+
+Work top to bottom. Every gate is confirmed under **Settings & setup → Pilot setup** with an evidence note, and every confirmation is audited.
+
+| # | Step | Evidence for the gate note |
+|---|---|---|
+| 1 | Pilot project created, migrations pushed, security advisor clean ([`deployment.md`](deployment.md) §1) | Advisor screenshot date |
+| 2 | Source master imported; supplier contacts, pack sizes, costs, terms and lead times checked against real supplier documents → `supplier_master_verified`, `pack_conversions_verified` | Who checked, against which documents |
+| 3 | Recipes checked with the kitchen (portions, yields) → `recipes_verified` per dish. Record the simplified production limitation (§ "Known limitation" above) | Kitchen lead's name and date |
+| 4 | Tax rate and menu prices entered → `tax_rate_confirmed`, `menu_prices_confirmed` per location | Source of the tax rate |
+| 5 | Perishable list reviewed → `perishables_confirmed` | Who reviewed it |
+| 6 | Return policy saved → `return_policy_configured` | Window and restock decision |
+| 7 | Opening counts posted with use-by dates → `opening_counts_posted` per location | Count sheet reference |
+| 8 | Planning cost basis reviewed → `planning_inputs_confirmed` per location | S and H basis |
+| 9 | Staff invited and given roles; each person signs in once; managers set PINs → `roles_verified`. Before confirming, run the permission suite against the **local** stack (`npm run test:integration`) and spot-check in the pilot that an employee cannot see costs or another location | Test run date and the spot checks done |
+| 10 | Backup rehearsal: take a pilot backup, restore it into a **disposable** project, verify with `DRILL_MODE=compare` ([`backup-restore.md`](backup-restore.md)), delete the disposable project → `backup_restore_tested` | Elapsed restore time and the drill report |
+| 11 | Full acceptance suite run on the exact commit being deployed (`npm run typecheck && npm run lint && npm run test:unit && npm run test:db && npm run test:integration && npm run test:e2e -- --trace off`), with results matching `docs/acceptance/ACCEPTANCE_REPORT.md` → `acceptance_suite_passed` | Commit hash and pass counts |
+| 12 | Tablet check at each location: sign in on the shared tablet, scan five labels with the real scanner in **Labels → Scanner test** and at the POS (an `ING-` label must not add anything), and print one label sheet | Location, device, scanner model |
+| 13 | Manual outage fallback printed and briefed to each shift lead ([`manual-outage-fallback.md`](manual-outage-fallback.md)) | Briefing date |
+| 14 | Pilot frontend published with the pilot project's URL and key ([`deployment.md`](deployment.md) §2); banner reads **PILOT — real data**; deep-link reload works | Pages URL |
+| 15 | **Enable posting** (requires `roles_verified`, `backup_restore_tested`, `acceptance_suite_passed`) | — |
+
+After go-live, keep the nightly backup running and repeat the restore rehearsal after any major migration.

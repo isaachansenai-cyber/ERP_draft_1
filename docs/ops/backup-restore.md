@@ -16,7 +16,7 @@
 4. The disposable database is dropped.
 
 ```bash
-DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npx tsx scripts/ops/backup-restore-drill.ts
+DATABASE_URL=postgresql://postgres:<password>@127.0.0.1:54322/postgres npx tsx scripts/ops/backup-restore-drill.ts
 ```
 
 The latest result is in [`docs/acceptance/evidence/backup-restore-drill.md`](../acceptance/evidence/backup-restore-drill.md). It covered a demo database with 50,000 operational order lines plus history. The backup was 6.3 MB in about 1 s, the restore took about 3 s, and there were 0 mismatches. `tests/integration/demo/ac31-backup-restore.test.ts` repeats the drill on every integration run.
