@@ -173,7 +173,7 @@ The operator-only functions (`private.bootstrap_owner`, `private.enable_demo_mod
 
 ### Prerequisites
 
-- Node.js 20 or later, and npm
+- Node.js 22 or later (supabase-js needs the built-in WebSocket), and npm
 - Docker (for the local Supabase stack)
 - If `public.ecr.aws` is blocked on your network, set `SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io` before running `supabase` commands
 
