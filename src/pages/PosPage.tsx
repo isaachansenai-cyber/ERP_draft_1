@@ -314,6 +314,17 @@ export function PosPage() {
 
   function onScan(e: FormEvent) {
     e.preventDefault();
+    if (!menu.data) {
+      // A scan that arrives before the menu has loaded must not be reported as an unknown code.
+      setScanMessage(
+        menu.error
+          ? 'The menu could not be loaded. Nothing was added.'
+          : 'Menu still loading — scan again in a moment. Nothing was added.',
+      );
+      setScan('');
+      scanRef.current?.focus();
+      return;
+    }
     const result = interpretScan(scan, items);
     if (result.kind === 'add') {
       add(result.itemId);

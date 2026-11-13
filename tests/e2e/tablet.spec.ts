@@ -151,6 +151,8 @@ test('keyboard and scanner only: an order is taken, paid and found in the kitche
   await signIn(page, 'DEMO-LOC-SFO-EMP-1');
   await page.goto('./#/pos');
   const scan = page.getByLabel('Scan or type item code');
+  // Like a cashier, scan once the menu is on screen.
+  await expect(page.getByRole('button', { name: /barbecue sauce/i }).first()).toBeVisible();
   await scan.focus();
   // A keyboard-wedge scanner types the code and presses Enter.
   await page.keyboard.type('RET-001');
