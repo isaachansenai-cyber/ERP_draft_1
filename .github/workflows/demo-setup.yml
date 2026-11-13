@@ -1,0 +1,69 @@
+# Set up the hosted DEMO project: switch the freshly migrated, empty database to
+# demo mode, import the source master, demo seed and history, and create the 10
+# demo logins. MANUAL ONLY, demo environment only. The scripts refuse unless the
+# project ref is in DEMO_PROJECT_REF_ALLOWLIST and the database is (or becomes)
+# demo mode, so this can never run against the pilot.
+#
+# Environment "demo" needs:
+#   variables: VITE_SUPABASE_URL, DEMO_PROJECT_REF_ALLOWLIST (the demo ref)
+#   secrets:   DEMO_DATABASE_URL (Session pooler URI with the password),
+#              DEMO_SUPABASE_SERVICE_ROLE_KEY, DEMO_CREDENTIALS_PASSPHRASE
+# The generated demo passwords never appear in logs: they are encrypted with the
+# passphrase and uploaded as a 1-day artifact (decrypt instructions in docs/demo/README.md).
+name: Demo project setup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    environment: demo
+    env:
+      SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      DEMO_PROJECT_REF_ALLOWLIST: ${{ vars.DEMO_PROJECT_REF_ALLOWLIST }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prepare the connection (TLS on; the pooler certificate chain is Supabase's own CA)
+        run: |
+          url="${{ secrets.DEMO_DATABASE_URL }}"
+          case "$url" in *sslmode=*) ;; *\?*) url="$url&sslmode=no-verify" ;; *) url="$url?sslmode=no-verify" ;; esac
+          echo "::add-mask::$url"
+          echo "DATABASE_URL=$url" >> "$GITHUB_ENV"
+      - name: Current data mode
+        id: mode
+        run: |
+          mode=$(node -e "const pg=require('pg');(async()=>{const c=new pg.Client({connectionString:process.env.DATABASE_URL});await c.connect();const r=await c.query('select data_mode from public.app_settings');console.log(r.rows[0].data_mode);await c.end()})().catch(e=>{console.error(e.message);process.exit(1)})")
+          echo "data_mode=$mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+      - name: Switch the empty database to demo mode
+        if: steps.mode.outputs.mode == 'pilot'
+        run: npx tsx scripts/demo/init-demo-database.ts
+      - name: Import source master, demo seed and history (idempotent)
+        run: npm run import:demo
+      - name: Create or re-key the demo logins
+        run: npm run demo:users
+        env:
+          DEMO_CREDENTIALS_PATH: ${{ runner.temp }}/DEMO_CREDENTIALS.local.md
+      - name: Encrypt the credentials file
+        env:
+          PASSPHRASE: ${{ secrets.DEMO_CREDENTIALS_PASSPHRASE }}
+        run: |
+          test -n "$PASSPHRASE" || { echo "DEMO_CREDENTIALS_PASSPHRASE is not set"; exit 1; }
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:PASSPHRASE \
+            -in "$RUNNER_TEMP/DEMO_CREDENTIALS.local.md" -out "$RUNNER_TEMP/demo-credentials.md.enc"
+          shred -u "$RUNNER_TEMP/DEMO_CREDENTIALS.local.md"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-credentials-encrypted
+          path: ${{ runner.temp }}/demo-credentials.md.enc
+          retention-days: 1

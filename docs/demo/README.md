@@ -43,3 +43,13 @@ To reset the demo to a reproducible state later, run `npm run demo:reset`. It wi
 ## Demo return policy
 
 The demo seed also stores a synthetic return policy, labeled `synthetic_demo_policy`: a 30-day window, with unopened retail sauces allowed back into stock. Restocking a returned bottle restores its original issue cost and reverses that retail COGS once. Demo refunds and supplier payments are **simulated** records. The pilot never receives this policy: its owner sets one, and restocking is off by default.
+
+## Hosted demo via GitHub Actions
+
+When the demo project is connected to the repository (Supabase GitHub integration deploys the migrations on merge to `main`), run **Actions → Demo project setup**. It needs the `demo` environment configured as described at the top of `.github/workflows/demo-setup.yml`. The demo passwords are uploaded only as an **encrypted** artifact that expires after 1 day. To decrypt it:
+
+```bash
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in demo-credentials.md.enc -out DEMO_CREDENTIALS.local.md
+```
+
+Enter the passphrase you stored as `DEMO_CREDENTIALS_PASSPHRASE`. Keep the decrypted file private and never commit it.
