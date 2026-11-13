@@ -12,10 +12,13 @@ This is an internal restaurant ERP for the three Meats Around the World location
 | [`docs/spec/ERP_MVP_PRD.txt`](docs/spec/ERP_MVP_PRD.txt) | Product specification (PDF/DOCX copies alongside) |
 | [`docs/acceptance/Acceptance_Checklist.csv`](docs/acceptance/Acceptance_Checklist.csv) | The 34 launch checks with current status and test evidence |
 | [`docs/acceptance/PROGRESS.md`](docs/acceptance/PROGRESS.md) | Per-milestone progress notes, test counts, limitations |
-| [`docs/decisions/`](docs/decisions/) | ADRs 0001–0029 for choices the PRD leaves open |
+| [`docs/acceptance/ACCEPTANCE_REPORT.md`](docs/acceptance/ACCEPTANCE_REPORT.md) | Final acceptance report: every check, evidence, limitations, operator actions |
+| [`docs/decisions/`](docs/decisions/) | ADRs 0001–0032 for choices the PRD leaves open |
 | [`docs/ops/pilot-setup.md`](docs/ops/pilot-setup.md) | Pilot setup runbook |
 | [`docs/demo/README.md`](docs/demo/README.md) | Demo project setup and demo logins |
-| [`docs/ops/deployment.md`](docs/ops/deployment.md) | GitHub Pages and Supabase deployment notes |
+| [`docs/ops/deployment.md`](docs/ops/deployment.md) | Supabase projects, GitHub Pages workflow, CI, updates and rollback |
+| [`docs/ops/backup-restore.md`](docs/ops/backup-restore.md) | Backup/restore procedure, the tested local drill and the hosted rehearsal |
+| [`docs/ops/manual-outage-fallback.md`](docs/ops/manual-outage-fallback.md) | Paper process during an outage and re-entry afterwards |
 
 ---
 
@@ -27,9 +30,9 @@ This is an internal restaurant ERP for the three Meats Around the World location
 | 2 Complete restaurant transaction | Purchasing → partial receipt → stock → POS (reservation) → kitchen (issue) → ready → payment → pickup → dashboard | **Done** (see §9 for which acceptance checks fully pass) |
 | 3 Inventory & financial controls | Counts, waste, quarantine, transfers, refunds, returns/exchanges, supplier invoices/payments/credits | **Done** (every exit check passes; see §9) |
 | 4 Planning & staff tools | Forecast/MRP, ROP/EOQ, "What can we serve", labels, schedules, clocking, corrections, hours | **Done** (every exit check passes; see §9) |
-| 5 Pilot readiness | Full acceptance run, performance, backup/restore, deployment | Not started |
+| 5 Pilot readiness | Full acceptance run, tablet/keyboard/scanner pass, 20-session performance, backup/restore drill, deployment and ops docs, acceptance report | **Done** (33/34 PASS; AC30 needs live hosting, an operator action; see §9) |
 
-Acceptance checklist today: **30 PASS, 3 PARTIAL, 1 NOT_RUN** (all four open checks are Milestone 5 work). Each PARTIAL lists exactly what remains and which milestone delivers it.
+Acceptance checklist today: **33 PASS, 1 PARTIAL** (AC30: the live GitHub Pages check needs an operator to create the hosted projects and publish). See [`ACCEPTANCE_REPORT.md`](docs/acceptance/ACCEPTANCE_REPORT.md). Each PARTIAL lists exactly what remains and which milestone delivers it.
 
 ---
 
@@ -225,9 +228,11 @@ SUPABASE_SERVICE_ROLE_KEY=... npm run demo:users   # writes DEMO_CREDENTIALS.loc
 | `npm run typecheck`, `npm run lint` | Strict TypeScript and ESLint, app and tooling | clean |
 | `npm run test:unit` | Money mirror (largest remainder, half-up tax), cart and scanner rules, draft storage, error messages, request-key retry logic, tooling guards, secret scanner, Denver wall-clock conversion across DST | 39 |
 | `npm run test:db` | Resets the local DB, then runs pgTAP: grants, RLS, search_path, synthetic guards, immutability, recipes, units, gates, idempotency, PIN lockout, demo switch, **ledger** (first-expiry-first-out, availability, weighted average, constraints, append-only), **controls** (append-only money rows, transfer reconciliation, invoice-number uniqueness, refund planning), **staff and planning** (EOQ vector and guards, both DST transitions, shift/time overlap constraints, immutable corrections) | 138 |
-| `npm run test:integration` | Three suites as real local Auth users through the API: **pilot** (AC01, AC02, AC03, retries, gates), **pilot operations** (full pilot setup via RPCs, then AC04–AC27 except demo-only retail, and cross-location permissions), **demo** (AC02, AC34, demo logins, reset reproducibility, opening stock, retail and simulated payments, historical source, retail returns, restock and exchanges, history-based forecast and EOQ) | 47 + 71 + 26 |
-| `npm run test:e2e` | Production build under `/ERP_draft_1/`: sign-in, deep-link reload, role-scoped UI, offline, lost responses and expired sessions on real order RPCs, the POS → kitchen → pickup → dashboard flow, purchasing with a partial receipt, waste reports, counts, transfers, a retail return with restock, supplier invoice matching and payment, labels and scanner test with print styles, clocking and shifts, planning, What can we serve | 22 |
+| `npm run test:integration` | Three suites as real local Auth users through the API: **pilot** (AC01, AC02, AC03, retries, gates), **pilot operations** (full pilot setup via RPCs, then AC04–AC27 except demo-only retail, and cross-location permissions), **demo** (AC02, AC34, demo logins, reset reproducibility, opening stock, retail and simulated payments, historical source, retail returns, restock and exchanges, history-based forecast and EOQ, the backup/restore drill) | 49 + 71 + 28 |
+| `npm run test:e2e` | Production build under `/ERP_draft_1/`: sign-in, deep-link reload, role-scoped UI, offline, lost responses and expired sessions on real order RPCs, the POS → kitchen → pickup → dashboard flow, purchasing with a partial receipt, waste reports, counts, transfers, a retail return with restock, supplier invoice matching and payment, labels and scanner test with print styles, clocking and shifts, planning, What can we serve, CSV export vs screen and role limits, and the **tablet pass** (axe accessibility scan of every screen, 44 px targets, portrait layout, keyboard-and-scanner-only POS) | 29 |
 | `npm run build && npm run test:secrets -- --require-dist` | AC30 secret scan of the repo and bundle | pass |
+| `npm run perf:load` | AC33: 20 concurrent sessions over 50,000 order lines; p50/p95 per operation against the PRD targets; ledger invariants afterwards (demo databases only) | report in `docs/acceptance/evidence/` |
+| `npm run ops:drill` | AC31: full backup restored into a disposable local database and verified table by table and total by total; `DRILL_MODE=compare` verifies a hosted restore | report in `docs/acceptance/evidence/` |
 
 The integration and e2e suites **reset the local database** and refuse to run against anything but localhost.
 
@@ -240,7 +245,7 @@ VITE_BASE_PATH=/ERP_draft_1/ VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... np
 npm run test:secrets -- --require-dist
 ```
 
-Publish `dist/` to GitHub Pages. Hash routing means refreshes and deep links need no rewrite rules. Deployment is an operator action and **has not been performed**. See [`docs/ops/deployment.md`](docs/ops/deployment.md).
+Publish `dist/` to GitHub Pages, ideally with the included manual-only workflow (`.github/workflows/pages.yml`: choose `demo` or `pilot`; it runs the secret scan before publishing). Hash routing means refreshes and deep links need no rewrite rules. `.github/workflows/ci.yml` runs every check on pull requests. Deployment is an operator action and **has not been performed**. See [`docs/ops/deployment.md`](docs/ops/deployment.md).
 
 ---
 
@@ -253,6 +258,9 @@ supabase/tests/        pgTAP: 001 schema security, 002 invariants, 003 demo mode
 scripts/import/        import-source-master, import-demo-seed (posts demo opening stock), import-demo-history
 scripts/demo/          init-demo-database, create-demo-users, reset-demo (allowlist + demo-mode guarded)
 scripts/security/      scan-secrets (AC30)
+scripts/perf/          load-test (AC33, demo only)
+scripts/ops/           backup-restore-drill (AC31)
+.github/workflows/     pages (manual deploy), ci (pull requests)
 src/                   React app: auth/, components/ (shell, UI kit, approval fields, reason picker, error boundary),
                        lib/ (rpc, retry-safe mutation hook, money mirror, POS draft, formatting, reference data,
                        Denver time helpers),
@@ -260,7 +268,7 @@ src/                   React app: auth/, components/ (shell, UI kit, approval fi
 tests/unit|integration/{pilot,ops,demo}|e2e
 data/source/           source master data (pilot + demo)
 data/demo/             synthetic demo fixtures and history (demo only)
-docs/                  spec, acceptance, ops, demo, decisions
+docs/                  spec, acceptance (checklist, progress, report, evidence/), ops, demo, decisions
 ```
 
 ---
@@ -396,29 +404,60 @@ Exit checks AC21–AC28 all pass, and AC03 (permission enforcement) is now compl
   - e2e `staff-planning.spec.ts` (4).
 - **ADRs 0024–0029:** forecast method, MRP projection, EOQ settings and the planning gate, clocking rules, serve view, labels.
 
+### Milestone 5: Pilot readiness
+
+The exit criterion is that every check passes or is listed with a reason the operator accepts. 33 of 34 checks pass. AC30 is partial, because the live GitHub Pages check needs hosted projects that only the operator can create.
+
+- **Full acceptance run:** every suite was rerun from clean databases. Static checks are clean; unit 39, pgTAP 138, integration 49 + 71 + 28 and end-to-end 29 all pass, and the secret scan passes. The results are recorded in [`ACCEPTANCE_REPORT.md`](docs/acceptance/ACCEPTANCE_REPORT.md).
+- **Performance (AC33, ADR 0030):** `scripts/perf/load-test.ts` signs in **20 concurrent sessions** (10 demo role users × 2) over **50,000 operational order lines** plus the demo history. The volume rows are a labeled `synthetic_perf_volume` fixture in a demo database only. Sessions run role-shaped scenarios through the real API.
+  - Result on the local stack: **100% of 960 screen queries within 2 s** (p95 480 ms; slowest the 14-day ingredient projection at p95 951 ms) and **order acceptance p95 241 ms** (max 404 ms; target 3 s).
+  - Zero unexpected errors, and all ledger invariants hold afterwards. The report is in [`evidence/perf-AC33.md`](docs/acceptance/evidence/perf-AC33.md).
+- **Reporting (AC33):** a manager's CSV export equals the dashboard totals and shows only summary fields for other locations. Employees get no export and see no cost. Every report shows scope, source, local dates, currency and refresh time.
+- **Backup/restore (AC31, ADR 0031):** `scripts/ops/backup-restore-drill.ts` restores a full `pg_dump` into a disposable database.
+  - It verifies that **all 72 tables** (row counts and content hashes) and **15 ledger and document totals** are identical, and that in the copy the ledger reconciles, RLS is on, the append-only triggers fire and API roles cannot write.
+  - Backup 6.3 MB in about 1 s; restore about 3 s, against a 4-hour target.
+  - A regression test runs the drill on every demo integration run. The hosted procedure and `compare` mode are documented in [`docs/ops/backup-restore.md`](docs/ops/backup-restore.md).
+- **Tablet, keyboard and scanner pass (AC32, ADR 0032):** axe-core scans **26 manager and 10 employee screens**: zero serious or critical WCAG 2.1 A/AA findings after one fix (wide tables are now keyboard-focusable regions).
+  - Every control is at least 44 px; a portrait 820 px tablet needs no sideways scrolling.
+  - A POS order can be scanned (keyboard wedge), accepted, paid and completed with the keyboard alone, with a visible focus ring at every stop.
+- **Bundle:** route-level code splitting takes the main bundle from 743 kB to **463 kB (135 kB gzipped)**.
+- **Deployment and ops:**
+  - The manual-only Pages workflow (with the secret scan) and the CI workflow for pull requests.
+  - `deployment.md`: projects, Auth URLs, environments, updates, rollback.
+  - `manual-outage-fallback.md`: paper tickets, external payments, timesheets, and re-entry in a safe order after recovery.
+  - The **go-live checklist** in `pilot-setup.md`, mapping every gate to its evidence, including on-site tablet and scanner checks and the hosted restore rehearsal.
+- **ADRs 0030–0032:** performance measurement, restore drill, tablet pass and code splitting.
+
 ---
 
-## 9. Acceptance status after Milestone 4
+## 9. Final acceptance status
 
 | Check | Status | Note |
 |---|---|---|
-| AC01–AC29, AC34 | PASS | Milestones 1–4 (AC03 completed in Milestone 4) |
-| AC30 | PARTIAL | Secret scan and base-path build pass; live GitHub Pages is an operator action (Milestone 5) |
-| AC31 | PARTIAL | Immutability passes; the backup/restore drill is Milestone 5 |
-| AC32 | PARTIAL | Every screen exists with full states; the tablet, keyboard-focus and scanner-hardware pass is Milestone 5 |
-| AC33 | NOT_RUN | 20-session performance measurement (Milestone 5) |
+| AC01–AC29, AC31–AC34 | PASS | Test evidence for each in the checklist and the acceptance report |
+| AC30 | PARTIAL | Secret scan passes and base-path login and deep-link reload work on a local static preview. Live GitHub Pages needs hosted Supabase projects and an operator to publish ([`deployment.md`](docs/ops/deployment.md)) |
+
+**Operator actions before go-live** (details in the acceptance report):
+- publish and recheck AC30 on the live URL;
+- rehearse the hosted restore into a disposable project;
+- rerun the performance test against the hosted demo;
+- check tablets, scanners and label printers on site;
+- confirm every pilot gate with real values;
+- confirm the ADR decisions listed in the report.
 
 ---
 
 ## 10. Known limitations (current)
 
+- **Simplified production model:** standard consumption at kitchen start; no batches, yields or prep stock (PRD §2).
 - **Recipe versions:** there is no UI to create new ones yet. Recipes are the source version 1.
 - **Same-day orders:** there are no future-dated pickups, so forecast netting applies to the current business date only.
-- **Planning:** a day without a forecast counts as zero demand and is flagged, never invented. Shelf life is never inferred: only the manager's max-cover-days caps quantities.
-- **Returns:** refunds and returns are processed at the selling location only. An exchange with a balance still due leaves the replacement `ready` until it is collected.
+- **Planning:** a day without a forecast counts as zero demand and is flagged, never invented. Shelf life is never inferred.
+- **Returns:** refunds and returns are processed at the selling location only. An exchange with a balance due waits on the kitchen screen.
 - **Transfers:** a draft transfer reserves nothing, so dispatch can still fail on a shortage.
 - **Supplier invoices:** receipt matching covers the last 180 days; there is no statement reconciliation or aging export.
-- **Staff time:** schedules and time records only. No payroll, overtime rules, shift swaps or notifications.
+- **Staff time:** not payroll; no shift swaps or notifications.
+- **Outages:** there is no offline mode by design. Paper orders entered after recovery post on the entry date.
 - **Kitchen refresh:** the queue refreshes by polling every 10 s rather than Realtime (ADR 0016).
-- **Bundle size:** about 743 kB (205 kB gzipped). Route-level code-splitting is a Milestone 5 candidate.
-- **Not done:** live GitHub Pages deployment, hosted Supabase projects, the backup/restore drill, the performance measurement and the tablet/scanner hardware pass (Milestone 5 / operator direction).
+- **Measured locally:** performance and the restore drill ran on the local stack; hosted reruns are operator steps.
+- **Workflows:** the CI and Pages workflows are prepared but have not run on GitHub yet.

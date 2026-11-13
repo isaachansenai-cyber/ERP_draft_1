@@ -236,3 +236,53 @@ Checklist now: **30 PASS, 3 PARTIAL (AC30, AC31, AC32), 1 NOT_RUN (AC33).** All 
 - **Labels:** verified with simulated keyboard-wedge input. Physical scanner hardware is part of the Milestone 5 tablet pass.
 - **Bundle size:** about 743 kB (205 kB gzipped). Code-splitting by route is a Milestone 5 candidate.
 - **Milestone 5 still open:** full acceptance run, tablet/keyboard/scanner pass, 20-session performance (AC33), backup/restore drill (AC31), deployment docs and the pilot runbook, `ACCEPTANCE_REPORT.md`.
+
+## Milestone 5 — Pilot readiness (2026-11-13)
+
+**Exit criterion (CLAUDE.md §10):** every AC is PASS, or is listed with a reason the operator must accept. Result: **33 PASS, 1 PARTIAL**. The final report is [`ACCEPTANCE_REPORT.md`](ACCEPTANCE_REPORT.md).
+
+| Check | Status | Notes |
+|---|---|---|
+| AC31 Audit and restore | PASS | Local drill: full dump restored into a disposable database; 72 tables and 15 totals identical; ledger reconciles; RLS, append-only and grant controls intact. Hosted rehearsal is an operator step |
+| AC32 Screen completeness | PASS | axe finds no serious/critical WCAG 2.1 A/AA problems on 36 screen scans; 44 px targets; portrait layout; keyboard-and-scanner-only POS flow with visible focus |
+| AC33 Performance and reporting | PASS | 20 sessions over 50,000 order lines: 100% of screen queries ≤ 2 s (p95 480 ms), acceptance p95 241 ms; CSV equals the screen and keeps role limits |
+| AC30 Hosting and secrets | **PARTIAL** | Secrets pass and the base path works on a local static preview. A live GitHub Pages check needs hosted projects and operator direction. The **operator must accept this, or direct the deployment** |
+
+### Test evidence (final full run)
+
+| Suite | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, Prettier check, `supabase db lint --level warning` | clean |
+| `npm run test:unit` | 39 passed |
+| `npm run test:db` | 138 passed |
+| `npm run test:integration` | pilot 49 (2 new: the perf script refuses pilot), pilot operations 71, demo 28 (2 new: restore drill) — all passed |
+| `npm run build && npm run test:secrets -- --require-dist` | passed |
+| `npm run test:e2e` | 29 passed (new: `tablet.spec.ts`, 4; `reports.spec.ts`, 3) |
+| `npm run perf:load` | targets met (`evidence/perf-AC33.md`) |
+| `npm run ops:drill` | PASS (`evidence/backup-restore-drill.md`) |
+
+### Delivered
+
+- **Tools:** `scripts/perf/load-test.ts` (20-session load and latency report with a labeled volume fixture; refuses pilot databases) and `scripts/ops/backup-restore-drill.ts` (local drill and a hosted `compare` mode).
+- **Evidence:** `docs/acceptance/evidence/perf-AC33.{md,json}` and `backup-restore-drill.{md,json}`, containing counts, timings and hashes only (no data rows).
+- **Tablet pass:** an axe accessibility scan of every screen for both roles, touch-target checks, portrait layout and a keyboard-only POS flow.
+- **Fixes from the pass:** wide tables are now keyboard-focusable labeled regions. Route-level code splitting takes the main bundle from 743 kB to 463 kB.
+- **Ops documents:** `backup-restore.md` (local drill and hosted procedure), `manual-outage-fallback.md`, `deployment.md` (projects, Pages workflow, CI, updates and rollback), and the go-live checklist in `pilot-setup.md`.
+- **Workflows:** `.github/workflows/pages.yml` (manual-only deploy with a secret scan) and `ci.yml` (pull requests: static checks, then the full local-stack suites). Neither has run yet.
+- **Report:** `ACCEPTANCE_REPORT.md`.
+
+### Bugs found and fixed
+
+- The dashboard's horizontally scrolling table was not reachable by keyboard (axe `scrollable-region-focusable`). All wide tables are now focusable labeled regions.
+- The secret scanner caught an example connection string with an inline password in the new backup doc. It now uses a placeholder. The guard worked as designed.
+- The drill script's integrity result type failed `typecheck` in one commit; the next commit fixed it.
+
+### Decisions (ADRs 0030–0032)
+
+- 0030 How performance was measured: volume fixture, role scenarios, local stack.
+- 0031 The restore drill on a disposable local database, and what "intact" means.
+- 0032 The automated tablet pass and route-level code splitting.
+
+### Open items for the operator
+
+See "What the operator must do or accept" in `ACCEPTANCE_REPORT.md`: live hosting (AC30), the hosted restore rehearsal, the hosted performance rerun, on-site device checks, real operating values for every gate, and the ADR decisions to confirm.
