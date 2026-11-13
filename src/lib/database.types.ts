@@ -69,6 +69,32 @@ isOneToOne: false
       referencedColumns: ["location_id"]
     }
                   ]
+                },"break_intervals": {
+                  Row: {
+                    "break_id": string,"created_at": string,"ends_at": string | null,"recorded_by": string,"starts_at": string,"time_entry_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "break_id"?: string,"created_at"?: string,"ends_at"?: string | null,"recorded_by": string,"starts_at": string,"time_entry_id": string
+                  }
+                  Update: {
+                    "break_id"?: string,"created_at"?: string,"ends_at"?: string | null,"recorded_by"?: string,"starts_at"?: string,"time_entry_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "break_intervals_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "break_intervals_time_entry_id_fkey"
+      columns: ["time_entry_id"]
+isOneToOne: false
+      referencedRelation: "time_entries"
+      referencedColumns: ["time_entry_id"]
+    }
+                  ]
                 },"cogs_reversals": {
                   Row: {
                     "business_date": string,"cost": number,"custody_id": string,"location_id": string,"order_id": string,"recorded_at": string
@@ -177,6 +203,38 @@ isOneToOne: false
 isOneToOne: true
       referencedRelation: "returns"
       referencedColumns: ["return_id"]
+    }
+                  ]
+                },"forecast_overrides": {
+                  Row: {
+                    "business_date": string,"is_sellable": boolean,"item_id": string,"location_id": string,"override_id": string,"quantity": number,"reason": string,"request_key": string | null,"set_at": string,"set_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_date": string,"is_sellable"?: boolean,"item_id": string,"location_id": string,"override_id"?: string,"quantity": number,"reason": string,"request_key"?: string | null,"set_at"?: string,"set_by": string
+                  }
+                  Update: {
+                    "business_date"?: string,"is_sellable"?: boolean,"item_id"?: string,"location_id"?: string,"override_id"?: string,"quantity"?: number,"reason"?: string,"request_key"?: string | null,"set_at"?: string,"set_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "forecast_overrides_item_id_is_sellable_fkey"
+      columns: ["item_id","is_sellable"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id","is_sellable"]
+    },{
+      foreignKeyName: "forecast_overrides_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "forecast_overrides_set_by_fkey"
+      columns: ["set_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
     }
                   ]
                 },"historical_sales_lines": {
@@ -501,14 +559,14 @@ isOneToOne: false
                   ]
                 },"location_item_settings": {
                   Row: {
-                    "annual_holding_cost_per_base": number | null,"approved_at": string | null,"approved_by": string | null,"daily_demand_example_base": number | null,"holding_cost_unit": string,"item_id": string,"location_id": string,"max_cover_days": number | null,"ordering_cost_cents": number | null,"ordering_cost_unit": string,"provenance": string,"quantity_unit_basis": string,"reorder_applicable": boolean,"reorder_point_base": number | null,"safety_stock_base": number | null,"updated_at": string
+                    "annual_demand_override_base": number | null,"annual_demand_unit": string,"annual_holding_cost_per_base": number | null,"approved_at": string | null,"approved_by": string | null,"daily_demand_example_base": number | null,"holding_cost_unit": string,"item_id": string,"location_id": string,"max_cover_days": number | null,"ordering_cost_cents": number | null,"ordering_cost_unit": string,"provenance": string,"quantity_unit_basis": string,"reorder_applicable": boolean,"reorder_point_base": number | null,"safety_stock_base": number | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "annual_holding_cost_per_base"?: number | null,"approved_at"?: string | null,"approved_by"?: string | null,"daily_demand_example_base"?: number | null,"holding_cost_unit"?: string,"item_id": string,"location_id": string,"max_cover_days"?: number | null,"ordering_cost_cents"?: number | null,"ordering_cost_unit"?: string,"provenance": string,"quantity_unit_basis"?: string,"reorder_applicable": boolean,"reorder_point_base"?: number | null,"safety_stock_base"?: number | null,"updated_at"?: string
+                    "annual_demand_override_base"?: number | null,"annual_demand_unit"?: string,"annual_holding_cost_per_base"?: number | null,"approved_at"?: string | null,"approved_by"?: string | null,"daily_demand_example_base"?: number | null,"holding_cost_unit"?: string,"item_id": string,"location_id": string,"max_cover_days"?: number | null,"ordering_cost_cents"?: number | null,"ordering_cost_unit"?: string,"provenance": string,"quantity_unit_basis"?: string,"reorder_applicable": boolean,"reorder_point_base"?: number | null,"safety_stock_base"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "annual_holding_cost_per_base"?: number | null,"approved_at"?: string | null,"approved_by"?: string | null,"daily_demand_example_base"?: number | null,"holding_cost_unit"?: string,"item_id"?: string,"location_id"?: string,"max_cover_days"?: number | null,"ordering_cost_cents"?: number | null,"ordering_cost_unit"?: string,"provenance"?: string,"quantity_unit_basis"?: string,"reorder_applicable"?: boolean,"reorder_point_base"?: number | null,"safety_stock_base"?: number | null,"updated_at"?: string
+                    "annual_demand_override_base"?: number | null,"annual_demand_unit"?: string,"annual_holding_cost_per_base"?: number | null,"approved_at"?: string | null,"approved_by"?: string | null,"daily_demand_example_base"?: number | null,"holding_cost_unit"?: string,"item_id"?: string,"location_id"?: string,"max_cover_days"?: number | null,"ordering_cost_cents"?: number | null,"ordering_cost_unit"?: string,"provenance"?: string,"quantity_unit_basis"?: string,"reorder_applicable"?: boolean,"reorder_point_base"?: number | null,"safety_stock_base"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1431,6 +1489,38 @@ isOneToOne: false
       referencedColumns: ["code"]
     }
                   ]
+                },"shifts": {
+                  Row: {
+                    "cancel_reason": string | null,"cancelled_at": string | null,"created_at": string,"created_by": string,"employee_id": string,"ends_at": string,"location_id": string,"note": string | null,"published_at": string | null,"shift_id": string,"starts_at": string,"status": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancel_reason"?: string | null,"cancelled_at"?: string | null,"created_at"?: string,"created_by": string,"employee_id": string,"ends_at": string,"location_id": string,"note"?: string | null,"published_at"?: string | null,"shift_id"?: string,"starts_at": string,"status"?: string,"version"?: number
+                  }
+                  Update: {
+                    "cancel_reason"?: string | null,"cancelled_at"?: string | null,"created_at"?: string,"created_by"?: string,"employee_id"?: string,"ends_at"?: string,"location_id"?: string,"note"?: string | null,"published_at"?: string | null,"shift_id"?: string,"starts_at"?: string,"status"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shifts_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "shifts_employee_id_fkey"
+      columns: ["employee_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "shifts_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    }
+                  ]
                 },"stock_balances": {
                   Row: {
                     "condition": string,"item_id": string,"location_id": string,"lot_id": string,"on_hand": number,"reserved": number,"updated_at": string
@@ -1815,6 +1905,64 @@ isOneToOne: false
       referencedColumns: ["employee_id"]
     }
                   ]
+                },"time_corrections": {
+                  Row: {
+                    "corrected_at": string,"corrected_by": string,"correction_id": string,"new_breaks": NonNullable<Json>,"new_clock_in_at": string,"new_clock_out_at": string | null,"original_breaks": NonNullable<Json>,"original_clock_in_at": string,"original_clock_out_at": string | null,"reason": string,"request_key": string | null,"time_entry_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "corrected_at"?: string,"corrected_by": string,"correction_id"?: string,"new_breaks": NonNullable<Json>,"new_clock_in_at": string,"new_clock_out_at"?: string | null,"original_breaks": NonNullable<Json>,"original_clock_in_at": string,"original_clock_out_at"?: string | null,"reason": string,"request_key"?: string | null,"time_entry_id": string
+                  }
+                  Update: {
+                    "corrected_at"?: string,"corrected_by"?: string,"correction_id"?: string,"new_breaks"?: NonNullable<Json>,"new_clock_in_at"?: string,"new_clock_out_at"?: string | null,"original_breaks"?: NonNullable<Json>,"original_clock_in_at"?: string,"original_clock_out_at"?: string | null,"reason"?: string,"request_key"?: string | null,"time_entry_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "time_corrections_corrected_by_fkey"
+      columns: ["corrected_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "time_corrections_time_entry_id_fkey"
+      columns: ["time_entry_id"]
+isOneToOne: false
+      referencedRelation: "time_entries"
+      referencedColumns: ["time_entry_id"]
+    }
+                  ]
+                },"time_entries": {
+                  Row: {
+                    "clock_in_at": string,"clock_out_at": string | null,"corrected": boolean,"created_at": string,"employee_id": string,"location_id": string,"request_key": string | null,"shift_id": string | null,"time_entry_id": string,"unscheduled": boolean,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "clock_in_at": string,"clock_out_at"?: string | null,"corrected"?: boolean,"created_at"?: string,"employee_id": string,"location_id": string,"request_key"?: string | null,"shift_id"?: string | null,"time_entry_id"?: string,"unscheduled": boolean,"version"?: number
+                  }
+                  Update: {
+                    "clock_in_at"?: string,"clock_out_at"?: string | null,"corrected"?: boolean,"created_at"?: string,"employee_id"?: string,"location_id"?: string,"request_key"?: string | null,"shift_id"?: string | null,"time_entry_id"?: string,"unscheduled"?: boolean,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "time_entries_employee_id_fkey"
+      columns: ["employee_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "time_entries_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "time_entries_shift_id_fkey"
+      columns: ["shift_id"]
+isOneToOne: false
+      referencedRelation: "shifts"
+      referencedColumns: ["shift_id"]
+    }
+                  ]
                 },"transfer_lines": {
                   Row: {
                     "dispatch_movement_id": string,"dispatched_qty": number,"in_transit_qty": number | null,"item_id": string,"lost_qty": number,"received_qty": number,"source_lot_id": string,"transfer_id": string,"transfer_line_id": string,"unit_cost": number,"use_by_date": string | null
@@ -2057,11 +2205,17 @@ isOneToOne: false
 "accept_order":
 { Args: { "p_approver_employee_id"?: string,"p_customer_id"?: string,"p_discount_percent"?: number,"p_discount_reason"?: string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_pickup_name"?: string,"p_pin"?: string,"p_request_key": string }; Returns: Json
                            },
+"calculate_eoq":
+{ Args: { "p_annual_demand": number,"p_holding_cost": number,"p_max_cover_days"?: number,"p_min_order_base"?: number,"p_ordering_cost_cents": number,"p_pack_base_qty"?: number }; Returns: Json
+                           },
 "cancel_order":
 { Args: { "p_approver_employee_id"?: string,"p_expected_version": number,"p_external_reference"?: string,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_refund_method"?: string,"p_request_key": string }; Returns: Json
                            },
 "cancel_purchase_order_balance":
 { Args: { "p_expected_version": number,"p_po_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"cancel_shift":
+{ Args: { "p_expected_version": number,"p_reason": string,"p_request_key": string,"p_shift_id": string }; Returns: Json
                            },
 "cancel_stock_count":
 { Args: { "p_count_id": string,"p_expected_version": number,"p_request_key": string }; Returns: Json
@@ -2072,11 +2226,20 @@ isOneToOne: false
 "change_stock_condition":
 { Args: { "p_lot_id": string,"p_note"?: string,"p_quantity": number,"p_reason_code"?: string,"p_request_key": string,"p_to_condition": string }; Returns: Json
                            },
+"clock_in":
+{ Args: { "p_location_id": string,"p_request_key": string }; Returns: Json
+                           },
+"clock_out":
+{ Args: { "p_request_key": string }; Returns: Json
+                           },
 "complete_order_pickup":
 { Args: { "p_expected_version": number,"p_order_id": string,"p_request_key": string }; Returns: Json
                            },
 "confirm_setup_gate":
 { Args: { "p_evidence_note": string,"p_gate_id": string,"p_request_key": string }; Returns: Json
+                           },
+"correct_time_entry":
+{ Args: { "p_breaks"?: Json,"p_clock_in_at": string,"p_clock_out_at": string,"p_expected_version": number,"p_reason": string,"p_request_key": string,"p_time_entry_id": string }; Returns: Json
                            },
 "create_customer":
 { Args: { "p_display_name": string,"p_email"?: string,"p_location_id": string,"p_phone"?: string,"p_request_key": string }; Returns: Json
@@ -2086,6 +2249,9 @@ isOneToOne: false
                            },
 "create_purchase_order":
 { Args: { "p_expected_date": string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_request_key": string,"p_supplier_id": string }; Returns: Json
+                           },
+"create_shift":
+{ Args: { "p_employee_id": string,"p_ends_at": string,"p_location_id": string,"p_note"?: string,"p_request_key": string,"p_starts_at": string }; Returns: Json
                            },
 "create_supplier_invoice":
 { Args: { "p_due_date"?: string,"p_invoice_date": string,"p_invoice_number": string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_other_cents"?: number,"p_request_key": string,"p_supplier_id": string,"p_tax_cents"?: number }; Returns: Json
@@ -2108,10 +2274,25 @@ isOneToOne: false
 "enable_posting":
 { Args: { "p_evidence_note": string,"p_request_key": string }; Returns: Json
                            },
+"end_break":
+{ Args: { "p_request_key": string }; Returns: Json
+                           },
+"get_demand_forecast":
+{ Args: { "p_as_of"?: string,"p_days"?: number,"p_location_id": string,"p_source"?: string }; Returns: Json
+                           },
+"get_eoq_inputs":
+{ Args: { "p_item_id": string,"p_location_id": string,"p_source"?: string }; Returns: Json
+                           },
+"get_hours_report":
+{ Args: { "p_from": string,"p_location_id": string,"p_to": string }; Returns: Json
+                           },
 "get_matchable_receipt_lines":
 { Args: { "p_location_id": string,"p_supplier_id": string }; Returns: Json
                            },
 "get_my_context":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"get_my_time_status":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "get_order_for_return":
@@ -2123,11 +2304,17 @@ isOneToOne: false
 "get_public_app_mode":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"get_replenishment_plan":
+{ Args: { "p_days"?: number,"p_location_id": string,"p_source"?: string }; Returns: Json
+                           },
 "get_request_result":
 { Args: { "p_request_key": string }; Returns: Json
                            },
 "get_sales_summary":
 { Args: { "p_from": string,"p_location_ids"?: (string)[],"p_source"?: string,"p_to": string }; Returns: Json
+                           },
+"get_serve_view":
+{ Args: { "p_location_id": string }; Returns: Json
                            },
 "get_stock_overview":
 { Args: { "p_location_id": string }; Returns: Json
@@ -2145,6 +2332,9 @@ isOneToOne: false
 { Args: { "p_email": string,"p_employee_id": string,"p_request_key": string }; Returns: Json
                            },
 "list_location_approvers":
+{ Args: { "p_location_id": string }; Returns: Json
+                           },
+"list_location_staff":
 { Args: { "p_location_id": string }; Returns: Json
                            },
 "list_return_custody":
@@ -2170,6 +2360,9 @@ isOneToOne: false
                            },
 "process_return":
 { Args: { "p_approver_employee_id"?: string,"p_external_reference"?: string,"p_lines": Json,"p_note"?: string,"p_order_id": string,"p_pin"?: string,"p_reason_code": string,"p_refund_method"?: string,"p_request_key": string }; Returns: Json
+                           },
+"publish_shift":
+{ Args: { "p_expected_version": number,"p_request_key": string,"p_shift_id": string }; Returns: Json
                            },
 "receive_purchase_order":
 { Args: { "p_acknowledge_over_receipt"?: boolean,"p_expected_version": number,"p_lines": Json,"p_note"?: string,"p_packing_slip_ref": string,"p_po_id": string,"p_request_key": string }; Returns: Json
@@ -2210,8 +2403,14 @@ isOneToOne: false
 "set_employee_active":
 { Args: { "p_active": boolean,"p_employee_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
                            },
+"set_forecast_override":
+{ Args: { "p_business_date": string,"p_item_id": string,"p_location_id": string,"p_quantity": number,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
 "set_location_item_price":
 { Args: { "p_effective_from": string,"p_item_id": string,"p_location_id": string,"p_price_cents": number,"p_request_key": string }; Returns: Json
+                           },
+"set_location_item_settings":
+{ Args: { "p_annual_demand_override"?: number,"p_holding_cost": number,"p_item_id": string,"p_location_id": string,"p_max_cover_days"?: number,"p_ordering_cost_cents": number,"p_reorder_point": number,"p_request_key": string,"p_safety_stock": number }; Returns: Json
                            },
 "set_location_tax_rate":
 { Args: { "p_effective_from": string,"p_location_id": string,"p_rate": number,"p_request_key": string }; Returns: Json
@@ -2231,6 +2430,12 @@ isOneToOne: false
 "set_supplier_terms":
 { Args: { "p_payment_terms_days": number,"p_request_key": string,"p_supplier_id": string }; Returns: Json
                            },
+"simulate_menu_mix":
+{ Args: { "p_location_id": string,"p_mix": Json }; Returns: Json
+                           },
+"start_break":
+{ Args: { "p_request_key": string }; Returns: Json
+                           },
 "start_order_preparation":
 { Args: { "p_estimated_ready_at"?: string,"p_expected_version": number,"p_order_id": string,"p_request_key": string }; Returns: Json
                            },
@@ -2242,6 +2447,9 @@ isOneToOne: false
                            },
 "submit_waste_report":
 { Args: { "p_lines": Json,"p_location_id": string,"p_note"?: string,"p_reason_code": string,"p_request_key": string }; Returns: Json
+                           },
+"update_shift":
+{ Args: { "p_ends_at": string,"p_expected_version": number,"p_note"?: string,"p_reason"?: string,"p_request_key": string,"p_shift_id": string,"p_starts_at": string }; Returns: Json
                            },
 "void_supplier_invoice":
 { Args: { "p_expected_version": number,"p_invoice_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
