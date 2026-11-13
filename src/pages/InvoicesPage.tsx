@@ -4,7 +4,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError } from '../components/ui';
+import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError, ScrollRegion } from '../components/ui';
 import { formatCents, formatDateTime, parseDollarsToCents } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { supabase } from '../lib/supabase';
@@ -240,7 +240,7 @@ function NewInvoice({ locationId, today, onDone }: { locationId: string; today: 
         ) : receipts.data.length === 0 ? (
           <Empty>No receipts from this supplier at this location in the last 180 days.</Empty>
         ) : (
-          <div className="overflow-x-auto">
+          <ScrollRegion label="Supplier invoices">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-slate-400 text-left">
@@ -301,7 +301,7 @@ function NewInvoice({ locationId, today, onDone }: { locationId: string; today: 
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         )
       ) : null}
       {charges.map((c, idx) => (
@@ -850,7 +850,7 @@ export function InvoicesPage() {
             {formatCents(outstanding.filter((r) => r.overdue).reduce((s, r) => s + r.balance_cents, 0))} · as of{' '}
             {list.data.business_date} · refreshed {formatDateTime(list.data.refreshed_at)} · USD
           </p>
-          <div className="overflow-x-auto">
+          <ScrollRegion label="Supplier invoices">
             <table className="w-full border-collapse bg-white text-sm">
               <thead>
                 <tr className="border-b border-slate-400 text-left">
@@ -895,7 +895,7 @@ export function InvoicesPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         </>
       )}
       {selected ? <InvoiceDetailPanel key={selected} invoiceId={selected} onChanged={refresh} /> : null}

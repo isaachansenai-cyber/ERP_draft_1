@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { Button, Empty, Field, inputClass, Loading, Notice, QueryError } from '../components/ui';
+import { Button, Empty, Field, inputClass, Loading, Notice, QueryError, ScrollRegion } from '../components/ui';
 import { formatCents, formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 
@@ -245,7 +245,7 @@ export function DashboardPage() {
           {summary.data.locations.length === 0 ? (
             <Empty>No locations in scope.</Empty>
           ) : (
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Sales summary by location">
               <table className="w-full border-collapse bg-white text-sm">
                 <thead>
                   <tr className="border-b border-slate-400 text-left">
@@ -279,7 +279,7 @@ export function DashboardPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           )}
           <Notice tone="info">
             Supplier balances, worked hours and the waste-report detail join this dashboard in Milestones 3–4.

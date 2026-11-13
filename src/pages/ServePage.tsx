@@ -4,7 +4,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { Badge, Button, Field, inputClass, Loading, Notice, QueryError } from '../components/ui';
+import { Badge, Button, Field, inputClass, Loading, Notice, QueryError, ScrollRegion } from '../components/ui';
 import { formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { qty } from './InventoryPage';
@@ -110,7 +110,7 @@ function MenuMix({ locationId }: { locationId: string }) {
             Preview only. A proposed replenishment becomes an order only when saved from Planning → Ingredient
             projection or Purchasing.
           </Notice>
-          <div className="overflow-x-auto">
+          <ScrollRegion label="Menu-mix results">
             <table className="w-full border-collapse text-sm" data-testid="mix-table">
               <thead>
                 <tr className="border-b border-slate-400 text-left">
@@ -145,7 +145,7 @@ function MenuMix({ locationId }: { locationId: string }) {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         </>
       ) : null}
     </section>

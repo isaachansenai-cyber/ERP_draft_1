@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError } from '../components/ui';
+import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError, ScrollRegion } from '../components/ui';
 import { formatCents, formatDateTime, parseDollarsToCents } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { supabase } from '../lib/supabase';
@@ -165,7 +165,7 @@ function ForecastPanel({ locationId, demo, today }: { locationId: string; demo: 
             Each cell: forecast servings/units, then what remains after today&apos;s fulfilled, in-progress and accepted
             orders (those already hold their ingredients). Retail demand is kept separate from the dish recipes.
           </p>
-          <div className="overflow-x-auto">
+          <ScrollRegion label="Forecast by day">
             <table className="border-collapse bg-white text-xs" data-testid="forecast-table">
               <thead>
                 <tr className="border-b border-slate-400 text-left">
@@ -209,7 +209,7 @@ function ForecastPanel({ locationId, demo, today }: { locationId: string; demo: 
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
           {selected ? (
             (() => {
               const d = f.data.items

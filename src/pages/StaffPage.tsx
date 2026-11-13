@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError } from '../components/ui';
+import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError, ScrollRegion } from '../components/ui';
 import { formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { supabase } from '../lib/supabase';
@@ -201,7 +201,7 @@ function MyTime({ locationId, today }: { locationId: string; today: string }) {
 
 function HoursTable({ report }: { report: HoursReport }) {
   return (
-    <div className="overflow-x-auto">
+    <ScrollRegion label="Hours by day">
       <p className="text-xs text-slate-600">
         {report.date_from} to {report.date_to} · America/Denver · elapsed time minus recorded unpaid breaks · refreshed{' '}
         {formatDateTime(report.refreshed_at)}
@@ -234,7 +234,7 @@ function HoursTable({ report }: { report: HoursReport }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 }
 

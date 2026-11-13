@@ -3,7 +3,18 @@ import Decimal from 'decimal.js';
 import { useState } from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { Badge, Button, Empty, Field, inputClass, Loading, MutationStatus, Notice, QueryError } from '../components/ui';
+import {
+  Badge,
+  Button,
+  Empty,
+  Field,
+  inputClass,
+  Loading,
+  MutationStatus,
+  Notice,
+  QueryError,
+  ScrollRegion,
+} from '../components/ui';
 import { formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { useRpcMutation } from '../lib/useRpcMutation';
@@ -329,7 +340,7 @@ export function InventoryPage() {
           {items.length === 0 ? (
             <Empty>No stocked items match.</Empty>
           ) : (
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Stock by item">
               <table className="w-full border-collapse bg-white text-sm">
                 <thead>
                   <tr className="border-b border-slate-400 text-left">
@@ -407,7 +418,7 @@ export function InventoryPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           )}
         </>
       )}

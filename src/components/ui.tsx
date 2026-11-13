@@ -169,3 +169,20 @@ export function Field({
 
 export const inputClass =
   'min-h-11 rounded-md border border-slate-500 bg-white px-3 py-2 text-base text-slate-950 focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-500';
+
+/**
+ * Horizontally scrollable wrapper for wide tables. Keyboard users can focus it
+ * and scroll with the arrow keys (WCAG 2.1.1); the label names the region.
+ */
+export function ScrollRegion({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+      className="overflow-x-auto rounded focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-500"
+    >
+      {children}
+    </div>
+  );
+}
