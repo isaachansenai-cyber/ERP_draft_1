@@ -85,7 +85,18 @@ export async function callRpc<T = unknown, N extends RpcName = RpcName>(
     const res = await (supabase.rpc as any)(name, args).abortSignal(controller.signal);
     if (res.error)
       throw classifyError(res.error as RawError, typeof res.status === 'number' && res.status > 0 ? res.status : null);
-    return res.data as T;
+    // Approval-gated RPCs return {ok:false, error} instead of raising so that
+    // failed-PIN counters persist (ADR 0006): a definite, uncommitted rejection.
+    const data = res.data as unknown;
+    if (data && typeof data === 'object' && (data as { ok?: unknown }).ok === false) {
+      throw new RpcError(
+        String((data as { error?: unknown }).error ?? 'rejected'),
+        'rejected',
+        null,
+        res.status ?? null,
+      );
+    }
+    return data as T;
   } catch (err) {
     if (err instanceof RpcError) throw err;
     throw new RpcError('network_uncertain', 'uncertain', null, null, err instanceof Error ? err.message : String(err));

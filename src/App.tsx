@@ -3,7 +3,12 @@ import { useAuth } from './auth/AuthContext';
 import { AppShell } from './components/AppShell';
 import { Loading, Notice, QueryError } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { InventoryPage } from './pages/InventoryPage';
+import { KitchenPage } from './pages/KitchenPage';
 import { OverviewPage } from './pages/OverviewPage';
+import { PosPage } from './pages/PosPage';
+import { PurchasingPage } from './pages/PurchasingPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -45,6 +50,12 @@ export function App() {
           }
         >
           <Route index element={<OverviewPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="pos" element={<PosPage />} />
+          <Route path="kitchen" element={<KitchenPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="purchasing" element={<PurchasingPage />} />
+          <Route path="purchasing/:tab" element={<PurchasingPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/:tab" element={<SettingsPage />} />
           <Route

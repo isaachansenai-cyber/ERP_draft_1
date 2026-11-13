@@ -37,9 +37,52 @@ const EXACT: Record<string, string> = {
   pin_locked: 'Too many wrong PINs. This manager PIN is locked for 15 minutes.',
   pin_not_set: 'That manager has not set a PIN yet.',
   approver_not_authorized: 'That person cannot approve actions at this location.',
+  approval_required: 'A manager must approve this. Choose the approving manager and enter their PIN.',
+  'validation:balance_due': 'Record the remaining payment before completing pickup.',
+  'validation:amount_exceeds_balance':
+    'The amount is more than the balance due. Record only what was collected for this order.',
+  'validation:over_receipt_requires_acknowledgement':
+    'This receipt is more than was ordered. Tick the over-receipt acknowledgement to post it (audited).',
+  'invalid_state:recorded_payment_requires_refund':
+    'This order has a recorded payment. It must be reversed through a refund before cancelling (refunds arrive in Milestone 3).',
+  'invalid_state:opening_already_posted':
+    'Opening stock for this location was already posted. Use counts and adjustments instead.',
+  'validation:item_unavailable': 'That item is switched off on this location’s menu.',
+  'validation:no_price': 'That item has no price at this location. Ask a manager to set one.',
+  'validation:no_tax_rate': 'This location has no tax rate. The owner must enter one.',
+  'validation:use_by_required': 'This item needs a use-by date.',
+  'validation:unverified_conversion': 'That unit cannot be converted for this item without a verified conversion.',
+  'duplicate_business_key:packing_slip_ref': 'That packing slip was already received from this supplier.',
+  'validation:employee_daily_summary_only': 'Employees can view one day at a time.',
+  'validation:discount_reason': 'A discount needs a reason.',
+  'validation:zero_value_requires_approval': 'A zero-total order needs a manager-approved 100% discount.',
+  'validation:pack_not_defined': 'That supplier item has no pack size yet. The owner sets it under Suppliers & packs.',
+  'validation:reason_code': 'Choose a reason.',
+  'validation:note_required': 'Add a note for reason OTHER.',
 };
 
+interface Shortage {
+  name?: string;
+  item_id?: string;
+  shortfall?: string;
+  base_unit?: string;
+}
+
+function trimDecimal(value: string | undefined): string {
+  if (!value) return '?';
+  return value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value;
+}
+
 export function describeError(code: string, detail?: Record<string, unknown> | null): string {
+  if (code === 'insufficient_stock') {
+    const shortages = Array.isArray(detail?.shortages) ? (detail.shortages as Shortage[]) : [];
+    if (shortages.length) {
+      return `Not enough stock: ${shortages
+        .map((s) => `${s.name ?? s.item_id} short by ${trimDecimal(s.shortfall)} ${s.base_unit ?? ''}`.trim())
+        .join('; ')}. Nothing was reserved.`;
+    }
+    return 'Not enough eligible stock. Nothing was changed.';
+  }
   if (EXACT[code]) return EXACT[code];
   if (code.startsWith('setup_gate_closed:')) {
     return `Blocked by an unconfirmed setup gate: ${code.slice('setup_gate_closed:'.length).replaceAll('_', ' ')}.`;

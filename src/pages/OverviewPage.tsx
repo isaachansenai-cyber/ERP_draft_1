@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Badge, Loading, Notice, QueryError } from '../components/ui';
 import { supabase } from '../lib/supabase';
@@ -64,16 +63,13 @@ export function OverviewPage() {
 
       <Notice tone="info" title="What is available in this build">
         <p>
-          Milestone 1 (foundation) is installed: sign-in, roles and location access, data-mode separation, the pilot
-          setup checklist and staff access management in{' '}
-          <Link className="font-semibold underline" to="/settings">
-            Settings &amp; setup
-          </Link>
-          .
+          Milestones 1–2 are installed: sign-in and roles, pilot setup gates, staff access, purchasing with partial
+          receipts, the stock ledger, the staff POS, the kitchen and pickup queue, recorded payments and the sales
+          dashboard.
         </p>
         <p className="mt-1">
-          POS, kitchen, inventory, purchasing, invoices, planning and reports are delivered in later milestones and are
-          not shown until they work end to end.
+          Counts, waste, transfers, returns, refunds, supplier invoices, planning, schedules and labels arrive in later
+          milestones and are not shown until they work end to end.
         </p>
       </Notice>
     </section>

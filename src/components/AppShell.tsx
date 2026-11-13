@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useOnlineStatus } from '../lib/useOnlineStatus';
+import { ErrorBoundary } from './ErrorBoundary';
 import { Button } from './ui';
 
 export function DataModeBanner({ mode }: { mode: 'pilot' | 'demo' | undefined }) {
@@ -26,8 +27,14 @@ export function OfflineBanner() {
   );
 }
 
-const NAV = [
+// Navigation is a convenience only; every screen and RPC is authorized server-side.
+const NAV: Array<{ to: string; label: string; end: boolean; managersOnly?: boolean }> = [
   { to: '/', label: 'Overview', end: true },
+  { to: '/dashboard', label: 'Dashboard', end: false },
+  { to: '/pos', label: 'POS', end: false },
+  { to: '/kitchen', label: 'Kitchen', end: false },
+  { to: '/inventory', label: 'Inventory', end: false },
+  { to: '/purchasing', label: 'Purchasing', end: false, managersOnly: true },
   { to: '/settings', label: 'Settings & setup', end: false },
 ];
 
@@ -72,8 +79,8 @@ export function AppShell() {
             Sign out
           </Button>
         </div>
-        <nav aria-label="Main" className="mx-auto flex max-w-6xl gap-1 px-4">
-          {NAV.map((n) => (
+        <nav aria-label="Main" className="mx-auto flex max-w-6xl flex-wrap gap-1 px-4">
+          {NAV.filter((n) => !n.managersOnly || selectedLocation?.role !== 'employee').map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -88,7 +95,9 @@ export function AppShell() {
         </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
     </div>
   );
