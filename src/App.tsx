@@ -7,11 +7,15 @@ import { DashboardPage } from './pages/DashboardPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { ReturnsPage } from './pages/ReturnsPage';
+import { ServePage } from './pages/ServePage';
 import { KitchenPage } from './pages/KitchenPage';
+import { LabelsPage } from './pages/LabelsPage';
 import { OverviewPage } from './pages/OverviewPage';
+import { PlanningPage } from './pages/PlanningPage';
 import { PosPage } from './pages/PosPage';
 import { PurchasingPage } from './pages/PurchasingPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { StaffPage } from './pages/StaffPage';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { session, context, contextLoading, contextError, refreshContext, signOut } = useAuth();
@@ -60,6 +64,12 @@ export function App() {
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="returns/:tab" element={<ReturnsPage />} />
           <Route path="invoices" element={<InvoicesPage />} />
+          <Route path="planning" element={<PlanningPage />} />
+          <Route path="planning/:tab" element={<PlanningPage />} />
+          <Route path="serve" element={<ServePage />} />
+          <Route path="staff" element={<StaffPage />} />
+          <Route path="staff/:tab" element={<StaffPage />} />
+          <Route path="labels" element={<LabelsPage />} />
           <Route path="purchasing" element={<PurchasingPage />} />
           <Route path="purchasing/:tab" element={<PurchasingPage />} />
           <Route path="settings" element={<SettingsPage />} />

@@ -49,7 +49,10 @@ const GATE_TEXT: Record<string, { title: string; blocks: string }> = {
     title: 'Opening counts posted',
     blocks: 'POS at this location. Post the opening count under Inventory.',
   },
-  planning_inputs_confirmed: { title: 'Planning inputs confirmed', blocks: 'Saving ROP/EOQ settings (Milestone 4).' },
+  planning_inputs_confirmed: {
+    title: 'Planning inputs confirmed',
+    blocks: 'Saving approved ROP/EOQ settings at this location (previews stay available under Planning).',
+  },
   supplier_master_verified: {
     title: 'Supplier details verified',
     blocks: 'Submitting purchase orders to this supplier.',

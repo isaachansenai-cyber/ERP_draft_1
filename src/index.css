@@ -3,7 +3,13 @@
 @tailwind utilities;
 
 :root {
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   color-scheme: light;
 }
 
@@ -13,7 +19,26 @@ body {
 }
 
 @media print {
-  nav, button, [data-print='hide'] {
+  nav,
+  button,
+  [data-print='hide'] {
     display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  /* When printing the label sheet, print only the labels. */
+  body:has(.label-sheet) header {
+    display: none !important;
+  }
+  /* Label sheet: 4 across, labels never split between pages. */
+  .label-sheet {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4mm !important;
+  }
+  .label {
+    break-inside: avoid;
+    border: 1px solid #000 !important;
   }
 }
