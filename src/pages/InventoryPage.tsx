@@ -1,11 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Decimal from 'decimal.js';
 import { useState } from 'react';
+import { NavLink, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Badge, Button, Empty, Field, inputClass, Loading, MutationStatus, Notice, QueryError } from '../components/ui';
 import { formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { useRpcMutation } from '../lib/useRpcMutation';
 import { usePosMenu } from './PosPage';
+import { CountsPanel, QuarantineAction, TransfersPanel, WastePanel } from './inventory/ControlsPanels';
 
 interface StockLot {
   lot_id: string;
@@ -239,9 +242,25 @@ export function InventoryPage() {
   });
   const menu = usePosMenu(locationId);
   const [filter, setFilter] = useState('');
+  const { tab } = useParams();
 
   if (!selectedLocation || !locationId) return <Notice tone="warning">Choose a location.</Notice>;
   const isManager = selectedLocation.role !== 'employee';
+  const tabs = [
+    { id: 'stock', label: 'Stock & lots' },
+    ...(isManager ? [{ id: 'counts', label: 'Counts' }] : []),
+    { id: 'waste', label: 'Waste reports' },
+    ...(isManager ? [{ id: 'transfers', label: 'Transfers' }] : []),
+  ];
+  const current = tab ?? 'stock';
+  if (!tabs.some((t) => t.id === current)) return <Navigate to="/inventory" replace />;
+  const refreshStock = () => void queryClient.invalidateQueries({ queryKey: ['stock', locationId] });
+  const lite = (stock.data?.items ?? []).map((i) => ({
+    item_id: i.item_id,
+    name: i.name,
+    base_unit: i.base_unit,
+    item_type: i.item_type,
+  }));
   const items = (stock.data?.items ?? []).filter((i) =>
     `${i.item_id} ${i.name}`.toLowerCase().includes(filter.toLowerCase()),
   );
@@ -251,7 +270,33 @@ export function InventoryPage() {
       <h1 id="inventory-heading" className="text-2xl font-bold">
         Inventory — {selectedLocation.location_name}
       </h1>
-      {stock.isPending ? (
+      <nav aria-label="Inventory sections" className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <NavLink
+            key={t.id}
+            to={t.id === 'stock' ? '/inventory' : `/inventory/${t.id}`}
+            end
+            className={({ isActive }) =>
+              `inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-semibold ${isActive ? 'border-emerald-800 bg-emerald-800 text-white' : 'border-slate-400 bg-white'}`
+            }
+          >
+            {t.label}
+          </NavLink>
+        ))}
+      </nav>
+      {current !== 'stock' ? (
+        stock.isPending ? (
+          <Loading />
+        ) : stock.error ? (
+          <QueryError error={stock.error} onRetry={() => void stock.refetch()} />
+        ) : current === 'counts' ? (
+          <CountsPanel locationId={locationId} items={lite} />
+        ) : current === 'waste' ? (
+          <WastePanel locationId={locationId} items={lite} isManager={isManager} />
+        ) : (
+          <TransfersPanel locationId={locationId} items={lite} />
+        )
+      ) : stock.isPending ? (
         <Loading />
       ) : stock.error ? (
         <QueryError error={stock.error} onRetry={() => void stock.refetch()} />
@@ -343,6 +388,15 @@ export function InventoryPage() {
                                   {l.lot_code} · {qty(l.on_hand)} on hand, {qty(l.reserved)} reserved · use-by{' '}
                                   {l.use_by_date ?? 'none'} · {l.condition}
                                   {!l.eligible ? ' · not eligible' : ''} · received {formatDateTime(l.received_at)}
+                                  {isManager && Number(l.on_hand) > 0 ? (
+                                    <QuarantineAction
+                                      lotId={l.lot_id}
+                                      lotCode={l.lot_code}
+                                      condition={l.condition}
+                                      free={new Decimal(l.on_hand).minus(l.reserved).toString()}
+                                      onDone={refreshStock}
+                                    />
+                                  ) : null}
                                 </li>
                               ))}
                             </ul>
@@ -358,7 +412,7 @@ export function InventoryPage() {
         </>
       )}
 
-      {isManager ? (
+      {isManager && current === 'stock' ? (
         <section aria-labelledby="availability-heading" className="flex flex-col gap-2">
           <h2 id="availability-heading" className="text-lg font-semibold">
             Menu availability at this location

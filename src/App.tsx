@@ -5,6 +5,8 @@ import { Loading, Notice, QueryError } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { InventoryPage } from './pages/InventoryPage';
+import { InvoicesPage } from './pages/InvoicesPage';
+import { ReturnsPage } from './pages/ReturnsPage';
 import { KitchenPage } from './pages/KitchenPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { PosPage } from './pages/PosPage';
@@ -54,6 +56,10 @@ export function App() {
           <Route path="pos" element={<PosPage />} />
           <Route path="kitchen" element={<KitchenPage />} />
           <Route path="inventory" element={<InventoryPage />} />
+          <Route path="inventory/:tab" element={<InventoryPage />} />
+          <Route path="returns" element={<ReturnsPage />} />
+          <Route path="returns/:tab" element={<ReturnsPage />} />
+          <Route path="invoices" element={<InvoicesPage />} />
           <Route path="purchasing" element={<PurchasingPage />} />
           <Route path="purchasing/:tab" element={<PurchasingPage />} />
           <Route path="settings" element={<SettingsPage />} />

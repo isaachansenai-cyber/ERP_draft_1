@@ -43,8 +43,39 @@ const EXACT: Record<string, string> = {
     'The amount is more than the balance due. Record only what was collected for this order.',
   'validation:over_receipt_requires_acknowledgement':
     'This receipt is more than was ordered. Tick the over-receipt acknowledgement to post it (audited).',
-  'invalid_state:recorded_payment_requires_refund':
-    'This order has a recorded payment. It must be reversed through a refund before cancelling (refunds arrive in Milestone 3).',
+  'validation:refund_method_required':
+    'This order has a recorded payment. Choose how the refund is paid back; it is recorded with the cancellation.',
+  'validation:refund_exceeds_line':
+    'That is more than remains refundable on this line (original price, discount and tax).',
+  'validation:refund_exceeds_recorded_payment': 'Refunds cannot exceed what was recorded as paid for this order.',
+  'validation:refund_amount': 'Enter a refund amount greater than zero.',
+  'validation:quantity_or_amount': 'Refund either a number of units or an amount, not both.',
+  'validation:meals_are_refunded_not_returned': 'Meals are refunded, never returned to stock. Use Refund instead.',
+  'validation:return_exceeds_sold': 'That is more units than were sold and not yet returned.',
+  'validation:return_window_expired': 'This sale is outside the return window set in the return policy.',
+  'validation:not_resaleable': 'Only unopened, intact, shelf-stable retail units can go back to stock.',
+  'forbidden:customer_restock_disabled': 'The return policy does not allow returned goods back into stock.',
+  'validation:exchange_retail_only': 'Exchanges are for retail items only.',
+  'validation:excess_refund_method_required':
+    'The returned value exceeds the replacement. Choose how the difference is paid back.',
+  'validation:count_below_reserved': 'A count cannot be lower than what is reserved for accepted orders on that lot.',
+  'conflict:stock_changed_since_count':
+    'Stock moved after this count was started. Cancel it and start a new count for the affected items.',
+  'validation:exceeds_in_transit': 'That is more than is still in transit on this line.',
+  'validation:lot_expired': 'An expired lot cannot be released back to sellable stock.',
+  'validation:to_location': 'Choose a different destination location.',
+  'duplicate_business_key:invoice_number':
+    'This supplier invoice number was already entered (numbers are compared ignoring case and spaces).',
+  'validation:due_date_required': 'Enter the due date from the invoice: this supplier’s terms are not verified yet.',
+  'validation:overpayment': 'That payment is more than the invoice balance.',
+  'validation:credit_exceeds_balance': 'That credit is more than the invoice balance.',
+  'validation:total_below_applied':
+    'The corrected total is below what was already paid or credited. Reverse a payment first.',
+  'validation:receipt_line_mismatch': 'That receipt line belongs to another supplier or location.',
+  'invalid_state:discrepancy_not_accepted':
+    'This invoice differs from what was received. A manager must accept the discrepancy before payment.',
+  'invalid_state:payments_or_credits_applied': 'Reverse the payments and credits on this invoice before voiding it.',
+  'invalid_state:already_reversed': 'That record was already reversed.',
   'invalid_state:opening_already_posted':
     'Opening stock for this location was already posted. Use counts and adjustments instead.',
   'validation:item_unavailable': 'That item is switched off on this location’s menu.',
