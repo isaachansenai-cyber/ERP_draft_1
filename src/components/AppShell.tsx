@@ -1,8 +1,9 @@
+import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useOnlineStatus } from '../lib/useOnlineStatus';
 import { ErrorBoundary } from './ErrorBoundary';
-import { Button } from './ui';
+import { Button, Loading } from './ui';
 
 export function DataModeBanner({ mode }: { mode: 'pilot' | 'demo' | undefined }) {
   if (!mode) return null;
@@ -102,7 +103,9 @@ export function AppShell() {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
         <ErrorBoundary>
-          <Outlet />
+          <Suspense fallback={<Loading label="Loading screen…" />}>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </main>
     </div>

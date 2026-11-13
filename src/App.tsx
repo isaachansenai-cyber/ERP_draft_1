@@ -1,21 +1,24 @@
+import { lazy } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { AppShell } from './components/AppShell';
 import { Loading, Notice, QueryError } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { InventoryPage } from './pages/InventoryPage';
-import { InvoicesPage } from './pages/InvoicesPage';
-import { ReturnsPage } from './pages/ReturnsPage';
-import { ServePage } from './pages/ServePage';
-import { KitchenPage } from './pages/KitchenPage';
-import { LabelsPage } from './pages/LabelsPage';
 import { OverviewPage } from './pages/OverviewPage';
-import { PlanningPage } from './pages/PlanningPage';
-import { PosPage } from './pages/PosPage';
-import { PurchasingPage } from './pages/PurchasingPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { StaffPage } from './pages/StaffPage';
+
+// Screens load on demand (route-level code splitting); login and overview stay in the main bundle.
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const InventoryPage = lazy(() => import('./pages/InventoryPage').then((m) => ({ default: m.InventoryPage })));
+const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then((m) => ({ default: m.InvoicesPage })));
+const ReturnsPage = lazy(() => import('./pages/ReturnsPage').then((m) => ({ default: m.ReturnsPage })));
+const ServePage = lazy(() => import('./pages/ServePage').then((m) => ({ default: m.ServePage })));
+const KitchenPage = lazy(() => import('./pages/KitchenPage').then((m) => ({ default: m.KitchenPage })));
+const LabelsPage = lazy(() => import('./pages/LabelsPage').then((m) => ({ default: m.LabelsPage })));
+const PlanningPage = lazy(() => import('./pages/PlanningPage').then((m) => ({ default: m.PlanningPage })));
+const PosPage = lazy(() => import('./pages/PosPage').then((m) => ({ default: m.PosPage })));
+const PurchasingPage = lazy(() => import('./pages/PurchasingPage').then((m) => ({ default: m.PurchasingPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const StaffPage = lazy(() => import('./pages/StaffPage').then((m) => ({ default: m.StaffPage })));
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { session, context, contextLoading, contextError, refreshContext, signOut } = useAuth();
