@@ -178,3 +178,61 @@ Checklist now: **21 PASS, 5 PARTIAL (AC03, AC28, AC30, AC31, AC32), 8 NOT_RUN (M
 - **Invoices:** matching covers receipts from the last 180 days. There is no supplier statement reconciliation or AP aging export beyond the dashboard totals.
 - **Bundle size:** the bundle is now about 634 kB (about 180 kB gzipped). Code-splitting is still deferred.
 - **Still open:** recipe-version editing UI, planning, labels and staff time (Milestone 4); the backup/restore drill, performance and deployment (Milestone 5).
+
+## Milestone 4 — Planning and staff tools (2026-11-13)
+
+**Exit criteria (CLAUDE.md §10):** AC21–AC28. All pass. AC03 (permission enforcement) also moves to PASS, since every authorization-matrix row now has negative tests.
+
+| Check | Status | Notes |
+|---|---|---|
+| AC21 MRP reservations | PASS | Today's accepted, in-progress and fulfilled orders are subtracted before the BOM explosion; projection starts from available stock (reservations already excluded); POs count only on their expected date; late POs are flagged |
+| AC22 EOQ units | PASS | SQL `private.eoq`: 447.214 → 450 with 25-unit packs; H ≤ 0 and negatives rejected; settings saved with unit labels after the planning gate; manager demand input when history is insufficient |
+| AC23 Forecast provenance | PASS | Only dates before the as-of date; no history → manager forecast required; demo history is a labeled alternative refused in the pilot |
+| AC24 Availability explanation | PASS | Independent dish potentials with the limiting ingredient match direct SQL; the menu mix sums shared chicken and garlic and writes nothing |
+| AC25 Clock integrity | PASS | Two simultaneous clock-ins → one open entry; no employee or time parameter; direct writes refused; no overlap across locations |
+| AC26 Schedules and corrections | PASS | Employees see only their own published shifts; overlaps fail; published changes need a reason; corrections keep originals and a reason |
+| AC27 Timezone | PASS | Fall-back night 9 h = 2 h + 7 h; spring-forward 7 h = 2 h + 5 h; breaks per local day; sales use local business dates |
+| AC28 Barcodes | PASS | 47 Code 128 labels with readable ID, name and base unit; print stylesheet; scanner test reads keyboard-wedge input back. A physical scanner check belongs to the Milestone 5 tablet pass |
+| AC03 Permissions | PASS | Negative tests for every matrix row, including shifts, clocking, corrections, forecasts, settings and simulation |
+
+Checklist now: **30 PASS, 3 PARTIAL (AC30, AC31, AC32), 1 NOT_RUN (AC33).** All four remaining checks belong to Milestone 5: live hosting, the backup/restore drill, the tablet/keyboard/scanner pass, and the 20-session performance measurement.
+
+### Test evidence (final full run)
+
+| Suite | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `supabase db lint --level warning`, Prettier check | clean |
+| `npm run test:unit` | 39 passed (new: `time.test.ts`, 4) |
+| `npm run test:db` | 138 passed (new: `006_staff_planning.test.sql`, 26) |
+| `npm run test:integration` | pilot 47, pilot operations 71 (16 new), demo 26 (2 new) — all passed |
+| `npm run build && npm run test:secrets` | passed |
+| `npm run test:e2e` | 22 passed (new: `staff-planning.spec.ts`, 4) |
+
+### Delivered
+
+- **Migrations 0020–0022:** schedules, clocking, breaks, corrections and the hours report; forecast, overrides, MRP projection, EOQ, ROP/EOQ settings, What can we serve and the menu mix; demo reset for the new tables.
+- **Screens:** Staff time (my time and shifts, schedule, time records and hours), Planning (forecast, ingredient projection with draft-PO proposals, ROP/EOQ settings with an EOQ preview), What can we serve (with the manager menu-mix simulator), and Labels (print sheet and scanner test).
+- **Client helper:** America/Denver wall-clock entry for shift and correction forms, unit-tested across both DST transitions.
+
+### Bugs found and fixed during the milestone
+
+- Clock-out padded a too-fast clock-out by a full second, so an immediate re-clock-in collided with it. The pad is now 1 microsecond, and an overlap reports `conflict:overlapping_time_entry` instead of "already clocked in".
+- The EOQ preview first went through the write hook, which adds a request key to a read-only function. It is now a direct read call.
+
+### Decisions (ADRs 0024–0029)
+
+- 0024 Forecast history range, method and same-day netting.
+- 0025 MRP projection, shortages and proposals saved as draft POs (no separate proposals table).
+- 0026 EOQ inputs and units; `planning_inputs_confirmed` becomes an owner attestation per location.
+- 0027 Clocking, breaks, unscheduled flag and correction rules (managers cannot correct their own time).
+- 0028 What can we serve visibility and the read-only menu mix.
+- 0029 Barcode labels and the scanner test.
+
+### Known limitations and open items
+
+- **Forecasts:** orders are same-day only, so netting applies to the current business date. There are no future-dated pickups.
+- **Planning scope:** the projection treats a day without a forecast as 0 demand and flags it; it does not invent demand. Shelf life is never inferred; only the manager's cover-day setting caps quantities.
+- **Time records:** corrections can only set past times. There is no shift-swap workflow, and no notifications (no email/SMS by design).
+- **Labels:** verified with simulated keyboard-wedge input. Physical scanner hardware is part of the Milestone 5 tablet pass.
+- **Bundle size:** about 743 kB (205 kB gzipped). Code-splitting by route is a Milestone 5 candidate.
+- **Milestone 5 still open:** full acceptance run, tablet/keyboard/scanner pass, 20-session performance (AC33), backup/restore drill (AC31), deployment docs and the pilot runbook, `ACCEPTANCE_REPORT.md`.

@@ -12,7 +12,7 @@ This is an internal restaurant ERP for the three Meats Around the World location
 | [`docs/spec/ERP_MVP_PRD.txt`](docs/spec/ERP_MVP_PRD.txt) | Product specification (PDF/DOCX copies alongside) |
 | [`docs/acceptance/Acceptance_Checklist.csv`](docs/acceptance/Acceptance_Checklist.csv) | The 34 launch checks with current status and test evidence |
 | [`docs/acceptance/PROGRESS.md`](docs/acceptance/PROGRESS.md) | Per-milestone progress notes, test counts, limitations |
-| [`docs/decisions/`](docs/decisions/) | ADRs 0001–0023 for choices the PRD leaves open |
+| [`docs/decisions/`](docs/decisions/) | ADRs 0001–0029 for choices the PRD leaves open |
 | [`docs/ops/pilot-setup.md`](docs/ops/pilot-setup.md) | Pilot setup runbook |
 | [`docs/demo/README.md`](docs/demo/README.md) | Demo project setup and demo logins |
 | [`docs/ops/deployment.md`](docs/ops/deployment.md) | GitHub Pages and Supabase deployment notes |
@@ -26,10 +26,10 @@ This is an internal restaurant ERP for the three Meats Around the World location
 | 1 Foundation | Schema, Auth/roles, RLS, pilot/demo separation, setup gates, importers, app shell | **Done** |
 | 2 Complete restaurant transaction | Purchasing → partial receipt → stock → POS (reservation) → kitchen (issue) → ready → payment → pickup → dashboard | **Done** (see §9 for which acceptance checks fully pass) |
 | 3 Inventory & financial controls | Counts, waste, quarantine, transfers, refunds, returns/exchanges, supplier invoices/payments/credits | **Done** (every exit check passes; see §9) |
-| 4 Planning & staff tools | Forecast/MRP, ROP/EOQ, "What can we serve", labels, schedules, clocking | Not started |
+| 4 Planning & staff tools | Forecast/MRP, ROP/EOQ, "What can we serve", labels, schedules, clocking, corrections, hours | **Done** (every exit check passes; see §9) |
 | 5 Pilot readiness | Full acceptance run, performance, backup/restore, deployment | Not started |
 
-Acceptance checklist today: **21 PASS, 5 PARTIAL, 8 NOT_RUN**. Each PARTIAL lists exactly what remains and which milestone delivers it.
+Acceptance checklist today: **30 PASS, 3 PARTIAL, 1 NOT_RUN** (all four open checks are Milestone 5 work). Each PARTIAL lists exactly what remains and which milestone delivers it.
 
 ---
 
@@ -53,6 +53,14 @@ Acceptance checklist today: **21 PASS, 5 PARTIAL, 8 NOT_RUN**. Each PARTIAL list
 | `#/invoices` | managers, owner | Enter supplier invoices matched to receipt lines (plus charge lines such as freight). See quantity and price variances; accept a discrepancy before paying; record payments and credits; reverse them; correct an invoice as a new revision; void an invoice with nothing applied. Balances and overdue status come from the server. |
 | `#/purchasing/orders` | managers, owner | Create a draft PO from the supplier's pack list, submit it (placed outside the app), **receive** actual packs with lot, use-by and actual pack cost, acknowledge over-receipts, close the open balance |
 | `#/purchasing/suppliers` | managers view, owner edits | Supplier contacts (unverified, missing phones left blank), payment terms, pack size and cost per supplier item (quoted/estimated), with provenance badges |
+| `#/planning` | managers, owner | 14-day forecast per sellable item with method, observations, history window and manager overrides; select a cell to see how it was computed and enter a manager forecast. Demo only: a labeled "demo historical (synthetic)" source. |
+| `#/planning/projection` | managers, owner | Per ingredient: daily projected balance (available stock + receipts on their expected dates − exploded requirements), safety stock, ROP and suggested ROP, shortage date, proposed order date (late flag), pack-rounded proposed quantity, late/undated POs. **Save as draft PO** creates a normal draft purchase order. |
+| `#/planning/settings` | managers, owner | Per item: estimated annual demand (or "insufficient"), current settings with units, EOQ and the pack-rounded actionable quantity; edit ROP, safety stock, S (USD/order), H (USD/base unit/year), max cover days and an annual demand input; **Preview EOQ**; **Save as approved settings** (needs the planning gate). |
+| `#/serve` | all staff (planning detail: managers) | What can we serve: per dish, portions possible now (independent, not additive), the limiting ingredient, today's served/cooking/accepted counts, planned demand (managers) and the next delivery. Managers get the **menu-mix simulator** (shared ingredients summed, shortages and pack-rounded replenishment preview; saves nothing). |
+| `#/staff` | all staff | Clock in/out and unpaid breaks on the server clock, my published shifts, my hours for 14 days. |
+| `#/staff/schedule` | managers | Create draft shifts (Denver times), publish, change times (reason needed once published), cancel with a reason. |
+| `#/staff/time` | managers | Hours per staff member per local business date, open-entry exceptions, entries with breaks and correction history; **Correct…** with a mandatory reason. |
+| `#/labels` | all staff | Code 128 labels for every item (readable ID, name, base unit), category filter, **Print**, and a scanner test field. |
 | `#/settings/setup` | all view, owner acts | Pilot setup gates with status, who confirmed and evidence. Confirm/reopen. Enable posting. |
 | `#/settings/taxes-prices` | owner (tax), managers (prices) | Effective-dated tax rates and menu prices. Past values can never be rewritten. |
 | `#/settings/return-policy` | all view, owner edits | Retail return window and whether unopened shelf-stable returns may go back into stock |
@@ -72,6 +80,10 @@ Every write screen shows loading, empty, validation, unauthorized, conflict (sta
 7. **Retail return and exchange.** Returned bottles go to a held custody record outside sellable stock. A manager later restocks them (demo policy) at the original issue cost, which reverses that retail COGS once, or disposes of them. An exchange returns, credits and sells the replacement in one transaction; if the replacement is short, nothing is recorded.
 
 Stock controls: physical counts adjust with a reason and reject stale snapshots; waste reports are posted by managers; quarantined stock stays on hand and valued but is never available; transfers move stock through in-transit custody with reason-coded losses.
+
+Planning: forecasts use only dates before the as-of date (same weekday over 8 weeks, else trailing 28 days, else a manager forecast). Today's accepted, cooking and fulfilled orders are subtracted before the recipe explosion because their ingredients are already reserved or used. Purchase orders count only on their expected date. EOQ = √(2DS/H) is computed in SQL with explicit units; settings are saved only by a manager after the owner confirms the planning gate.
+
+Staff time: employees clock only themselves, on the server clock; one open entry per employee; entries and shifts never overlap; corrections keep the original values and a reason. Hours are elapsed time minus recorded breaks, split at Denver midnight across DST changes. No payroll.
 
 Supplier payables: invoices are matched to receipts but never change stock or cost. Variances are shown and must be accepted before payment. Payments and credits cannot exceed the balance and are corrected only by linked reversals.
 
@@ -98,6 +110,7 @@ Money rules:
   - inventory movements, lots, opening counts, receipts, tenders, order lines and events, issue costs, cancellation waste
   - refunds and refund lines, returns and return lines, COGS reversals, exchanges, transfer receipts
   - supplier invoice lines, payments, credits and their reversals (invoices cannot be deleted, only voided)
+  - time corrections and forecast overrides
   - prices and tax rates, the audit log and demo history
 - **Retry safety:** one request key per user intent (`private.request_log`, scoped per actor). A retry returns the stored result with `replayed: true`. Concurrent duplicates serialize on the key. `get_request_result` lets the client check an uncertain outcome before offering a retry. The UI never shows success before the database commit.
 - **Concurrency:** stock rows are locked `(location, item, lot)` in order. Two sessions competing for the last portion produce exactly one acceptance (tested).
@@ -126,6 +139,9 @@ Money rules:
 | `0017_supplier_ap.sql` | Supplier invoices with receipt matching and revisions, discrepancy acceptance, payments, credits, linked reversals, void, AP reads |
 | `0018_reports_m3.sql` | Sales summary with refunds, COGS reversals, waste breakdown, count variance, stock and in-transit value, supplier balances; demo reset extended |
 | `0019_m3_reads.sql` | Waste-report costs hidden from employees; waste and custody list functions |
+| `0020_staff_time.sql` | Shifts (no overlap across locations), time entries (one open per employee, no overlap), breaks, immutable corrections, hours report split at Denver midnight |
+| `0021_planning.sql` | Forecast overrides, forecast with provenance and same-day netting, MRP projection and proposals, `private.eoq`, EOQ inputs and settings, What can we serve, menu-mix preview; planning gate becomes confirmable |
+| `0022_demo_reset_m4.sql` | Demo reset clears the Milestone 4 tables |
 
 ### RPCs available to signed-in staff (each authorizes server-side)
 
@@ -142,6 +158,8 @@ Money rules:
 | Refunds and returns | `set_return_policy`, `get_order_for_return`, `record_refund`, `process_return`, `process_exchange`, `decide_return_custody`, `list_return_custody` |
 | Supplier AP | `create_supplier_invoice`, `revise_supplier_invoice`, `accept_invoice_discrepancy`, `record_supplier_payment`, `reverse_supplier_payment`, `record_supplier_credit`, `reverse_supplier_credit`, `void_supplier_invoice`, `get_supplier_invoices`, `get_supplier_invoice`, `get_matchable_receipt_lines` |
 | Orders | `accept_order`, `edit_accepted_order`, `start_order_preparation`, `mark_order_ready`, `record_tender`, `complete_order_pickup`, `cancel_order`, `search_customers`, `create_customer` |
+| Planning | `get_demand_forecast`, `set_forecast_override`, `get_replenishment_plan`, `calculate_eoq`, `get_eoq_inputs`, `set_location_item_settings`, `get_serve_view`, `simulate_menu_mix` |
+| Staff time | `create_shift`, `update_shift`, `publish_shift`, `cancel_shift`, `clock_in`, `clock_out`, `start_break`, `end_break`, `correct_time_entry`, `get_my_time_status`, `get_hours_report`, `list_location_staff` |
 | Reporting | `get_sales_summary` |
 
 The operator-only functions (`private.bootstrap_owner`, `private.enable_demo_mode`, `private.reset_demo_data`) are not reachable through the API at all.
@@ -205,10 +223,10 @@ SUPABASE_SERVICE_ROLE_KEY=... npm run demo:users   # writes DEMO_CREDENTIALS.loc
 | Command | What it proves | Count |
 |---|---|---|
 | `npm run typecheck`, `npm run lint` | Strict TypeScript and ESLint, app and tooling | clean |
-| `npm run test:unit` | Money mirror (largest remainder, half-up tax), cart and scanner rules, draft storage, error messages, request-key retry logic, tooling guards, secret scanner | 35 |
-| `npm run test:db` | Resets the local DB, then runs pgTAP: grants, RLS, search_path, synthetic guards, immutability, recipes, units, gates, idempotency, PIN lockout, demo switch, **ledger** (first-expiry-first-out, availability, weighted average, constraints, append-only), **controls** (append-only money rows, transfer reconciliation, invoice-number uniqueness, refund planning) | 112 |
-| `npm run test:integration` | Three suites as real local Auth users through the API: **pilot** (AC01, AC02, AC03, retries, gates), **pilot operations** (full pilot setup via RPCs, then AC04–AC20 except demo-only retail, and cross-location permissions), **demo** (AC02, AC34, demo logins, reset reproducibility, opening stock, retail and simulated payments, historical source, retail returns, restock and exchanges) | 47 + 55 + 24 |
-| `npm run test:e2e` | Production build under `/ERP_draft_1/`: sign-in, deep-link reload, role-scoped UI, offline, lost responses and expired sessions on real order RPCs, the POS → kitchen → pickup → dashboard flow, purchasing with a partial receipt, waste reports, counts, transfers, a retail return with restock, supplier invoice matching and payment | 18 |
+| `npm run test:unit` | Money mirror (largest remainder, half-up tax), cart and scanner rules, draft storage, error messages, request-key retry logic, tooling guards, secret scanner, Denver wall-clock conversion across DST | 39 |
+| `npm run test:db` | Resets the local DB, then runs pgTAP: grants, RLS, search_path, synthetic guards, immutability, recipes, units, gates, idempotency, PIN lockout, demo switch, **ledger** (first-expiry-first-out, availability, weighted average, constraints, append-only), **controls** (append-only money rows, transfer reconciliation, invoice-number uniqueness, refund planning), **staff and planning** (EOQ vector and guards, both DST transitions, shift/time overlap constraints, immutable corrections) | 138 |
+| `npm run test:integration` | Three suites as real local Auth users through the API: **pilot** (AC01, AC02, AC03, retries, gates), **pilot operations** (full pilot setup via RPCs, then AC04–AC27 except demo-only retail, and cross-location permissions), **demo** (AC02, AC34, demo logins, reset reproducibility, opening stock, retail and simulated payments, historical source, retail returns, restock and exchanges, history-based forecast and EOQ) | 47 + 71 + 26 |
+| `npm run test:e2e` | Production build under `/ERP_draft_1/`: sign-in, deep-link reload, role-scoped UI, offline, lost responses and expired sessions on real order RPCs, the POS → kitchen → pickup → dashboard flow, purchasing with a partial receipt, waste reports, counts, transfers, a retail return with restock, supplier invoice matching and payment, labels and scanner test with print styles, clocking and shifts, planning, What can we serve | 22 |
 | `npm run build && npm run test:secrets -- --require-dist` | AC30 secret scan of the repo and bundle | pass |
 
 The integration and e2e suites **reset the local database** and refuse to run against anything but localhost.
@@ -229,13 +247,15 @@ Publish `dist/` to GitHub Pages. Hash routing means refreshes and deep links nee
 ## 7. Repository layout
 
 ```
-supabase/migrations/   0001–0019 (see §3)
-supabase/tests/        pgTAP: 001 schema security, 002 invariants, 003 demo mode + PIN, 004 ledger, 005 controls
+supabase/migrations/   0001–0022 (see §3)
+supabase/tests/        pgTAP: 001 schema security, 002 invariants, 003 demo mode + PIN, 004 ledger, 005 controls,
+                       006 staff + planning
 scripts/import/        import-source-master, import-demo-seed (posts demo opening stock), import-demo-history
 scripts/demo/          init-demo-database, create-demo-users, reset-demo (allowlist + demo-mode guarded)
 scripts/security/      scan-secrets (AC30)
 src/                   React app: auth/, components/ (shell, UI kit, approval fields, reason picker, error boundary),
-                       lib/ (rpc, retry-safe mutation hook, money mirror, POS draft, formatting, reference data),
+                       lib/ (rpc, retry-safe mutation hook, money mirror, POS draft, formatting, reference data,
+                       Denver time helpers),
                        pages/ (incl. inventory/ controls, settings/ panels)
 tests/unit|integration/{pilot,ops,demo}|e2e
 data/source/           source master data (pilot + demo)
@@ -341,30 +361,64 @@ Exit checks AC11–AC16, AC18, AC19, AC20 and the immutability part of AC31 all 
   - The Milestone 2 reconciliation test now nets refunds.
 - **ADRs 0017–0023:** refund allocation, returns and custody, exchanges, count snapshots, transfers, supplier AP, waste reports.
 
+### Milestone 4: Planning and staff tools
+
+Exit checks AC21–AC28 all pass, and AC03 (permission enforcement) is now complete.
+
+- **Schedules (0020, ADR 0027):**
+  - Managers create shifts for staff with a membership at the location. Shifts are drafts until published, at most 16 hours long, and never overlap for the same employee across all locations (exclusion constraint; cancelled shifts free the slot).
+  - Changing a published shift needs a reason; cancelling always does. Every step is audited.
+  - Employees see only their own published shifts (RLS and `get_my_time_status`).
+- **Clocking and breaks (0020, ADR 0027):**
+  - `clock_in(location)`, `clock_out()`, `start_break()`, `end_break()` take no employee or time argument: the server uses the signed-in employee and its own clock. Employees can clock only at locations where they hold a role.
+  - One open entry per employee across all locations (partial unique index plus a row lock); entries never overlap (exclusion constraint); clock-out is always after clock-in.
+  - An entry is linked to a published shift that is in progress or starts within the hour; otherwise it is flagged **unscheduled** and kept.
+- **Corrections (0020, ADR 0027):** a manager at the location (never for their own time) sets past clock times and breaks with a mandatory reason. An immutable `time_corrections` row keeps the original and new values. Overlaps, future times and reopening a closed entry are refused. Open entries stay visible as exceptions and are never auto-closed.
+- **Hours report (0020):** elapsed UTC time minus recorded unpaid breaks, split at America/Denver midnight with DST handled (a fall-back night is 9 h = 2 + 7; a spring-forward night is 7 h = 2 + 5). Managers see the location; everyone else sees only their own hours.
+- **Forecast (0021, ADR 0024):**
+  - A 14-day plan per sellable item. Method: the same-weekday mean over the previous 8 complete weeks (including zero-sales open days); with fewer than 2 instances, the trailing 28-day mean; with no prior history, **manager forecast required**. Only dates before the as-of date are used, starting from the location's first sale.
+  - Every value shows its method, observation count and window. Manager overrides are append-only, and the latest one wins.
+  - On the current business date the forecast is reduced by orders fulfilled, in preparation and accepted, so their ingredients are not counted twice.
+  - The pilot uses only operational orders. The demo can choose the synthetic history as an explicit, labeled source.
+- **MRP projection (0021, ADR 0025):** each ingredient's daily balance = available stock (reservations and quarantine excluded) + PO receipts on their expected date − residual forecast × recipe quantity. Shortage = first day below safety stock. The proposed order date subtracts the supplier lead time and is flagged late if already past; the proposed quantity is pack-rounded. Late and undated POs are listed, not counted. A proposal is saved only as a normal draft PO.
+- **EOQ and settings (0021, ADR 0026):**
+  - `private.eoq(D, S, H)` in SQL (10,000 / $20 / $2 → 447.214, or 450 in 25-unit packs; H ≤ 0 and negatives rejected; D = 0 → 0). `calculate_eoq` returns the unconstrained EOQ, the pack-rounded actionable quantity and the cover-days cap separately, with warnings.
+  - Estimated D comes from 180 days of fulfilled component use per observed open day × 365; under 28 days it is "insufficient" and a manager annual-demand input is used.
+  - `set_location_item_settings` saves ROP, safety stock, S (cents), H (USD/base unit/year), max cover days and the demand input with unit labels and the approver. It needs the per-location `planning_inputs_confirmed` gate, which is now an owner attestation. Every save is audited.
+- **What can we serve (0021, ADR 0028):** per dish, portions = floor(min available ÷ quantity per serving), with the limiting ingredient, today's order counts, planned demand (managers) and the next delivery, labeled as independent potentials. The manager **menu-mix preview** sums shared ingredients across dishes (for example 3 × FG-001 + 2 × FG-003 = 940 g chicken), shows shortages and pack-rounded replenishment, and writes nothing.
+- **Labels (ADR 0029):** all 47 demo items (45 in the pilot) as Code 128 SVG labels with readable ID, name and base unit; category filter; a print stylesheet that prints only the labels; a scanner test field that reads keyboard-wedge input back and marks ingredients as not sellable.
+- **Frontend:** Staff time, Planning (forecast, projection, settings), What can we serve and Labels screens. Denver wall-clock helpers convert form times to UTC across DST.
+- **Tests added:**
+  - pgTAP `006_staff_planning` (26).
+  - Pilot operations `m4-staff-time` (8) and `m4-planning` (8).
+  - Demo `m4-demo-planning` (2).
+  - Unit `time.test.ts` (4).
+  - e2e `staff-planning.spec.ts` (4).
+- **ADRs 0024–0029:** forecast method, MRP projection, EOQ settings and the planning gate, clocking rules, serve view, labels.
+
 ---
 
-## 9. Acceptance status after Milestone 3
+## 9. Acceptance status after Milestone 4
 
 | Check | Status | Note |
 |---|---|---|
-| AC01, AC02, AC34 | PASS | Milestone 1 |
-| AC04–AC10, AC29 | PASS | Milestone 2 (AC07 and AC09 completed in Milestone 3) |
-| AC11–AC20 | PASS | Milestone 3 (AC17 and AC20 completed in Milestone 3) |
-| AC31 | PARTIAL | Immutability passes for every ledger, money and control table; the backup/restore drill is Milestone 5 |
-| AC03, AC32 | PARTIAL | Everything built so far passes; shift, clocking and planning screens and their permission rows arrive in Milestone 4 |
-| AC28 | PARTIAL | POS scanner rule passes; the label printing and scanner test page are Milestone 4 |
-| AC30 | PARTIAL | Secret scan and base-path build pass; live GitHub Pages is an operator action |
-| AC21–AC27, AC33 | NOT_RUN | Milestones 4–5 |
+| AC01–AC29, AC34 | PASS | Milestones 1–4 (AC03 completed in Milestone 4) |
+| AC30 | PARTIAL | Secret scan and base-path build pass; live GitHub Pages is an operator action (Milestone 5) |
+| AC31 | PARTIAL | Immutability passes; the backup/restore drill is Milestone 5 |
+| AC32 | PARTIAL | Every screen exists with full states; the tablet, keyboard-focus and scanner-hardware pass is Milestone 5 |
+| AC33 | NOT_RUN | 20-session performance measurement (Milestone 5) |
 
 ---
 
 ## 10. Known limitations (current)
 
-- **Recipe versions:** there is no UI to create new ones yet (owner workflow later). Recipes are the source version 1.
-- **Returns:** refunds and returns are processed at the selling location only. An exchange with a balance still due leaves the replacement `ready` until it is collected on the kitchen screen.
-- **Transfers:** a draft transfer reserves nothing, so dispatch can still fail on a shortage (the error names the item).
-- **Supplier invoices:** receipt matching covers the last 180 days. There is no supplier statement reconciliation or aging export beyond the dashboard totals.
-- **Not yet built:** forecast/MRP, ROP/EOQ, "What can we serve", labels, schedules, clocking and the hours report (Milestone 4).
+- **Recipe versions:** there is no UI to create new ones yet. Recipes are the source version 1.
+- **Same-day orders:** there are no future-dated pickups, so forecast netting applies to the current business date only.
+- **Planning:** a day without a forecast counts as zero demand and is flagged, never invented. Shelf life is never inferred: only the manager's max-cover-days caps quantities.
+- **Returns:** refunds and returns are processed at the selling location only. An exchange with a balance still due leaves the replacement `ready` until it is collected.
+- **Transfers:** a draft transfer reserves nothing, so dispatch can still fail on a shortage.
+- **Supplier invoices:** receipt matching covers the last 180 days; there is no statement reconciliation or aging export.
+- **Staff time:** schedules and time records only. No payroll, overtime rules, shift swaps or notifications.
 - **Kitchen refresh:** the queue refreshes by polling every 10 s rather than Realtime (ADR 0016).
-- **Bundle size:** about 634 kB (180 kB gzipped). Code-splitting is deferred.
-- **Not done:** live GitHub Pages deployment, hosted Supabase projects, backup/restore drill and the performance measurement (Milestone 5 / operator direction).
+- **Bundle size:** about 743 kB (205 kB gzipped). Route-level code-splitting is a Milestone 5 candidate.
+- **Not done:** live GitHub Pages deployment, hosted Supabase projects, the backup/restore drill, the performance measurement and the tablet/scanner hardware pass (Milestone 5 / operator direction).

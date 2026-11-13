@@ -1,6 +1,6 @@
 # Pilot setup runbook
 
-This covers what exists after Milestone 3. Later milestones add planning inputs and the backup/restore drill. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
+This covers what exists after Milestone 4. Milestone 5 adds the backup/restore drill and the final acceptance run. The pilot is a **separate** Supabase project, and it never receives demo data or demo tooling.
 
 ## 1. Create the pilot database (operator)
 
@@ -57,7 +57,7 @@ Managers set their own PIN. Every grant and revoke is audited. At least one acti
 | `pack_conversions_verified` (per supplier item) | Pack size and quoted/estimated cost are entered (**Purchasing → Suppliers & packs**, owner) |
 | `opening_counts_posted` (per location) | The location's opening count is posted (**Inventory**, manager; needs `perishables_confirmed`) |
 | `return_policy_configured` | The owner has saved a return policy (**Settings & setup → Return policy**) |
-| `planning_inputs_confirmed` | Not confirmable until planning ships (Milestone 4) |
+| `planning_inputs_confirmed` (per location) | Attestation: the owner has reviewed the ordering-cost and holding-cost basis and the max-cover-days policy for the location. Until then managers can preview EOQ but cannot save approved settings |
 | `roles_verified`, `perishables_confirmed`, `backup_restore_tested`, `acceptance_suite_passed` | Attestation, recorded with the evidence note |
 
 Operational posting stays off until the owner runs **Enable posting**, which requires `roles_verified`, `backup_restore_tested` and `acceptance_suite_passed`. Reopening any of those three turns posting off again.
@@ -90,3 +90,21 @@ The simplified production model records standard ingredient consumption at kitch
 - **Waste (all staff report, managers post):** **Inventory → Waste reports**.
 - **Quarantine (managers):** from the lot list on **Inventory**, quarantine suspect stock (it stays on hand but cannot be sold) and release it when cleared. Expired lots cannot be released.
 - **Transfers (managers):** **Inventory → Transfers**. The sending manager dispatches. The receiving location's manager records what arrived and any loss with a reason.
+
+## 9. Planning inputs (managers, after the owner confirms `planning_inputs_confirmed`)
+
+1. Under **Planning → ROP / EOQ settings**, choose an item and enter: reorder point and safety stock (base units), S = ordering cost in USD per order, H = holding cost in USD per base unit per year, and a max-cover-days freshness cap if wanted.
+2. A new pilot has under 28 days of sales, so the annual demand shows **insufficient**: enter a manager annual-demand figure (base units/year) until the history builds up. **Preview EOQ** shows the unconstrained EOQ and the pack-rounded actionable quantity separately, with a warning if the cover-days cap is exceeded.
+3. **Save as approved settings.** Each save is audited.
+4. Until there is sales history, **Planning → Forecast** shows "manager forecast required". Select a day to enter the expected servings with a reason. Proposals in **Ingredient projection** become orders only through **Save as draft PO**, which is then reviewed and submitted under Purchasing.
+
+## 10. Staff time
+
+- Managers create shifts under **Staff time → Schedule** (times are entered in Denver time) and publish them. Employees see only their own published shifts.
+- Staff clock in and out under **Staff time** on the shared tablet; the time comes from the server. Breaks are recorded only when the employee starts and ends one.
+- Mistakes are fixed by another manager under **Staff time → Time records & hours → Correct…** with a reason. The original times stay on record. Open entries are listed as exceptions and are never closed automatically.
+- This is not payroll: there are no pay rates, overtime or automatic break deductions.
+
+## 11. Labels
+
+Print the item labels from **Labels** (filter by category if needed). Use the **Scanner test** field to check that each scanner reads the code back correctly before go-live.
