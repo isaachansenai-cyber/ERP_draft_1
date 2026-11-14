@@ -34,6 +34,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Which demo settings are visible (yes/no only, never values)
+        env:
+          S_DB: ${{ secrets.DEMO_DATABASE_URL != '' }}
+          S_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY != '' }}
+          S_PASS: ${{ secrets.DEMO_CREDENTIALS_PASSPHRASE != '' }}
+          V_DB: ${{ vars.DEMO_DATABASE_URL != '' }}
+          V_KEY: ${{ vars.DEMO_SUPABASE_SERVICE_ROLE_KEY != '' }}
+          V_PASS: ${{ vars.DEMO_CREDENTIALS_PASSPHRASE != '' }}
+        run: |
+          echo "secret DEMO_DATABASE_URL: $S_DB | as variable instead: $V_DB"
+          echo "secret DEMO_SUPABASE_SERVICE_ROLE_KEY: $S_KEY | as variable instead: $V_KEY"
+          echo "secret DEMO_CREDENTIALS_PASSPHRASE: $S_PASS | as variable instead: $V_PASS"
       - name: Prepare the connection (TLS on; the pooler certificate chain is Supabase's own CA)
         env:
           RAW_URL: ${{ secrets.DEMO_DATABASE_URL }}
