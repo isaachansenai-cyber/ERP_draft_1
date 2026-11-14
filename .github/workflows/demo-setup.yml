@@ -87,6 +87,27 @@ jobs:
         run: npx tsx scripts/demo/init-demo-database.ts
       - name: Import source master, demo seed and history (idempotent)
         run: npm run import:demo
+      - name: Check the service-role key (kind only, never the value)
+        env:
+          RAW_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          key=$(printf '%s' "$RAW_KEY" | tr -d '\r\n' | sed -E "s/^[[:space:]\"']+//; s/[[:space:]\"']+$//")
+          echo "::add-mask::$key"
+          node -e '
+            const k = process.argv[1] || "";
+            let kind = "unrecognised";
+            if (k.startsWith("sb_secret_")) kind = "secret key (sb_secret_) - correct";
+            else if (k.startsWith("sb_publishable_")) kind = "publishable key - wrong: use the secret or service_role key";
+            else if (k.split(".").length === 3) {
+              try {
+                const p = JSON.parse(Buffer.from(k.split(".")[1], "base64url").toString());
+                kind = p.role === "service_role" ? (p.ref === "qfvtpgxguaftrprxprof" ? "service_role JWT - correct" : "service_role JWT for another project") : `JWT with role ${p.role} - wrong`;
+              } catch { kind = "malformed JWT"; }
+            }
+            console.log(`key kind: ${kind}; length ${k.length}; trimmed ${k.length !== process.argv[2].length}`);
+            if (!/correct$/.test(kind)) process.exit(1);
+          ' "$key" "$RAW_KEY"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$key" >> "$GITHUB_ENV"
       - name: Create or re-key the demo logins
         run: npm run demo:users
         env:
