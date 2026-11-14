@@ -34,12 +34,48 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Prepare the connection (TLS on; the pooler certificate chain is Supabase's own CA)
+      - name: Which demo settings are visible (yes/no only, never values)
+        env:
+          S_DB: ${{ secrets.DEMO_DATABASE_URL != '' }}
+          S_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY != '' }}
+          S_PASS: ${{ secrets.DEMO_CREDENTIALS_PASSPHRASE != '' }}
+          V_DB: ${{ vars.DEMO_DATABASE_URL != '' }}
+          V_KEY: ${{ vars.DEMO_SUPABASE_SERVICE_ROLE_KEY != '' }}
+          V_PASS: ${{ vars.DEMO_CREDENTIALS_PASSPHRASE != '' }}
         run: |
-          url="${{ secrets.DEMO_DATABASE_URL }}"
+          echo "secret DEMO_DATABASE_URL visible=$S_DB, as variable=$V_DB"
+          echo "secret DEMO_SUPABASE_SERVICE_ROLE_KEY visible=$S_KEY, as variable=$V_KEY"
+          echo "secret DEMO_CREDENTIALS_PASSPHRASE visible=$S_PASS, as variable=$V_PASS"
+      - name: Prepare the connection (TLS on; the pooler certificate chain is Supabase's own CA)
+        env:
+          RAW_URL: ${{ secrets.DEMO_DATABASE_URL }}
+        run: |
+          # Trim whitespace and surrounding quotes that often come with a pasted value.
+          url=$(printf '%s' "$RAW_URL" | tr -d '\r\n' | sed -E "s/^[[:space:]\"']+//; s/[[:space:]\"']+$//")
+          echo "::add-mask::$url"
+          # Diagnose without printing the value: only its shape, host and username format.
+          node -e '
+            const raw = process.argv[1] || "";
+            if (!raw) { console.log("DEMO_DATABASE_URL is empty or not visible to this workflow (check the secret name and that it is a repository or demo-environment secret)."); process.exit(1); }
+            let u; try { u = new URL(raw); } catch { console.log("DEMO_DATABASE_URL is not a URL. It must start with postgresql://"); process.exit(1); }
+            const ok = /^postgres(ql)?:$/.test(u.protocol);
+            console.log(JSON.stringify({ scheme: u.protocol, host: u.hostname, port: u.port, database: u.pathname,
+              username_format: /^postgres\.[a-z0-9]{20}$/.test(decodeURIComponent(u.username)) ? "postgres.<ref>" : (u.username ? "other" : "missing"),
+              password_present: Boolean(u.password), placeholder_left_in: /YOUR-PASSWORD|%5BYOUR/i.test(raw) }));
+            if (!ok || !u.hostname || !u.password) process.exit(1);
+          ' "$url"
+          case "$url" in *sslmode=*) push_url="$url" ;; *\?*) push_url="$url&sslmode=require" ;; *) push_url="$url?sslmode=require" ;; esac
+          echo "::add-mask::$push_url"
+          echo "MIGRATION_DB_URL=$push_url" >> "$GITHUB_ENV"
           case "$url" in *sslmode=*) ;; *\?*) url="$url&sslmode=no-verify" ;; *) url="$url?sslmode=no-verify" ;; esac
           echo "::add-mask::$url"
           echo "DATABASE_URL=$url" >> "$GITHUB_ENV"
+      - name: Apply pending migrations (only those missing from the migration history)
+        env:
+          SUPABASE_YES: 'true'
+        run: |
+          npx supabase db push --remote="$MIGRATION_DB_URL" --dry-run
+          npx supabase db push --remote="$MIGRATION_DB_URL" --yes
       - name: Current data mode
         id: mode
         run: |
@@ -51,6 +87,27 @@ jobs:
         run: npx tsx scripts/demo/init-demo-database.ts
       - name: Import source master, demo seed and history (idempotent)
         run: npm run import:demo
+      - name: Check the service-role key (kind only, never the value)
+        env:
+          RAW_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          key=$(printf '%s' "$RAW_KEY" | tr -d '\r\n' | sed -E "s/^[[:space:]\"']+//; s/[[:space:]\"']+$//")
+          echo "::add-mask::$key"
+          node -e '
+            const k = process.argv[1] || "";
+            let kind = "unrecognised";
+            if (k.startsWith("sb_secret_")) kind = "secret key (sb_secret_) - correct";
+            else if (k.startsWith("sb_publishable_")) kind = "publishable key - wrong: use the secret or service_role key";
+            else if (k.split(".").length === 3) {
+              try {
+                const p = JSON.parse(Buffer.from(k.split(".")[1], "base64url").toString());
+                kind = p.role === "service_role" ? (p.ref === "qfvtpgxguaftrprxprof" ? "service_role JWT - correct" : "service_role JWT for another project") : `JWT with role ${p.role} - wrong`;
+              } catch { kind = "malformed JWT"; }
+            }
+            console.log(`key kind: ${kind}; length ${k.length}; trimmed ${k.length !== process.argv[2].length}`);
+            if (!/correct$/.test(kind)) process.exit(1);
+          ' "$key" "$RAW_KEY"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$key" >> "$GITHUB_ENV"
       - name: Create or re-key the demo logins
         run: npm run demo:users
         env:

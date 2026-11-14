@@ -1,6 +1,12 @@
 # Deployment (GitHub Pages + Supabase)
 
-Deployment is an **operator action**. This repository prepares it, but nothing has been published: no Supabase project has been created and no Pages site exists.
+Deployment is an **operator action**.
+
+Current state (2026-11-14):
+
+- The **demo** is live. The Supabase project `qfvtpgxguaftrprxprof` has the migrations applied and is in demo mode with the demo data imported and the demo logins created by **Actions → Demo project setup**.
+- The Pages site `https://isaachansenai-cyber.github.io/ERP_draft_1/` serves the demo build.
+- No pilot project exists yet.
 
 There are always two separate Supabase projects: a resettable **demo** and an isolated **pilot**. A frontend setting is never the isolation boundary. Each gets its own build.
 
@@ -18,6 +24,7 @@ There are always two separate Supabase projects: a resettable **demo** and an is
    ```
 
    A new database starts in **pilot mode** with posting disabled and every setup gate open.
+
 4. Open **Advisors → Security** in the dashboard and confirm there are no findings. Locally the schema passes `supabase db lint --level warning` with none.
 5. Demo project only: follow [`../demo/README.md`](../demo/README.md) (switch to demo mode, import the demo data, create demo logins).
 6. Pilot project only: follow [`pilot-setup.md`](pilot-setup.md). Never set `DEMO_PROJECT_REF_ALLOWLIST` to the pilot's ref.
@@ -54,7 +61,7 @@ Then publish `dist/` with any static host.
 
 ## 3. Continuous integration
 
-`.github/workflows/ci.yml` runs on pull requests and on manual start. It runs typecheck, lint, format, unit tests, build with secret scan, and then the full database, integration and end-to-end suites on a disposable local Supabase stack inside the runner. It never deploys and never connects to a hosted project. These workflows have not been run yet: the first run happens when a pull request is opened.
+`.github/workflows/ci.yml` runs on pull requests and on manual start. It runs typecheck, lint, format, unit tests, build with secret scan, and then the full database, integration and end-to-end suites on a disposable local Supabase stack inside the runner. It never deploys and never connects to a hosted project. CI ran green on the first pull request.
 
 ## 4. Updates
 

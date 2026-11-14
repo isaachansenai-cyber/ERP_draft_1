@@ -27,6 +27,11 @@ describe('AC30 secret scanner', () => {
     expect(findSecrets('SUPABASE_SERVICE_ROLE_KEY: abcdefghijklmnop1234')).toHaveLength(1);
   });
 
+  it('accepts a shell variable reference but not a literal that starts with $', () => {
+    expect(findSecrets('echo "SUPABASE_SERVICE_ROLE_KEY=$key" >> "$GITHUB_ENV"')).toEqual([]);
+    expect(findSecrets('SUPABASE_SERVICE_ROLE_KEY=$abc$defghijklmnop')).toHaveLength(1);
+  });
+
   it('is stricter for the production bundle', () => {
     expect(findSecrets('role:"service_role"', { bundle: true })).toHaveLength(1);
     expect(findSecrets('import.meta.env.DATABASE_URL', { bundle: true })).toHaveLength(1);
