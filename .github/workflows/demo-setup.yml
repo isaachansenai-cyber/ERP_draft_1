@@ -64,9 +64,18 @@ jobs:
               password_present: Boolean(u.password), placeholder_left_in: /YOUR-PASSWORD|%5BYOUR/i.test(raw) }));
             if (!ok || !u.hostname || !u.password) process.exit(1);
           ' "$url"
+          case "$url" in *sslmode=*) push_url="$url" ;; *\?*) push_url="$url&sslmode=require" ;; *) push_url="$url?sslmode=require" ;; esac
+          echo "::add-mask::$push_url"
+          echo "MIGRATION_DB_URL=$push_url" >> "$GITHUB_ENV"
           case "$url" in *sslmode=*) ;; *\?*) url="$url&sslmode=no-verify" ;; *) url="$url?sslmode=no-verify" ;; esac
           echo "::add-mask::$url"
           echo "DATABASE_URL=$url" >> "$GITHUB_ENV"
+      - name: Apply pending migrations (only those missing from the migration history)
+        env:
+          SUPABASE_YES: 'true'
+        run: |
+          npx supabase db push --remote="$MIGRATION_DB_URL" --dry-run
+          npx supabase db push --remote="$MIGRATION_DB_URL" --yes
       - name: Current data mode
         id: mode
         run: |
