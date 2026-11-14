@@ -53,7 +53,8 @@ export function findSecrets(text, { bundle = false } = {}) {
       !PLACEHOLDER.test(m[1]) &&
       !m[1].startsWith('process.env') &&
       !m[1].startsWith('stack.') &&
-      !m[1].startsWith('${{')
+      !m[1].startsWith('${{') &&
+      !/^\$[A-Za-z_][A-Za-z0-9_]*$/.test(m[1]) // a shell variable reference, not a value
     ) {
       findings.push('service-role key assignment');
     }
