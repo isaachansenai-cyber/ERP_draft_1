@@ -1,0 +1,6 @@
+# 0022 Supplier invoices: variance acceptance before payment; revisions; voids
+
+- An invoice line either matches a receipt line (same supplier and location) or is a charge line (description only, such as freight). Matched lines record received quantity and receipt unit cost; any quantity or price difference, or an item invoiced without a receipt line, marks the invoice as having a discrepancy. Charge lines are not discrepancies.
+- Payment is refused until a manager accepts the discrepancy (in session or by PIN) with a note. Editing an invoice adds a new line revision (earlier lines stay readable) and lapses any earlier acceptance. Nothing on an invoice touches stock, lots or weighted-average cost (AC19).
+- The due date defaults to invoice date + supplier terms only when that supplier's `supplier_master_verified` gate is confirmed (always in demo). Otherwise the due date from the invoice must be entered.
+- Payments and credits cannot exceed the balance. Corrections are linked reversals (one per payment or credit). An invoice can be voided only when nothing is applied, and its number stays reserved. `paid_on` is the external payment's business date (not a posting timestamp), and cannot be in the future.

@@ -1,0 +1,6 @@
+# 0009 Who approves what (manager PIN override in practice)
+
+- **Self-approval.** When the signed-in user is a manager at the order's location, or the owner, their own session is the approval for discounts, post-start cancellations and zero-value orders. Anyone else must name an approving manager and enter that manager's PIN (D5). In both cases the audit row records the actor and the approver.
+- **Approval failures are returned, not raised** (`{ok:false, error}`: `approval_required`, `pin_invalid`, `pin_locked`, `pin_not_set`, `approver_not_authorized`). This lets the PIN failure counter commit (ADR 0006). The client treats `ok:false` as a definite rejection.
+- **Over-receipt acknowledgement.** Only managers and the owner can receive stock, so the receiver is always a manager. An over-receipt therefore needs an explicit `p_acknowledge_over_receipt` flag rather than a second PIN. It is audited as `receipt.post_over_receipt`, with the receiver as approver, and the movement is reason-coded `RECEIVING_ERROR`.
+- **Approver list.** `list_location_approvers` shows staff at a location the names and IDs of the owner and that location's managers. It never exposes PIN state or contact details.

@@ -1,0 +1,52 @@
+{
+  "seed": 401,
+  "date_range": [
+    "2026-05-01",
+    "2026-10-31"
+  ],
+  "demo_as_of_date": "2026-11-01",
+  "order_count": 12775,
+  "order_line_count": 16501,
+  "location_count": 3,
+  "daily_location_rows": 552,
+  "generation_factors": {
+    "weekday": [
+      0.78,
+      0.82,
+      0.9,
+      1.0,
+      1.25,
+      1.52,
+      1.12
+    ],
+    "month": {
+      "5": 0.94,
+      "6": 1.03,
+      "7": 1.1,
+      "8": 1.04,
+      "9": 1.0,
+      "10": 1.08
+    },
+    "location_order_baselines": [
+      19,
+      15,
+      25
+    ],
+    "daily_growth": 0.0008,
+    "bounded_daily_variation": [
+      0.9,
+      1.1
+    ],
+    "illustrative_holidays": [
+      "2026-05-25",
+      "2026-07-04",
+      "2026-09-07"
+    ],
+    "illustrative_promotion": [
+      "2026-09-15",
+      "2026-09-21"
+    ]
+  },
+  "interpretation": "Every factor and transaction is synthetic, not evidence of observed restaurant demand. History is a read-only demand/reporting source, never replayed into operational inventory, AP, payments or timecards. Cost estimates use demo ingredient costs.",
+  "forecast_scope": "Demo forecasts may use this history. Pilot forecasts use only real pilot records or explicitly entered manager estimates."
+}

@@ -1,0 +1,27 @@
+SOURCE AUDIT
+
+ERP_IngredientsList.xlsx
+- Item Catalog!A2:G46: 45 records, 40 ingredients and five finished dishes.
+- Recipe BOM!A2:F67: 66 components across five recipe parents; all item IDs exist.
+- Recipes by Dish: quantities agree with Recipe BOM after mL/ml normalization.
+- Lead Times!A5:G49: 45 rows, 40 ingredient supplier lead times and five kitchen preparation lead times.
+- Ingredient lead-time basis: 21 Benchmark; 19 Assumption. No quoted lead times supplied.
+- Lead Times!B5:B49 uses an external Item Catalog link; join on Item ID instead.
+- START HERE identifies GSCM 401 Restaurant Mini-ERP and illustrative, non-kitchen-tested recipes.
+
+ERP_Supplier_List.xlsx
+- Suppliers!A2:I16: 15 supplier records.
+- Ingredients!A2:H41: 40 valid primary supplier relationships; agrees with ingredient workbook lead-time supplier IDs.
+- Five suppliers have no phone: SUP-06, SUP-08, SUP-15, SUP-16, SUP-17.
+- Supplier payment terms, quoted lead times, unit costs and pack sizes absent.
+- Some notes mention American Fork although the to-do list names Provo, Spanish Fork and Salt Lake City.
+
+Rosie's To-do list.docx
+- Documents minimum item, BOM, location, supplier, customer and historical sales counts.
+- Identifies MRP, EOQ with editable ordering/holding costs, reason codes, returns/exchanges, barcodes and a wow factor.
+- References 12 exact requirements that were not included.
+- Meeting dates, repository creation and deployment instructions are source context, not separately authorized actions.
+
+ERP PRD.pdf
+- Two-page original covers purchasing, inventory, production, sales, pickup and financial results; broad roles and module list.
+- Scope decisions pending user selections.

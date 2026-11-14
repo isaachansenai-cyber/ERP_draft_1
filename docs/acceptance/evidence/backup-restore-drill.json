@@ -1,0 +1,41 @@
+{
+  "mode": "drill",
+  "measured_at": "2026-11-13T21:21:51.040Z",
+  "environment": "local Supabase stack; full pg_dump (custom format) of database \"postgres\" restored into disposable database \"restore_drill_mwfhfbni\" in the same cluster",
+  "dump_seconds": 0.9,
+  "dump_megabytes": 6.3,
+  "restore_seconds": 3.4,
+  "verify_seconds": 0.7,
+  "restore_warnings": 0,
+  "recovery_target": "restore within 4 hours (PRD §15)",
+  "tables_compared": 72,
+  "tableMismatches": [],
+  "totals": {
+    "movements": "1532",
+    "movement_qty": "711253.100000",
+    "movement_value": "2565.965200",
+    "on_hand": "711253.100000",
+    "reserved": "0.000000",
+    "inventory_value": "2565.965200",
+    "completed_orders": "25144:150393776",
+    "tenders_cents": "150393776",
+    "refunds_cents": "0",
+    "invoices": "0:0",
+    "supplier_payments_cents": "0",
+    "time_entries": "0",
+    "audit_rows": "686",
+    "history": "12775:30682004",
+    "settings": "demo:true"
+  },
+  "totalMismatches": [],
+  "restored_integrity": {
+    "balances_not_matching_ledger": 0,
+    "invalid_balances": 0,
+    "public_tables_without_rls": 0,
+    "append_only_triggers": 32,
+    "api_can_write_movements": false,
+    "functions": 163,
+    "movement_update_guard": "refused (immutable:inventory_movements)"
+  },
+  "pass": true
+}

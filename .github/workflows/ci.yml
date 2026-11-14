@@ -1,0 +1,49 @@
+# Checks for pull requests (and manual runs). It never deploys and never touches
+# a hosted Supabase project: database tests run on a disposable local stack.
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npx prettier --check src tests scripts
+      - run: npm run test:unit
+      - name: Build and scan the bundle for secrets
+        run: npm run build && npm run test:secrets -- --require-dist
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Start the local Supabase stack
+        run: npx supabase start -x storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+      - run: npx supabase db lint --level warning --fail-on warning
+      - run: npm run test:db
+      - run: npm run test:integration
+      - name: End-to-end tests (Playwright)
+        run: npx playwright install --with-deps chromium && npm run test:e2e -- --trace off

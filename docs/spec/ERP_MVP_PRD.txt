@@ -1,0 +1,588 @@
+MEATS AROUND THE WORLD MVP PRD
+Version 1.0 | November 12, 2026 | Internal restaurant pilot
+
+
+1 Purpose and agreed scope
+
+Meats Around the World is a single restaurant company operating three locations: Provo, Spanish Fork and Salt Lake City. This MVP supports an internal pilot with real staff and stock, plus a separate synthetic demonstration environment. It connects purchasing, inventory, recipe-based order fulfillment, pickup, planning, basic staff administration and operational financial reporting.
+
+The build target is a working restaurant ERP pilot. No payment gateway is included. Staff may record payments handled outside the ERP; the demo uses simulated tenders. Recording an invoice payment or refund does not move money. The application must make these distinctions visible.
+
+Decision | Final specification
+Locations | Three locations from the to-do list: Provo, Spanish Fork and Salt Lake City. American Fork references in supplier notes do not create a fourth location.
+Order entry | Built-in staff POS, kitchen queue and pickup workflow. No public customer ordering or customer login.
+Production | One simplified made-to-order flow for all five dishes. Reserve ingredients at order acceptance; consume at kitchen start. Preparation lead times are planning information. No batch or prepared-food stock.
+Included support functions | Basic employee scheduling and time tracking; supplier invoices, due dates and manual payment records.
+Planning and demonstration | MRP-style ingredient planning, EOQ, internal barcodes, retail returns/exchanges, 10 sample customers and six months of realistic synthetic sales.
+Architecture | React with TypeScript and Vite on GitHub Pages. Supabase Auth, Postgres, row-level security and transactional database functions.
+Data policy | Preserve source IDs, units and recipe quantities. Generate missing demo values with provenance. Real pilot data and synthetic fixtures remain in separate Supabase projects.
+Rubric | Use requirements visible in the supplied documents. Exact coverage of the referenced 12 grading requirements remains unverified.
+
+This scope supersedes the original module wishlist. GitHub repository creation, Supabase project creation, public deployment and meeting logistics mentioned in the to-do list are not actions performed by this PRD revision.
+
+
+2 Goals and completion measures
+
+The primary outcome is an explainable chain from receipt of ingredients to fulfilled orders and inventory and financial results. Managers should identify stock shortages and unpaid supplier invoices without maintaining parallel spreadsheets.
+
+- A manager can receive a partial purchase, sell a dish through the staff POS, move it through the kitchen and pickup, and explain every stock movement and recorded cost.
+
+- All five supplied dishes use their actual source BOM quantities. Shared ingredients are checked across the whole order, not independently per line.
+
+- All three locations maintain independent stock, prices, invoices, orders and staff permissions. The owner can compare locations.
+
+- Source and synthetic data are visibly distinguished. A fresh demo is reproducible; a fresh pilot contains no synthetic customers, employees, orders or opening stock.
+
+- Every launch acceptance criterion in section 17 passes. No unresolved defect may create duplicate orders, negative available stock, unauthorized access or unexplained balance changes.
+
+Pilot boundary: the simplified recipe model records standard ingredient consumption at kitchen start. It does not represent actual overnight marination, braising, semi-finished stock or batch yields. Use physical counts and reason-coded waste to identify differences. A future batch-production module is needed if prepared stock must be represented accurately.
+
+
+3 Source baseline and provenance
+
+Source | What is preserved | Qualification
+ERP PRD.pdf, pages 1–2 | Original goal, role intent and multi-location reporting vision. | Screen/module list was an outline; workflows and rules are defined here.
+Rosie’s To-do list.docx | Restaurant theme, three named cities, minimum record counts, reason codes, MRP/EOQ, barcode labels, returns/exchanges and wow factor. | A planning checklist, not the complete grading rubric. Relative meeting dates are not product requirements.
+ERP_IngredientsList.xlsx / Item Catalog!A2:G46 | 40 ingredient IDs ING-001 through ING-040 and five parent dishes FG-001 through FG-005. | Storage notes are source suggestions, not verified operating instructions.
+ERP_IngredientsList.xlsx / Recipe BOM!A2:F67 | 66 per-serving component lines: 12, 16, 14, 17 and 7 across the five dishes. | Illustrative, not kitchen-tested. Confirm quantities and yields before pilot stocking.
+ERP_IngredientsList.xlsx / Lead Times!A5:G49 | 40 ingredient supplier lead times and five finished-dish preparation lead times. | 21 ingredient values are benchmarks and 19 are assumptions. None is supplied as a verified supplier quote.
+ERP_Supplier_List.xlsx / Suppliers!A2:I16 and Ingredients!A2:H41 | 15 supplier identities and 40 primary ingredient-to-supplier relationships. | Contacts not independently verified; payment terms and pack prices are absent.
+
+Recipe BOM and Recipes by Dish agree after normalizing mL to ml. Every recipe component exists in the catalog, its unit matches the catalog, and supplier IDs agree across both workbooks. Import data by Item ID and Supplier ID, not by display names or Excel formulas.
+
+The Lead Times name column contains external workbook references in B5:B49. Resolve names from the local item catalog. Supplier lookup formulas must likewise be replaced by ID joins. The package provides normalized source data so the build does not depend on Excel recalculation.
+
+Missing supplied fields include barcodes, purchasing pack conversions and costs, menu/retail prices, reorder/safety-stock settings, opening counts, payment terms, customer records and historical sales. Five suppliers lack a phone: SUP-06, SUP-08, SUP-15, SUP-16 and SUP-17. Keep missing real contacts blank; never present generated contacts as verified supplier details.
+
+
+Supplied menu
+
+ID | Menu item | BOM lines | Source preparation information
+FG-001 | Brazilian Chicken Strogonoff | 12 | 0 planning days; about 25 minutes.
+FG-002 | Tacos al Pastor (3 tacos) | 16 | 1 planning day; pork marinates overnight.
+FG-003 | Korean Fried Chicken with Rice | 14 | 0 planning days; about 20 minutes.
+FG-004 | Beef Bourguignon with Potatoes | 17 | 1 planning day; braised the day before, about 3 hours.
+FG-005 | Mongolian Khorkhog | 7 | 0 planning days; cooked the same day, about 2 hours.
+
+Keep these notes as planning context. They neither create prepared inventory nor justify a short pickup-time promise. The source uses a nonalcoholic Bourguignon recipe and boneless lamb; preserve both choices.
+
+
+4 Users and permissions
+
+Authenticate every staff user through Supabase Auth. Resolve owner, manager and employee memberships from protected database records. A frontend role selector or a client-supplied location ID never grants access. The owner provisions roles; managers manage operational records only in their assigned locations.
+
+Action or data | Owner | Location manager | Employee
+Company catalog, recipe versions, suppliers and company settings | Create/edit/archive | Read; request global changes | Read active menu and task-relevant item names
+Location availability and menu price overrides | All locations | Edit own location | Read assigned location
+Raw stock, receipts, counts, waste and transfers | All locations | Manage own location; receive transfers into own location | View availability; submit a waste report for manager posting
+POS and kitchen/pickup | All locations | Own location | Assigned location; create orders and update fulfillment
+Discounts and cancellations | All locations | Own location; approve discounts and post-start cancellation | No discounts; may cancel an unstarted order, audited
+Refunds, returns and exchanges | All locations | Own location only | No financial reversal permissions
+Supplier invoices, payments and unit costs | All locations | Own location only | No access
+Sales and planning reports | All locations | Own full reports; other locations only sales totals and item availability | Own-location daily sales summary; no costs, margins or customer lists
+Staff schedules and time records | All locations | Manage own location | Own published shifts and own clock actions only
+Customer details | All locations | Own-location order context | Minimum lookup/create fields required for an assigned-location order
+Memberships, exports and audit history | Manage all | Read own-location operational audit; limited operational exports | No bulk exports or permission edits
+
+Cross-location read-only access for managers is limited to aggregated sales and availability. It does not expose other locations’ employee details, invoices, customer information or ingredient costs. Enforce the same restriction through SQL/RPC endpoints and direct API reads.
+
+Customers are records associated with orders, not application users. Walk-in orders may be anonymous. Do not require phone or email to place a staff-entered order.
+
+
+5 Catalog recipes and units
+
+- Use stable internal IDs as unique keys. Barcodes encode those IDs with Code 128, including ING-001, FG-001 and RET-001. These are internal labels, not manufacturer UPC/GTIN claims. Labels show the barcode, readable ID, name and base unit.
+
+- Keep ingredient units as supplied: grams, milliliters and each. One finished-dish unit is one serving; FG-002 is one order of three tacos. Ingredient “each” supports decimals because tacos consume 0.5 lime. POS serving and retail-bottle quantities must be positive whole units.
+
+- Allow verified mass conversions within mass and volume conversions within volume. A purchase pack has an explicit quantity in the item’s base unit. Never infer g-to-ml or each-to-g conversions; require an item-specific verified conversion.
+
+- Ingredients are not sellable from the POS. Store their unit cost and optional reference price for item records. Only finished dishes and retail items have a POS sale price. Made-to-order dishes have BOM-derived cost and no physical reorder point or on-hand finished balance.
+
+- Global recipe changes create an immutable version. Accepted order lines retain the recipe version, component quantities and price snapshot. Later recipe or price edits do not rewrite historical orders.
+
+- All supplied recipe quantities remain unchanged in the demo. Treat them as standard issue quantities with no additional yield multiplier. A verified pilot recipe version can change the consumption basis after portion/yield checks; do not silently add shrink factors.
+
+- No substitutions, modifier BOMs, nested recipes, combos or batch production in this MVP. Staff may enter a non-inventory note; a note must not imply automatic ingredient substitution.
+
+The approved synthetic assortment adds RET-001 and RET-002 as purchased, sealed retail sauce bottles. They are separate stock items and do not consume ING ingredients. Their proposed supplier relationship, pack sizes and prices are demo assumptions, not verified availability.
+
+
+6 Inventory and transaction integrity
+
+The stock ledger is append-only. Each movement records event ID, idempotency key, item, location, lot, signed base quantity, unit cost, reason code, source document/line, actor and server timestamp. Post a linked reversal to correct a posted movement; do not delete it or overwrite balances.
+
+Track lots and stock condition: sellable or quarantined. Receipt lines capture supplier lot when available, otherwise an internal lot ID. Perishable pilot receipts require an operator-entered use-by date. Expired or quarantined stock cannot be reserved. Use-by dates remain valid through the end of that local business date; exclude them starting the following date.
+
+Available quantity = eligible sellable on-hand quantity − reservations against those eligible lots. Eligible stock excludes both quarantined and expired lots; do not double-subtract overlapping exclusions. Physical on-hand still includes stock awaiting disposal. Reserve eligible lots by earliest use-by date, then receipt time; undated eligible lots follow dated lots. Revalidate eligibility at kitchen start or retail handover: reassign an expired reservation atomically to eligible stock or block fulfillment. Stock valuation is weighted average by location/item, independent of the physical lot selection.
+
+Event | Quantity and costing behavior
+Opening count | Owner/manager posts verified quantity and unit cost by location/lot. Demo opening quantities are separate fixtures, not pilot counts.
+Purchase receipt | Add only quantities actually received. Record base conversion and receipt cost snapshot. Weighted average = (old quantity × old unit cost + received quantity × receipt unit cost) / new quantity.
+Order acceptance | Reserve full BOM requirements atomically across the whole order. Do not consume physical stock yet. Retail units reserve their own item IDs.
+Kitchen start | Atomically release and consume the dish ingredient reservations once, recording actual issue-cost snapshots. Do not deduct again at ready or pickup.
+Retail handover | Consume reserved retail units at completed pickup. Retail-only orders need no kitchen preparation.
+Waste or scrap | Manager posts a reason-coded removal of eligible unreserved stock. Order-linked post-start waste reclassifies already issued cost; it does not remove ingredients again.
+Physical count | Take a versioned stock snapshot and enter counted quantities by lot/condition. Reject posting if stock changed since the count snapshot; refresh/recount affected lines. Never overwrite movements.
+Transfer | Manager dispatches unreserved sellable stock to in-transit stock at source cost. Destination manager receives actual quantities into destination lots. Quarantine expired/damaged arrivals and retain source-lot linkage.
+Correction | Use audited compensating entries and a reason. Never allow on-hand below quarantine plus active reservations.
+
+Stock availability checks, reservation changes, issues, receipts, transfers and their document-state changes must each commit as one database transaction. Lock affected stock rows in a consistent order. Two users competing for the last available portion cannot both succeed. No negative available stock or partially posted order is permitted.
+
+Duplicate submissions reuse a request idempotency key and return the existing result. A new key must not bypass business uniqueness checks such as a receipt external reference or a supplier invoice number. Version-check edits so a stale browser cannot overwrite a newer order or count.
+
+Transfers use draft → dispatched → partially received → received. A draft can be cancelled; dispatched stock is held in transit until received, returned by a linked movement, or resolved as reason-coded transit loss. Received plus lost plus in-transit quantities must equal dispatched quantity. No silent auto-receipt between locations.
+
+Seed reason codes: BURNT, EXPIRED, SPOILAGE, DAMAGED_SEAL, PREP_ERROR, CUSTOMER_COMPLAINT, WRONG_ITEM, COUNT_VARIANCE, RECEIVING_ERROR, TRANSIT_LOSS and OTHER. OTHER requires a note. Reason applicability is configurable; a reason code never grants permission or automatically restores food to stock.
+
+
+7 Staff POS kitchen and pickup
+
+
+Order lifecycle
+
+State | Allowed next step | Required behavior
+Draft | Accepted or discard draft | Cart editing has no stock effect. Show prices, taxes, availability and total.
+Accepted | In preparation or cancelled | Snapshot price and recipe version; atomically reserve ingredients and retail quantities. An edit must atomically replace reservations.
+In preparation | Ready or manager cancellation | Consume all dish ingredients once. Show kitchen ticket, pickup name/code and time. Recipe ingredient edits are locked.
+Ready | Completed or manager cancellation | No further dish ingredient issue. Staff confirms correct pickup and outstanding recorded payment status.
+Completed | Refund/return through a separate linked workflow | Require fully recorded tender or a manager-approved zero-value order. Consume retail units once at handover.
+Cancelled | Terminal | Before kitchen start, release reservations. After kitchen start, manager records wasted already-issued ingredients; no automatic restock.
+
+Retail-only orders can move from accepted to ready without kitchen ingredient consumption. Mixed orders follow the kitchen flow for dishes and retain retail reservations until handover. Partial fulfillment and item-level cancellation after kitchen start are deferred; cancel the entire uncompleted order with a manager reason.
+
+POS shows the five dishes and two demo retail products, item availability, location, cart, optional customer, quantities, subtotal, manager-authorized discount, tax, total and recorded tender. A disabled or insufficient-stock item cannot be accepted by bypassing the UI. A menu availability override can disable a dish, but cannot create stock.
+
+The kitchen queue shows accepted, preparing and ready orders for one location. Staff explicitly start and complete preparation; a timer never auto-completes an order. Staff may enter an estimated ready time. Source preparation lead times are shown as context and are not an automatic capacity or overnight-prep scheduler.
+
+
+Payments discounts and refunds
+
+In demo mode tenders are SIMULATED. In the pilot, tenders are MANUAL_EXTERNAL records for cash or an external processor, with optional external reference. No card entry fields, payment API, bank connection or stored card data. Display “recorded payment” or “simulated payment”; do not claim settlement.
+
+Use USD. Monetary payable amounts are integer cents; issue costs and base quantities retain higher decimal precision. Calculate discounts before tax and round tax half up to cents per line. Allocate order-wide discounts proportionally using largest remainder, with stable line order for ties. Refunds use the original price, allocated discount and tax snapshots, never current prices or tax settings.
+
+Managers may authorize a discount from 0 to 100 percent with a reason; a 100 percent discount is an explicitly complimentary order. Taxes are configurable by location with effective dates. Demo tax of 7.25 percent is synthetic. The pilot requires an operator-confirmed tax rate before enabling monetary orders. Tips, split tenders, cash-drawer reconciliation and integrated settlement are excluded.
+
+Refunds require owner/manager permission, a recorded tender, original order/line linkage and a reason. Cumulative refunded amounts cannot exceed recorded amounts. A partial monetary refund is allowed without an inventory return. Retain each refund event; do not change the original sale. The pilot records externally completed refunds only; the demo simulates them.
+
+
+8 Returns exchanges and food disposition
+
+A prepared meal may receive a manager-authorized refund, but neither the dish nor its raw ingredients returns to sellable stock. Cancelling after kitchen start records waste of the issued quantities/cost; refunding a completed meal leaves its ingredient consumption intact.
+
+Demo retail policy: original receipt required; a return must occur within seven calendar days of sale at the original location. Returned quantity cannot exceed the original quantity minus previous returns. A manager records the reason and condition. Return stock first enters quarantine. “No stock returned” is also an explicit option for a refund without physical goods.
+
+Customer-returned goods are held in a separate returns-quarantine custody record, outside valued on-hand and available stock until a manager approves resale. Ordinary quarantine of stock already owned by the restaurant remains part of valued on-hand. This distinction prevents recognizing both a returned asset and its original COGS before disposition.
+
+For a demo restock example, a manager may release an unopened, intact, unexpired shelf-stable bottle from quarantine to sellable stock. Restore its original issue cost and reverse corresponding retail COGS only on that release. The real pilot defaults customer-food restocking to disabled; any release policy must be configured by the operator before use. Inspection and refund are distinct actions, so issuing a refund never makes returned food sellable automatically.
+
+An exchange links a return to a new retail sale. Validate and reserve the replacement before finalizing. Create the return, replacement order, tax differences and any manually recorded balance adjustment atomically. If replacement stock is unavailable, neither the return nor replacement is partially posted. Display the amount due or refundable; no automatic money movement.
+
+
+9 Suppliers purchasing and invoice tracking
+
+Maintain supplier identity, source contact details, verification status, payment terms in days and item-level supply relationships. Each supplier-item relation has pack-to-base conversion, quoted or estimated cost, lead time and provenance/effective date. Preserve the supplied primary suppliers. Alternative suppliers may be added by the owner after verification.
+
+A purchase order belongs to one location and supplier. States are draft → submitted → partially received → received, or cancelled for an unreceived balance. Submitted means internally approved and placed outside the app; the MVP does not email or transmit supplier orders. Receipt quantities can be smaller than ordered. Over-receipt requires an explicit manager acknowledgement and is audited. Changing a submitted order does not rewrite existing receipts.
+
+Receipts may record packing-slip/reference and actual item quantities, lot, use-by date, purchase pack, conversion and actual net unit cost. Snapshot all conversions and costs. Repeating a receipt request must not post stock twice. Receipt costs establish inventory value; subsequently entering an invoice does not add stock or cost again.
+
+A supplier invoice stores location, supplier, invoice number/date, due date, line quantities/prices, tax/freight and total. Invoice number is unique per supplier within the company after trim/case normalization. Link invoice lines to purchase/receipt lines where possible. Show quantity and price differences; default discrepancy tolerance is zero. A manager may accept a discrepancy with a reason. Unmatched invoices remain visible for manual review.
+
+Due date defaults to invoice date plus the snapshotted agreed term days. Supplier-master edits do not change existing invoice due dates. Amount outstanding = invoice total − recorded payments − applied supplier credits. Disallow overpayment or over-credit; a corrected payment is a linked reversal, not a deleted row. Support multiple partial payment records with date, amount and optional external reference.
+
+Invoice status is draft, open, partially paid, paid or void. Overdue is derived when a non-void invoice has positive balance and due date is before the location business date. A paid invoice cannot be voided until payment/credit records are reversed. The app records externally handled payments; it does not execute them.
+
+Invoice price differences are shown as purchasing variances. Automatic retroactive inventory revaluation, supplier-return logistics, double-entry accounting, accounts receivable, bank reconciliation and tax filing are outside the MVP. Do not silently recalculate historical ingredient issue costs from a later invoice.
+
+
+10 Demand planning MRP EOQ and wow factor
+
+
+Forecast and ingredient planning
+
+Provide a 14-day, per-location demand plan with a selectable as-of date. Default daily dish forecasts use the mean fulfilled quantity for the same weekday over the previous eight complete weeks. Include zero-sales open days; exclude future data. If fewer than two instances of that weekday exist, use the trailing 28-day mean, including open days with zero sales. When no operating history exists, require an explicit manager forecast; do not treat synthetic sales as real demand.
+
+Show the method, observation count, history window and any manager override on every forecast. Refunds of fulfilled meals do not erase ingredient demand. Exclude cancelled/unprepared orders. Keep retail unit demand separate from the five dish BOM explosions.
+
+Start with available stock, excluding active reservations and quarantine. Reduce forecasts by accepted, unconsumed order quantities for the corresponding item/date before exploding the remaining forecast through its recipe. This prevents counting reserved orders twice. Subtract fulfilled orders from same-day forecast remaining; they are already reflected in physical stock. Add open PO quantities only on their expected receipt dates; late receipts are flagged rather than assumed available now.
+
+For each ingredient and day, show projected available balance = prior projected balance + scheduled receipts − uncovered forecast requirements. Compare with editable safety stock and reorder point. A shortage generates a proposed order date offset by the supplier-item lead time in calendar days. A past proposed date is marked late. Preparation-day notes remain visible planning context and do not create batch jobs or ingredient issues.
+
+Reorder point is stored per location/item in base units. Show a suggested ROP = average daily base-unit demand × procurement lead days + safety stock. Save changes only when a manager accepts them. Replenishment proposals create drafts; no automatic supplier order is sent.
+
+
+EOQ
+
+EOQ = square root of (2 × D × S / H). D is annual demand in base units/year; S is an editable dollar cost per item replenishment order; H is an editable dollar holding cost per base unit/year. Use a matching unit basis throughout. Never mix a case-based cost with a gram-based demand.
+
+Estimate annual demand from the last 180 complete days of fulfilled component use, divided by observed open days and multiplied by 365. With fewer than 28 days, label it insufficient and require a manager demand input. In a demo only, the synthetic history is an explicit alternative source. Block EOQ calculation when D or S is negative or H is zero/nonpositive; return zero when D is zero and H is positive.
+
+Display unconstrained EOQ and an actionable purchase quantity separately. Round the actionable quantity to verified pack multiples and minimum order size, then show shelf-life/storage constraints and any override. A freshness cap uses a manager-confirmed maximum cover-days setting; no inferred shelf life is treated as safe. When constraints conflict, show a warning and require a quantity choice instead of silently ordering too much.
+
+Example for testing only: D = 10,000 each/year, S = $20/order and H = $2/each/year gives EOQ 447.214 each. A 25-unit pack rounds to 450 each before any additional constraint. Every ordering and holding cost must be editable and labeled with units.
+
+
+Wow factor
+
+Build an explainable “What can we serve?” view. For each dish at a selected location, show immediately available portions, the bottleneck ingredient, current versus planned demand, and the next relevant expected delivery. Portions = floor of the minimum available component quantity divided by per-serving recipe quantity. These are independent dish potentials sharing stock; do not add them together as simultaneously feasible capacity. Managers can simulate a menu mix to see combined shortages and proposed replenishment. All changes are previews until explicitly saved. No external AI API is required.
+
+
+11 Employee schedules and time tracking
+
+Include basic schedules and time records, not payroll. Employee records contain internal ID, display name, active status and location membership. Keep pay rates, bank details, tax identifiers and payroll calculations out of scope.
+
+Managers create location shifts with employee, start/end timestamps and optional note. Shifts are draft until published. Employees see their own published schedule. Prevent overlapping scheduled shifts for the same employee across locations. A manager may cancel or update a published shift with an audit entry; no email/SMS integration is included.
+
+Employees clock in/out for themselves at an assigned location. Permit one open time entry per employee across all locations. Prevent overlapping time entries. Clock-out must be later than clock-in. A shift is not required to clock in; flag unscheduled time rather than discarding it. Employees cannot edit a recorded timestamp.
+
+Managers correct their location’s time entries with the original values, new values and a mandatory reason retained in the audit. Open entries remain visible as exceptions; do not auto-clock out. Total hours are elapsed UTC time minus explicitly recorded unpaid break intervals; no automatic break deduction or overtime rule engine. Require valid, nonoverlapping breaks inside the time entry.
+
+Store timestamps in UTC; display America/Denver. Split time-report totals at local midnight when an entry crosses business days, including daylight-saving transitions. Scheduling, clocking and manual correction are server-authorized; browser clock manipulation must not set an unapproved actual clock timestamp.
+
+
+12 Reports and metric definitions
+
+Every report shows location scope, local date range, data source (pilot operational, demo operational or demo historical), currency and last refresh. Do not silently combine synthetic history with real pilot orders. Historical demo snapshots are separately labeled and do not alter stock, supplier balances or recorded payments.
+
+Metric | Definition
+Gross sales | Completed order quantities × original unit prices, before discounts, refunds, tax and tips.
+Net sales | Completed gross sales − discounts − sales-value refunds. Show sales and refund activity in the period each event occurs. Tax is excluded.
+Recorded receipts/refunds | Manual or simulated tender events in their own event dates. Keep payment activity separate from fulfillment-based sales. These are not bank-settlement totals.
+COGS | Snapshotted ingredient issue cost for completed dishes plus retail issue cost, less eligible retail-restock reversals. Pending preparation cost is shown separately until completion or cancellation.
+Gross margin | Net sales − COGS. This is not net business profit. Waste and all excluded operating expenses are not silently treated as zero.
+Waste cost | Reason-coded ingredient/retail disposals plus issued cost of post-start cancelled orders. Do not include the same issued cost in both COGS and waste.
+Inventory value | Valued on-hand sellable and quarantined stock plus a separately shown in-transit value. Exclude finished-dish virtual availability and unapproved customer-return custody.
+Supplier balances | Invoice totals − recorded payments − applied credits; show due/overdue amounts by invoice due date. Purchases are not subtracted from sales as if they were COGS.
+Count variance | Counted base quantity − expected snapshot quantity, with cost at the posting snapshot.
+Fulfillment time | Completed timestamp − accepted timestamp for completed orders; show sample count and separately flag cancelled orders.
+Staff hours | Elapsed closed time entries − recorded unpaid breaks, split by local day. Open/uncorrected exceptions are separate.
+
+Dashboard shows net sales, orders, average order value (net sales / completed orders), gross margin, waste, low stock, unpaid supplier balances and worked hours. A zero denominator produces “—”, not an error. CSV exports obey the same location and role rules as the screen. Cross-location comparison uses a consistent timezone/date window.
+
+Current stock is a present-state view. If a past-date inventory report is offered, reconstruct it from timestamped movements; never label today’s balance as the balance on a historical sales date. Historical demo cost fields are synthetic estimates and must be identified as such.
+
+
+13 MVP screens and navigation
+
+Screen | Primary actions and required states
+Login and location selector | Secure sign-in/out, session expiry, assigned locations and visible role. No unauthenticated operational data.
+Sales dashboard | Date/location/data-source filters, defined metrics, other-location manager summaries and CSV export.
+Inventory | On hand / reserved / quarantine / available, lots, history, count adjustments, waste reports and transfer dispatch/receipt.
+Catalog and recipes | Items, units, purchase packs, supplier links, prices, active recipe versions and source/assumption badges.
+Suppliers and purchasing | Contact verification, editable lead times/terms, purchase orders, partial receipts and discrepancy states.
+Supplier invoices | Invoice lines and receipt links, due dates, mismatch flags, partial payment/credit records and outstanding balance.
+Staff POS | Barcode/item lookup, availability, cart/customer, totals, recorded tender, receipt and idempotent order submission.
+Kitchen and pickup | Location queue, start/ready/complete actions, age/ETA and manager cancellation.
+Returns and exchanges | Original sale lookup, remaining returnable quantity, reason/condition, quarantine and linked replacement sale.
+Planning | Forecast history/overrides, BOM explosion, shortage dates, ROP/EOQ inputs and proposed purchase drafts.
+What can we serve | Independent dish availability, bottlenecks, combined menu-mix scenario and delivery context.
+Staff and schedules | Location staff, draft/published shifts, own clock controls, manager corrections and hours report.
+Customers | Minimal customer records and location-permitted order lookup; walk-in path.
+Print barcode labels | All 47 demo items selectable by category; Code 128 labels, human-readable IDs, print stylesheet and scanner test.
+Settings and setup | Owner-managed memberships, location taxes, return settings, reason codes, verified pilot setup and data-mode indicator.
+
+Every write screen needs loading, empty, validation, unauthorized, conflict, network-failure and success states. Preserve a local unsent cart draft without calling it an accepted order. Do not retry non-idempotent writes blindly. A network outage disables posting and clearly shows that no transaction was committed.
+
+Optimize POS, kitchen, clocking and inventory lookup for tablet and desktop use, with touch targets of at least 44 CSS pixels and keyboard/scanner operation. Use semantic labels, visible focus and text in addition to status colors. A USB/Bluetooth keyboard-wedge scanner is supported; camera scanning is deferred. Printing labels is not the same as printing kitchen receipts.
+
+
+14 Logical data model and invariants
+
+Use one company and three locations, not a multi-tenant SaaS design. All operational records carry company/location context as applicable. The following are logical entities; the agent must implement explicit foreign keys, unique constraints and transactional functions rather than relying on client validation.
+
+Entity group | Required records and relationships
+Identity | locations; employees; protected role/location memberships tied to Supabase Auth IDs; employee activation and ownership.
+Master data | items; item-specific purchase packs/conversions; suppliers; supplier_items; effective location prices/taxes; location_item_settings.
+Recipes | recipe_versions; recipe_components; parent dish, component item, base quantity and immutable effective version.
+Inventory | lots; immutable inventory_movements; stock/reservation projections; reservations and allocations; counts; waste; transfers/transfer_lines.
+Orders | orders; order_lines; ingredient requirement snapshots; order state events; recorded tenders; refunds/refund_lines; returns/exchanges and dispositions.
+Purchasing | purchase_orders/lines; receipts/lines and lots; supplier_invoices/lines; receipt matching; supplier_payment_records; credits and reversals.
+Staff | shifts with publication state; time_entries; break_intervals; immutable time-correction events.
+Planning | forecast_overrides; demand provenance; location/item ROP, safety stock, S, H, maximum cover-days and approved proposed orders.
+Demo history | Read-only historical_sales_orders/lines with dataset_id and synthetic provenance; no operational inventory posting triggers.
+Audit | actor/action/object/location, server timestamp, request idempotency key and before/after or linked reversal. Never log secrets.
+
+- Base quantities use NUMERIC(18,6); cost per base unit uses NUMERIC(18,8). Payable totals use integer cents. Do not use binary floating point for posting money or quantities.
+
+- Immutable snapshots retain recipe version, line prices/discount/tax, receipt pack conversion, supplier payment terms and original issue cost. Archive referenced master records instead of deleting them.
+
+- Unique constraints cover item IDs/barcodes, supplier IDs, request idempotency scope, supplier invoice number and one open time entry per employee. Foreign keys reject missing item/supplier/location references.
+
+- Stock, reservation and document-state invariants are checked in the database. A caller cannot supply an actor ID, role, authoritative cost, past clock timestamp or cross-location scope to bypass authorization.
+
+- Reporting views and exports enforce caller permissions. A read-only view must not accidentally bypass row-level security through its owner; use security-invoker views or explicitly authorized functions.
+
+- Demo historical rows are immutable import snapshots with source keys unique within dataset_id. Reimport is idempotent and never creates operational orders or ingredient issues.
+
+
+15 Architecture security and reliability
+
+Use React, TypeScript and Vite for the static frontend. Host its compiled assets on GitHub Pages with the repository base path configured and hash-based routing so refresh/deep links work without a server rewrite. Supabase provides Auth, Postgres, RLS and narrowly scoped RPC functions for all transactional workflows. Python and a Next.js server are not required in this architecture.
+
+Treat the browser as untrusted. Permit public frontend configuration only for the Supabase URL and publishable/anon key. Never ship service-role credentials, database passwords, staff data, pilot exports or private environment files in source control or static assets. The public repository is application source and synthetic fixtures only.
+
+Enable RLS on every exposed operational table and secure private employee/customer fields. Protect membership writes. Security-definer functions must use a fixed search_path, validate auth.uid() and membership themselves, and have the minimum executable grants. Use invoker behavior where it meets transactional needs. Do not rely on RLS that a privileged function bypasses.
+
+Apply schema changes through versioned SQL migrations. Give each posted workflow a narrow RPC contract with input validation, authorization, locking, state validation, idempotency, business writes and audit writes in one transaction. Realtime updates may refresh the kitchen screen but never replace durable database state.
+
+Use two Supabase projects: a resettable demo and an isolated pilot. A frontend switch alone is insufficient isolation. The pilot has no public demo credentials and no seed/reset endpoint. Demo reset is owner-only, targets an allowlisted demo project and cannot accept an arbitrary project identifier.
+
+For the small pilot, design for at least 20 concurrent staff sessions across three locations and 50,000 order lines plus six months of demo history. Target 95 percent of ordinary indexed screen queries within two seconds and order acceptance within three seconds on a stable connection. Verify in a measured test environment and report exceptions; these are targets, not claimed measurements.
+
+Reliable connectivity is required; offline ordering, background transaction synchronization and offline payment capture are excluded. Keep a documented manual fallback. On session expiry or uncertain network completion, check the idempotency key before offering a retry. Never display success before the database commit is confirmed.
+
+Before real pilot entry, document and test a database backup/restore procedure in a disposable project. Target a daily backup and a recoverable pilot restore within four hours. Do not assume automatic point-in-time recovery exists on the selected Supabase plan. Limit real-data exports to the owner and authorized managers; keep application logs free of payment or credential secrets.
+
+
+16 Demo fixtures and pilot setup
+
+ERP_Seed_and_Setup.xlsx and data/demo_seed.json contain 47 demo items: the 45 supplied records plus two synthetic retail sauces; 66 source BOM lines; 15 supplied suppliers; three locations; 10 synthetic customer records; 10 role/staff fixtures; 141 location/item settings; and 126 synthetic opening stock rows. Finished dishes have no opening stock.
+
+The history CSVs contain 12,775 synthetic completed orders and 16,501 lines from May 1 through October 31, 2026: 184 days and all three locations. The demo planning reference date is November 1, 2026. History is stored as read-only sales snapshots and is never replayed against the November opening stock.
+
+History generation uses deterministic seed 401, weekday demand factors, distinct location baselines, monthly seasonality, modest growth, illustrative holiday effects, a September promotion, stable top-seller preferences, bounded daily variation and repeat demo customers. Every observation is synthetic. These patterns are not evidence of actual restaurant performance. Full methodology is in data/history_method.json.
+
+Generated supplier terms and pack costs are editable assumptions. Existing contact details remain source records; demo-only email addresses use example.invalid. Barcodes reuse internal item IDs. The demo tax rate is synthetic. Location reorder, safety-stock, ordering-cost and holding-cost values are setup examples; no generated number is an approved operating policy.
+
+
+Example synthetic menu pricing
+
+Item | Demo ingredient cost per serving | Demo sale price
+FG-001 | $2.5023 | $15.99
+FG-002 | $1.8152 | $13.99
+FG-003 | $1.7244 | $15.49
+FG-004 | $3.3592 | $19.99
+FG-005 | $4.3792 | $22.99
+
+These ingredient costs exclude labor, energy, packaging, rent, payment fees and unrecorded process losses. They are not supplier quotes or complete product margins.
+
+
+Pilot import gates
+
+- Create the isolated pilot schema and real Auth users; verify roles and location access with direct API tests.
+
+- Import only reviewed source master records. Confirm actual supplier contacts, pack conversions, costs, payment terms and lead times. A lead time may be an operator-approved estimate but must remain labeled as such.
+
+- Confirm menu portions and yields, actual menu prices, effective tax settings, return/restock policy, opening costs and all relevant reorder/EOQ inputs. Record the simplified production limitation in pilot setup.
+
+- Count real stock by location/lot, enter use-by dates where required and post opening movements once. Never reuse generated quantities or historical demo balances.
+
+- Invite real staff securely. Demo staff fixtures describe roles only; they create no Auth accounts, passwords, wages or personal identifiers.
+
+- Pass the launch acceptance suite, confirm the manual outage process and restore test, then enable posting for real pilot staff. No synthetic seed/reset feature is available in that project.
+
+
+17 Acceptance criteria and verification
+
+The following are required launch checks. Verify user-facing flows and database/API behavior. Persisted invariants require meaningful integration tests against a disposable Supabase database; frontend-only tests are insufficient. The complete checklist is also supplied as Acceptance_Checklist.csv.
+
+
+AC01 Source import
+
+Import preserves 40 source ingredients, five source dishes, 66 BOM lines, 15 supplier IDs and their 40 primary ingredient links; mL normalizes to ml without quantity changes.
+
+
+AC02 Demo segregation
+
+Demo includes 47 items, 10 customers, three locations and six complete months of synthetic sales. Pilot contains no synthetic staff, customers, history or opening rows; demo reset cannot target pilot.
+
+
+AC03 Permission enforcement
+
+Direct API/RPC calls by employee or location manager cannot refund without authority, change memberships or write another location. Cross-location summaries reveal only allowed fields.
+
+
+AC04 Unit precision
+
+One FG-002 consumes three tortillas and 0.5 lime. Receiving two 10,000 g packs adds 20,000 g, not two grams. Unverified mass/volume conversions are rejected.
+
+
+AC05 Shared-ingredient aggregation
+
+With 2,000 g chicken available, three FG-001 plus two FG-003 reserve 940 g and leave 1,060 g available; kitchen start consumes 940 g exactly once.
+
+
+AC06 Concurrency
+
+Two sessions competing for the same last portion yield exactly one acceptance and one actionable insufficient-stock result; no partial reservations or negative availability.
+
+
+AC07 Request retries
+
+Retrying order acceptance, kitchen start, receipt, refund or payment with the same key returns the original result without duplicate documents, money records or movements.
+
+
+AC08 Order cancellation
+
+Before start, cancellation releases reservations. After start, manager cancellation records issued cost as waste without adding stock or issuing ingredients twice.
+
+
+AC09 Historical snapshots
+
+Recipe/price/tax edits do not change already accepted or completed order requirements, original totals or refund calculations.
+
+
+AC10 Partial receipts
+
+Receiving 6 of 10 packs adds six packs; four remain open. A receipt retry adds nothing. An over-receipt needs an audited manager acknowledgement.
+
+
+AC11 Count conflict
+
+If a stock movement occurs after a count snapshot, posting that stale count is rejected. A successful count adjustment has a reason and preserves reservations.
+
+
+AC12 Lot eligibility
+
+Quarantined or expired stock is excluded from availability and reservations. If a reserved lot expires before fulfillment, reassign it atomically or block the issue. Eligible allocations follow use-by order. Perishable pilot receipts require use-by data.
+
+
+AC13 Transfer reconciliation
+
+Dispatch moves stock to transit; partial receive moves only actual received stock. Source + transit + destination quantities/costs reconcile, including a reason-coded loss.
+
+
+AC14 Returns and exchanges
+
+Meal refunds never restock ingredients. Retail returns respect original quantities and dates and enter quarantine. An exchange stock failure rolls back both sides.
+
+
+AC15 Retail cost reversal
+
+Eligible demo restock restores original issue cost and reverses that retail COGS once. Pilot food-restock is disabled until operator configuration.
+
+
+AC16 Refund limits
+
+Cumulative refunds cannot exceed original recorded tender or remaining line refund value; original discount/tax allocation is respected. Employee refund attempts fail.
+
+
+AC17 Recorded money only
+
+No card/bank API is called. Demo tenders are visibly simulated; pilot tender/refund/AP records identify external manual handling. Monetary completion requires recorded balance due zero.
+
+
+AC18 Invoices and payments
+
+Normalized duplicate supplier invoice number is rejected. Partial payment reduces only the invoice balance; overpayment fails; overdue uses due date and local business date.
+
+
+AC19 Receipt and invoice costs
+
+Entering or editing a matched invoice does not add inventory or silently rewrite historical COGS. Discrepancies remain traceable.
+
+
+AC20 Money reconciliation
+
+Completed gross sales minus discounts/refunds equals net sales; taxes are separate. Post-start cancelled cost appears once as waste, not COGS and waste.
+
+
+AC21 MRP reservations
+
+An accepted order already represented by reserved ingredients is not also counted in residual forecast demand. Future PO receipts enter projections only on expected dates.
+
+
+AC22 EOQ units
+
+D=10,000, S=$20 and H=$2 gives 447.214 base units, with 450 for 25-unit packs. H<=0 is rejected; settings are editable and stored with units.
+
+
+AC23 Forecast provenance
+
+Same-weekday demand uses only prior completed dates; no-history pilot requires a manager forecast. Synthetic history never appears as real pilot demand.
+
+
+AC24 Availability explanation
+
+What can we serve shows limiting ingredients and independent dish potentials; combined-menu simulation accounts for shared chicken and garlic.
+
+
+AC25 Clock integrity
+
+Two simultaneous clock-ins create at most one open entry. Employees cannot alter timestamps or clock for another person. Closed entries cannot overlap.
+
+
+AC26 Schedules and corrections
+
+Only own published shifts are visible to employees. Overlapping shifts fail. Manager time corrections retain originals and a reason.
+
+
+AC27 Timezone
+
+An overnight entry and an America/Denver daylight-saving transition yield correct elapsed hours and local-day totals. Sales filters use local business dates.
+
+
+AC28 Barcodes
+
+Print all 47 item labels; a keyboard-wedge scanner returns the correct item ID with readable code. Ingredient scans do not accidentally add unsellable ingredients to POS.
+
+
+AC29 Failure recovery
+
+Expired session and interrupted network show an unresolved/failed action without false success. A reconnect checks the request key before retry.
+
+
+AC30 Hosting and secrets
+
+GitHub Pages base-path refresh/login works. Production bundle/repository contains no service-role key, passwords, real staff fixtures or pilot exports.
+
+
+AC31 Audit and restore
+
+Posted movements cannot be deleted by application roles. A backup restores in a disposable project with ledger and document totals intact.
+
+
+AC32 Screen completeness
+
+Every listed screen has loading, empty, error, conflict and permission behavior; principal tablet flows work with keyboard focus and scanner input.
+
+
+AC33 Performance and reporting
+
+Measure representative query/order timings with 20 staff sessions. Exports match filtered screen totals and role limits; source/date/refresh indicators are visible.
+
+
+AC34 Historical import integrity
+
+All 184 days and all locations are covered; line totals equal order totals; known customers/products exist; reimport is idempotent and does not change operational stock.
+
+
+18 Build sequence and definition of done
+
+Milestone | Deliverable and exit condition
+1 Foundation | Versioned SQL, Auth/memberships, RLS, types, isolated environments and idempotent source/demo import. Pass source and permission checks before operational modules.
+2 Complete restaurant transaction | Implement receipt → stock → order reservation → kitchen issue → pickup → reports. Prove partial receipt, shared ingredients, concurrency, cancellation and retry behavior.
+3 Inventory and financial controls | Add counts, waste, transfers, returns/exchanges, invoices/payments and reconciliation. Prove linked reversals and permission boundaries.
+4 Planning and staff tools | Add forecast/BOM explosion, ROP/EOQ, availability scenario, barcode printing, schedules and clocking.
+5 Pilot readiness | Run the acceptance suite, inspect tablet flows, measure representative performance, test backup/restore and complete verified pilot setup. Prepare deployment instructions and reviewable build artifacts.
+
+An implemented screen is not a completed workflow unless records persist, authorization is enforced server-side, retries are safe and relevant reports reconcile. Do not substitute localStorage mock data, disabled buttons or hardcoded dashboard totals for a working module.
+
+The build agent must deliver source code, SQL migrations, seed/import tooling, meaningful tests, an environment example without secrets, setup/deployment instructions, backup/restore instructions and a final acceptance report listing passes, failures and limitations. Request clarification for a new scope-changing ambiguity; do not invent payment integrations, payroll rules or stock behavior.
+
+Prepare a local/reviewable build first. This PRD does not instruct an agent to publish a public site, create external accounts, contact suppliers or upload real pilot data without the operator’s separate deployment direction.
+
+
+19 Requirement coverage and deferred work
+
+The to-do list is the source for the following documented minima. This is a coverage map of those visible requirements, not a claim to reproduce the missing 12-item rubric word for word.
+
+Documented requirement | MVP coverage | Verification
+Restaurant concept and 3+ locations | Meats Around the World; Provo, Spanish Fork, Salt Lake City. | AC01–AC03
+25+ barcoded items with costs/prices/ROP/lead time | 47 demo item records; ingredients have reference prices; only sellable items have POS prices. Finished dishes use recipe cost and preparation lead times; physical ROP is not applicable. | AC01, AC04, AC22, AC28; confirm rubric treatment of non-sellable prices and virtual dish ROP.
+5+ parent recipes | Five source recipes, 66 per-serving component lines. | AC01, AC05, AC09
+Lead time for each ingredient/component | All 40 source ingredient lead times preserved and labeled estimates. | AC01, AC21, AC23
+6+ suppliers with contacts/terms | 15 supplied suppliers; demo terms and non-routable sample contact emails; real contact gaps remain flagged. | AC01, AC18; pilot verification required.
+10+ customers | 10 synthetic customer records plus anonymous walk-in support. | AC02, AC34
+6+ months of realistic sales | May–October 2026, 184 days with location/weekday/season/promotion patterns. | AC02, AC23, AC34
+Returns and exchanges | Retail sauces demonstrate linked returns/exchanges; meal refunds never restock ingredients. | AC14–AC16
+Reason codes | Seeded reasons for returns, waste, adjustments and transfer loss. | AC08, AC11, AC13, AC14
+Editable EOQ costs | Per-location/item ordering and annual holding costs with explicit units. | AC22
+Wow factor | Explainable dish availability and combined-menu shortage simulation. | AC24
+Public build and barcode page | GitHub Pages-compatible architecture and a printable label screen. Repository/project setup and actual publication remain deployment tasks. | AC28, AC30
+
+Deferred: payroll/wages/taxes; full general ledger and accounts receivable; bank/payment integrations; customer self-ordering; table management; loyalty/marketing/LMS; maintenance/CMMS; prepared-food/batch production; recipe substitutions/modifier BOMs; autonomous supplier ordering; camera scanning; offline transaction sync; multi-currency; advanced labor optimization; delivery marketplaces. A later rubric requirement may change this boundary and must be explicitly reconciled.
+
+The PRD is ready for agent implementation with the selected scope. Exact rubric conformance and real pilot data verification remain distinct gates: the first needs the missing rubric, and the second needs confirmed operating values and physical counts rather than generated assumptions.
