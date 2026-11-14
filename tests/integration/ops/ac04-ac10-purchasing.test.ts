@@ -1,6 +1,6 @@
 // AC04 Unit precision (receiving side) and AC10 Partial receipts, in a pilot
 // database set up through the real setup gates.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { as, balance, code, employeeId, key, ok, sql } from './helpers';
 
 const LOC = 'LOC-PRO';
@@ -36,7 +36,8 @@ async function submittedPo(itemId: string, packs: number) {
 }
 
 const useBy = () => {
-  const d = new Date();
+  // Relative to the America/Denver business date, not the UTC date (they differ in the evening).
+  const d = new Date(`${inject('opsToday')}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + 20);
   return d.toISOString().slice(0, 10);
 };

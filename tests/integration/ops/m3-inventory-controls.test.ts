@@ -1,7 +1,7 @@
 // AC11 count conflict, AC12 lot eligibility (quarantine, expiry reassignment),
 // AC13 transfer reconciliation, and waste reports, through the real API in a
 // pilot database.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { as, balance, code, key, ok, sql, type OrderResult } from './helpers';
 import { withDb } from '../helpers/stack';
 import { stack } from './helpers';
@@ -10,7 +10,8 @@ const PRO = 'LOC-PRO';
 const SFO = 'LOC-SFO';
 
 const dayOffset = (n: number) => {
-  const d = new Date();
+  // Relative to the America/Denver business date, not the UTC date (they differ in the evening).
+  const d = new Date(`${inject('opsToday')}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 };
