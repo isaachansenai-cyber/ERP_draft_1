@@ -43,9 +43,9 @@ jobs:
           V_KEY: ${{ vars.DEMO_SUPABASE_SERVICE_ROLE_KEY != '' }}
           V_PASS: ${{ vars.DEMO_CREDENTIALS_PASSPHRASE != '' }}
         run: |
-          echo "secret DEMO_DATABASE_URL: $S_DB | as variable instead: $V_DB"
-          echo "secret DEMO_SUPABASE_SERVICE_ROLE_KEY: $S_KEY | as variable instead: $V_KEY"
-          echo "secret DEMO_CREDENTIALS_PASSPHRASE: $S_PASS | as variable instead: $V_PASS"
+          echo "secret DEMO_DATABASE_URL visible=$S_DB, as variable=$V_DB"
+          echo "secret DEMO_SUPABASE_SERVICE_ROLE_KEY visible=$S_KEY, as variable=$V_KEY"
+          echo "secret DEMO_CREDENTIALS_PASSPHRASE visible=$S_PASS, as variable=$V_PASS"
       - name: Prepare the connection (TLS on; the pooler certificate chain is Supabase's own CA)
         env:
           RAW_URL: ${{ secrets.DEMO_DATABASE_URL }}
