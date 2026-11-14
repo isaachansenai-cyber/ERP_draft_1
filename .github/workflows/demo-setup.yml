@@ -35,8 +35,23 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Prepare the connection (TLS on; the pooler certificate chain is Supabase's own CA)
+        env:
+          RAW_URL: ${{ secrets.DEMO_DATABASE_URL }}
         run: |
-          url="${{ secrets.DEMO_DATABASE_URL }}"
+          # Trim whitespace and surrounding quotes that often come with a pasted value.
+          url=$(printf '%s' "$RAW_URL" | tr -d '\r\n' | sed -E "s/^[[:space:]\"']+//; s/[[:space:]\"']+$//")
+          echo "::add-mask::$url"
+          # Diagnose without printing the value: only its shape, host and username format.
+          node -e '
+            const raw = process.argv[1] || "";
+            if (!raw) { console.log("DEMO_DATABASE_URL is empty or not visible to this workflow (check the secret name and that it is a repository or demo-environment secret)."); process.exit(1); }
+            let u; try { u = new URL(raw); } catch { console.log("DEMO_DATABASE_URL is not a URL. It must start with postgresql://"); process.exit(1); }
+            const ok = /^postgres(ql)?:$/.test(u.protocol);
+            console.log(JSON.stringify({ scheme: u.protocol, host: u.hostname, port: u.port, database: u.pathname,
+              username_format: /^postgres\.[a-z0-9]{20}$/.test(decodeURIComponent(u.username)) ? "postgres.<ref>" : (u.username ? "other" : "missing"),
+              password_present: Boolean(u.password), placeholder_left_in: /YOUR-PASSWORD|%5BYOUR/i.test(raw) }));
+            if (!ok || !u.hostname || !u.password) process.exit(1);
+          ' "$url"
           case "$url" in *sslmode=*) ;; *\?*) url="$url&sslmode=no-verify" ;; *) url="$url?sslmode=no-verify" ;; esac
           echo "::add-mask::$url"
           echo "DATABASE_URL=$url" >> "$GITHUB_ENV"
