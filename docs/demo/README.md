@@ -46,7 +46,7 @@ The demo seed also stores a synthetic return policy, labeled `synthetic_demo_pol
 
 ## Hosted demo via GitHub Actions
 
-When the demo project is connected to the repository (Supabase GitHub integration deploys the migrations on merge to `main`), run **Actions → Demo project setup**. It needs the `demo` environment configured as described at the top of `.github/workflows/demo-setup.yml`. The demo passwords are uploaded only as an **encrypted** artifact that expires after 1 day. To decrypt it:
+Or run **Actions → Demo project setup**. It applies any migrations missing from the database's migration history (`supabase db push`), switches an empty database to demo mode, runs the imports and creates the demo logins. Every step is idempotent, so it is safe to re-run. Do not rely on the Supabase GitHub integration alone: on the first deploy it did not apply the migrations. It needs the repository secrets described at the top of `.github/workflows/demo-setup.yml`. `DEMO_SUPABASE_SERVICE_ROLE_KEY` must be the project's **secret** key (`sb_secret_…`) or legacy `service_role` key, never the publishable key. The workflow checks the key's kind and stops if it is wrong. The demo passwords are uploaded only as an **encrypted** artifact that expires after 1 day. To decrypt it:
 
 ```bash
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in demo-credentials.md.enc -out DEMO_CREDENTIALS.local.md
