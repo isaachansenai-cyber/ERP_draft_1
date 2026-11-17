@@ -7,6 +7,7 @@ import { NavLink, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ApprovalFields, approvalArgs, emptyApproval, type Approval } from '../components/ApprovalFields';
 import { ReasonSelect } from '../components/ReasonSelect';
+import { RecentOrders } from '../components/RecentOrders';
 import { Badge, Button, Empty, Field, inputClass, Loading, Notice, QueryError } from '../components/ui';
 import { formatCents, formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
@@ -448,6 +449,14 @@ function OrderActions({ locationId, isManager }: { locationId: string; isManager
           Find order
         </Button>
       </form>
+      <RecentOrders
+        locationId={locationId}
+        selected={submitted}
+        onPick={(n) => {
+          setLookup(n);
+          setSubmitted(n);
+        }}
+      />
       {!submitted ? null : order.isPending ? (
         <Loading />
       ) : order.error ? (
