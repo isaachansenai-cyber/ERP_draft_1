@@ -31,7 +31,7 @@ export function ReasonSelect({
         {(codes.data ?? []).map((r) => (
           <option key={r.code} value={r.code}>
             {r.description}
-            {r.requires_note ? ' (note required)' : ''}
+            {r.requires_note && !r.description.toLowerCase().includes('note required') ? ' (note required)' : ''}
           </option>
         ))}
       </select>
