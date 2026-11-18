@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { Button, Empty, Field, inputClass, Loading, Notice, QueryError, ScrollRegion } from '../components/ui';
+import { Button, Empty, Field, inputClass, Loading, QueryError, ScrollRegion } from '../components/ui';
 import { formatCents, formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 
@@ -237,11 +237,7 @@ export function DashboardPage() {
             {summary.data.date_to} ({summary.data.timezone}) · {summary.data.currency} · refreshed{' '}
             {formatDateTime(summary.data.refreshed_at)}
           </p>
-          <p className="text-xs text-slate-600">
-            Net sales = gross − discounts − refunds (tax excluded), by completion date. {summary.data.payments_note}{' '}
-            COGS uses issue-cost snapshots; costs of orders cancelled after kitchen start appear only as waste. Gross
-            margin is not net profit.
-          </p>
+          <p className="text-xs text-slate-600">{summary.data.payments_note}</p>
           {summary.data.locations.length === 0 ? (
             <Empty>No locations in scope.</Empty>
           ) : (
@@ -281,9 +277,6 @@ export function DashboardPage() {
               </table>
             </ScrollRegion>
           )}
-          <Notice tone="info">
-            Supplier balances, worked hours and the waste-report detail join this dashboard in Milestones 3–4.
-          </Notice>
         </>
       )}
     </section>

@@ -111,10 +111,6 @@ function MyTime({ locationId, today }: { locationId: string; today: string }) {
         <h2 id="clock-heading" className="text-lg font-semibold">
           Clock
         </h2>
-        <p className="text-sm text-slate-700">
-          Times come from the server clock, not this device. You can only clock yourself. Ask a manager to correct a
-          mistake.
-        </p>
         {open ? (
           <>
             <p data-testid="clock-status">
@@ -203,8 +199,7 @@ function HoursTable({ report }: { report: HoursReport }) {
   return (
     <ScrollRegion label="Hours by day">
       <p className="text-xs text-slate-600">
-        {report.date_from} to {report.date_to} · America/Denver · elapsed time minus recorded unpaid breaks · refreshed{' '}
-        {formatDateTime(report.refreshed_at)}
+        {report.date_from} to {report.date_to} · America/Denver · refreshed {formatDateTime(report.refreshed_at)}
       </p>
       <table className="w-full border-collapse bg-white text-sm" data-testid="hours-table">
         <thead>
@@ -660,7 +655,6 @@ export function StaffPage() {
       <h1 id="staff-heading" className="text-2xl font-bold">
         Staff time — {selectedLocation.location_name}
       </h1>
-      <p className="text-sm text-slate-700">Schedules and time records only: no pay, overtime or automatic breaks.</p>
       <nav aria-label="Staff sections" className="flex flex-wrap gap-2">
         {tabs.map((t) => (
           <NavLink

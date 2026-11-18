@@ -60,18 +60,6 @@ export function OverviewPage() {
           Your account is signed in but has no active role. Ask the owner to grant a location membership.
         </Notice>
       ) : null}
-
-      <Notice tone="info" title="What is available in this build">
-        <p>
-          Milestones 1–2 are installed: sign-in and roles, pilot setup gates, staff access, purchasing with partial
-          receipts, the stock ledger, the staff POS, the kitchen and pickup queue, recorded payments and the sales
-          dashboard.
-        </p>
-        <p className="mt-1">
-          Counts, waste, transfers, returns, refunds, supplier invoices, planning, schedules and labels arrive in later
-          milestones and are not shown until they work end to end.
-        </p>
-      </Notice>
     </section>
   );
 }

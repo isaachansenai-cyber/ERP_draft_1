@@ -123,9 +123,6 @@ function RefundForm({ data, locationId, needsApproval, onDone }: FormProps) {
       }}
     >
       <h3 className="font-semibold">{moneyWord(data.order.tender_mode)}</h3>
-      <p className="text-xs text-slate-700">
-        Refunds use the original price, discount and tax of each line. Meals are refunded, never returned to stock.
-      </p>
       <ul className="flex flex-col gap-1">
         {data.lines.map((l) => {
           const left = l.quantity - l.refunded_quantity;
@@ -163,7 +160,7 @@ function RefundForm({ data, locationId, needsApproval, onDone }: FormProps) {
         <Field label={needsNote ? 'Note (required)' : 'Note'} htmlFor="refund-note">
           <input id="refund-note" className={inputClass} value={note} onChange={(e) => setNote(e.target.value)} />
         </Field>
-        <Field label="External reference" htmlFor="refund-ref" hint="e.g. terminal slip number">
+        <Field label="External reference" htmlFor="refund-ref">
           <input
             id="refund-ref"
             className={inputClass}
@@ -270,10 +267,7 @@ function ReturnForm({ data, locationId, needsApproval, onDone }: FormProps) {
       }}
     >
       <h3 className="font-semibold">Retail return</h3>
-      <p className="text-xs text-slate-700">
-        Returned bottles go to a held custody record outside sellable stock until a manager decides. Window:{' '}
-        {data.return_window_days ?? '—'} days from the sale.
-      </p>
+      <p className="text-xs text-slate-700">Window: {data.return_window_days ?? '—'} days from the sale.</p>
       {editor('ret')}
       <div className="flex flex-wrap items-end gap-2">
         <ReasonSelect
@@ -346,10 +340,6 @@ function ExchangeForm({ data, locationId, needsApproval, onDone }: FormProps) {
       }}
     >
       <h3 className="font-semibold">Exchange (retail)</h3>
-      <p className="text-xs text-slate-700">
-        One step: the returned units go to custody, their original value is credited to a replacement sale, and the
-        replacement is reserved and handed over. If the replacement is out of stock, nothing is recorded.
-      </p>
       {editor('exc')}
       <div className="flex flex-wrap items-end gap-2">
         <Field label="Replacement item" htmlFor="exchange-item">
@@ -442,7 +432,7 @@ function OrderActions({ locationId, isManager }: { locationId: string; isManager
           setSubmitted(lookup.trim());
         }}
       >
-        <Field label="Order number or pickup code" htmlFor="return-lookup" hint="Returns need the original sale">
+        <Field label="Order number or pickup code" htmlFor="return-lookup">
           <input id="return-lookup" className={inputClass} value={lookup} onChange={(e) => setLookup(e.target.value)} />
         </Field>
         <Button type="submit" disabled={!lookup.trim()}>

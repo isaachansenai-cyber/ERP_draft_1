@@ -37,11 +37,6 @@ export function ReturnPolicyPanel() {
       <h2 id="policy-heading" className="text-lg font-semibold">
         Retail return policy
       </h2>
-      <p className="text-sm text-slate-700">
-        Meals are refunded, never returned. Retail units can be returned to the selling location within the window.
-        Returned goods are held outside stock; with restocking disabled they can only be disposed. After saving, confirm
-        the <span className="font-mono">return_policy_configured</span> gate under Pilot setup.
-      </p>
       {policy.isPending ? (
         <Loading />
       ) : policy.error ? (

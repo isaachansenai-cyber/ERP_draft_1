@@ -306,9 +306,6 @@ export function KitchenPage() {
           Refresh
         </Button>
       </div>
-      <p className="text-sm text-slate-700">
-        Staff start and complete each step. Nothing advances on a timer; prep lead times are shown as context only.
-      </p>
       {queue.isPending ? (
         <Loading />
       ) : queue.error ? (

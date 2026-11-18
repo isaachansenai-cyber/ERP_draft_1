@@ -40,11 +40,7 @@ function ScannerTest({ items }: { items: LabelItem[] }) {
         setValue('');
       }}
     >
-      <Field
-        label="Scanner test"
-        htmlFor="scanner-test"
-        hint="Scan a label with a keyboard-wedge scanner (it types the code and Enter)"
-      >
+      <Field label="Scanner test" htmlFor="scanner-test">
         <input
           id="scanner-test"
           className={inputClass}
@@ -96,9 +92,6 @@ export function LabelsPage() {
       <h1 id="labels-heading" className="text-2xl font-bold">
         Barcode labels
       </h1>
-      <p className="text-sm text-slate-700" data-print="hide">
-        Code 128 labels encode the internal item ID. They are not manufacturer UPC/GTIN codes.
-      </p>
       {items.isPending ? (
         <Loading />
       ) : items.error ? (

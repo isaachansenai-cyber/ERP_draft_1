@@ -104,13 +104,9 @@ test('planning, hours and supplier reports show scope, source and refresh indica
     /demo operational · as of \d{4}-\d{2}-\d{2} .* America\/Denver · refreshed/,
   );
   await page.goto('./#/staff/time');
-  await expect(
-    page.getByText(
-      /America\/Denver · elapsed time minus recorded unpaid breaks · refreshed|No recorded time in this range/,
-    ),
-  ).toBeVisible();
+  await expect(page.getByText(/America\/Denver · refreshed|No recorded time in this range/)).toBeVisible();
   await page.goto('./#/invoices');
   await expect(
-    page.getByText(/Overdue is judged by the due date against today's date in America\/Denver/),
+    page.getByText(/as of \d{4}-\d{2}-\d{2} · refreshed .* · USD|No supplier invoices for this location/),
   ).toBeVisible();
 });
