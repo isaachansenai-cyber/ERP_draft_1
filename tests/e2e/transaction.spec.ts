@@ -72,16 +72,17 @@ test('POS → kitchen → simulated payment → pickup, with scanner rules', asy
   );
   expect(row).toEqual({ status: 'completed', tender_type: 'SIMULATED' });
 
+  // The sale reaches the location manager's dashboard (employees have none, ADR 0033).
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await signIn(page, 'DEMO-LOC-PRO-MAN-1');
   await page.goto('./#/dashboard');
   await expect(page.getByTestId('report-scope')).toContainText('demo operational');
   await expect(page.getByTestId('summary-LOC-PRO')).toBeVisible();
-  // Employees get the daily summary: sales figures, but cost and margin cells are withheld ("—").
   const summaryRow = page.getByTestId('summary-LOC-PRO');
   const cells = await summaryRow.locator('td').allTextContents();
   const headers = await page.locator('thead th').allTextContents();
-  expect(cells[headers.indexOf('COGS')]).toBe('—');
-  expect(cells[headers.indexOf('Gross margin')]).toBe('—');
   expect(Number(cells[headers.indexOf('Completed orders')])).toBeGreaterThanOrEqual(1);
+  expect(cells[headers.indexOf('COGS')]).not.toBe('—');
 });
 
 test('a POS acceptance whose response is lost is confirmed by its request key — one order, no duplicate', async ({
@@ -160,10 +161,21 @@ test('a manager creates, submits and partially receives a purchase order; stock 
   expect(Number(after!.q) - Number(before!.q)).toBe(Number(si!.pack));
 });
 
-test('employees see availability without costs; managers see average cost', async ({ page }) => {
+test('employees only report waste under Inventory; managers see stock with average cost', async ({ page }) => {
   await signIn(page, 'DEMO-LOC-PRO-EMP-2');
+  await expect(page.getByRole('link', { name: 'Inventory' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Waste reports' }).click();
+  await expect(page).toHaveURL(/#\/inventory\/waste$/);
+  await page.goto('./#/inventory');
+  await expect(page).toHaveURL(/#\/inventory\/waste$/); // the stock list is not offered
+  await expect(page.getByRole('columnheader', { name: 'Available' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /stock chart/ })).toHaveCount(0);
+  await expect(page.getByLabel('Item 1')).toBeVisible(); // the waste form still lists items
+  await expect(page.getByRole('link', { name: 'Purchasing' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await signIn(page, 'DEMO-LOC-PRO-MAN-1');
   await page.goto('./#/inventory');
   await expect(page.getByRole('columnheader', { name: 'Available' })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'Avg cost / unit' })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Purchasing' })).toHaveCount(0);
+  await expect(page.getByRole('columnheader', { name: 'Avg cost / unit' })).toBeVisible();
 });

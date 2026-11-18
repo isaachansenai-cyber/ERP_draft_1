@@ -12,12 +12,12 @@ export interface StockHistoryDay {
 export const W = 720;
 export const LEFT = 56;
 export const RIGHT = 16;
-export const LINE_TOP = 12;
+export const LINE_TOP = 24;
 export const LINE_H = 150;
-export const BAR_TOP = LINE_TOP + LINE_H + 28;
+export const BAR_TOP = LINE_TOP + LINE_H + 40;
 export const BAR_H = 64;
 export const H = BAR_TOP + BAR_H + 28;
-const PLOT_W = W - LEFT - RIGHT;
+export const PLOT_W = W - LEFT - RIGHT;
 
 /**
  * Pure drawing helper, exported for unit tests. Numbers are parsed only to
@@ -37,5 +37,6 @@ export function chartGeometry(series: StockHistoryDay[], reorderPoint: string | 
   const yLine = (v: number) => LINE_TOP + LINE_H - (Math.max(v, 0) / lineMax) * LINE_H;
   const barHeight = (v: number) => (Math.max(v, 0) / barMax) * BAR_H;
   const path = onHand.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${yLine(v).toFixed(1)}`).join(' ');
-  return { n, band, x, yLine, barHeight, path, lineMax, barMax, rop, used, wasted, received, onHand };
+  const hasBars = used.some((v) => v > 0) || wasted.some((v) => v > 0) || received.some((v) => v > 0);
+  return { n, band, x, yLine, barHeight, path, lineMax, barMax, hasBars, rop, used, wasted, received, onHand };
 }

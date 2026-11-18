@@ -10,6 +10,7 @@ import {
   LEFT,
   LINE_H,
   LINE_TOP,
+  PLOT_W,
   RIGHT,
   W,
   type StockHistoryDay,
@@ -66,15 +67,15 @@ function Chart({ data }: { data: StockHistory }) {
       data-testid="stock-history-svg"
     >
       {/* stock level panel */}
+      <text x={LEFT} y={LINE_TOP - 10} className="fill-slate-900 text-[12px] font-semibold">
+        On hand at end of day ({unit})
+      </text>
       <line x1={LEFT} x2={W - RIGHT} y1={LINE_TOP + LINE_H} y2={LINE_TOP + LINE_H} className="stroke-slate-400" />
       <text x={LEFT - 6} y={LINE_TOP + 4} textAnchor="end" className="fill-slate-700 text-[11px]">
         {Math.round(g.lineMax).toLocaleString()}
       </text>
       <text x={LEFT - 6} y={LINE_TOP + LINE_H} textAnchor="end" className="fill-slate-700 text-[11px]">
         0
-      </text>
-      <text x={LEFT} y={LINE_TOP + LINE_H + 16} className="fill-slate-700 text-[11px]">
-        On hand ({unit})
       </text>
       {g.rop != null ? (
         <g data-testid="reorder-line">
@@ -87,12 +88,7 @@ function Chart({ data }: { data: StockHistory }) {
             strokeWidth={2}
             className="stroke-red-700"
           />
-          <text
-            x={W - RIGHT}
-            y={g.yLine(g.rop) - 4}
-            textAnchor="end"
-            className="fill-red-800 text-[11px] font-semibold"
-          >
+          <text x={LEFT + 4} y={g.yLine(g.rop) - 5} className="fill-red-800 text-[11px] font-semibold">
             Reorder point {q(data.reorder_point)}
           </text>
         </g>
@@ -105,13 +101,29 @@ function Chart({ data }: { data: StockHistory }) {
       ))}
 
       {/* daily movements panel */}
+      <text x={LEFT} y={BAR_TOP - 10} className="fill-slate-900 text-[12px] font-semibold">
+        Per day ({unit}): used, wasted, delivered
+      </text>
       <line x1={LEFT} x2={W - RIGHT} y1={BAR_TOP + BAR_H} y2={BAR_TOP + BAR_H} className="stroke-slate-400" />
-      <text x={LEFT - 6} y={BAR_TOP + 4} textAnchor="end" className="fill-slate-700 text-[11px]">
-        {Math.round(g.barMax).toLocaleString()}
-      </text>
-      <text x={LEFT - 6} y={BAR_TOP + BAR_H} textAnchor="end" className="fill-slate-700 text-[11px]">
-        0
-      </text>
+      {g.hasBars ? (
+        <>
+          <text x={LEFT - 6} y={BAR_TOP + 4} textAnchor="end" className="fill-slate-700 text-[11px]">
+            {Math.round(g.barMax).toLocaleString()}
+          </text>
+          <text x={LEFT - 6} y={BAR_TOP + BAR_H} textAnchor="end" className="fill-slate-700 text-[11px]">
+            0
+          </text>
+        </>
+      ) : (
+        <text
+          x={LEFT + PLOT_W / 2}
+          y={BAR_TOP + BAR_H / 2 + 4}
+          textAnchor="middle"
+          className="fill-slate-700 text-[12px]"
+        >
+          No usage, waste or deliveries in this period
+        </text>
+      )}
       {data.series.map((d, i) => {
         const usedH = g.barHeight(g.used[i]!);
         const wasteH = g.barHeight(g.wasted[i]!);
