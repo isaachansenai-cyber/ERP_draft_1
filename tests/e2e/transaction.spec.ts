@@ -169,7 +169,7 @@ test('employees only report waste under Inventory; managers see stock with avera
   await page.goto('./#/inventory');
   await expect(page).toHaveURL(/#\/inventory\/waste$/); // the stock list is not offered
   await expect(page.getByRole('columnheader', { name: 'Available' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /stock chart/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Chart for / })).toHaveCount(0);
   await expect(page.getByLabel('Item 1')).toBeVisible(); // the waste form still lists items
   await expect(page.getByRole('link', { name: 'Purchasing' })).toHaveCount(0);
 

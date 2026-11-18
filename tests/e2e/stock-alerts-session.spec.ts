@@ -66,7 +66,7 @@ test('a manager opens an item chart from its stock row and switches between 7, 3
     await signIn(page, 'DEMO-LOC-PRO-MAN-1');
     await page.goto('./#/inventory');
     const [{ name }] = await query<{ name: string }>(`select name from public.items where item_id = 'ING-001'`);
-    await page.getByRole('button', { name: `Show stock chart for ${name}` }).click();
+    await page.getByRole('button', { name: `Chart for ${name}`, exact: true }).click();
     const panel = page.getByTestId('history-ING-001');
     await expect(panel.getByTestId('stock-history-svg')).toBeVisible();
     await expect(panel.getByTestId('reorder-line')).toBeAttached();
@@ -85,7 +85,7 @@ test('a manager opens an item chart from its stock row and switches between 7, 3
     await panel.getByRole('button', { name: '90 days' }).click();
     await expect(rows).toHaveCount(90);
 
-    await page.getByRole('button', { name: `Hide stock chart for ${name}` }).click();
+    await page.getByRole('button', { name: `Hide chart for ${name}`, exact: true }).click();
     await expect(panel).toHaveCount(0);
   } finally {
     await restore();

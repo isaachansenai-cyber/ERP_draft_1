@@ -390,7 +390,7 @@ export function InventoryPage() {
                               className="px-3"
                               aria-expanded={openChart === i.item_id}
                               aria-controls={`history-row-${i.item_id}`}
-                              aria-label={`${openChart === i.item_id ? 'Hide' : 'Show'} stock chart for ${i.name}`}
+                              aria-label={`${openChart === i.item_id ? 'Hide chart' : 'Chart'} for ${i.name}`}
                               onClick={() => toggleChart(i.item_id)}
                             >
                               {openChart === i.item_id ? 'Hide chart' : 'Chart'}
