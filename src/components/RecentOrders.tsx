@@ -2,9 +2,10 @@
 // exchange instead of typing its order number or pickup code. Read-only: staff already read orders
 // at their own locations (orders_read policy), so this needs no database change.
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { formatCents, formatDateTime } from '../lib/format';
 import { supabase } from '../lib/supabase';
-import { Empty, Loading, QueryError } from './ui';
+import { Empty, inputClass, Loading, QueryError } from './ui';
 
 // Matches the return policy's 30-day window: older orders can't be returned anyway.
 const WINDOW_DAYS = 30;
@@ -34,6 +35,7 @@ export function RecentOrders({
   selected: string;
   onPick: (orderNumber: string) => void;
 }) {
+  const [filter, setFilter] = useState('');
   const recent = useQuery({
     // Shares the 'order-for-return' prefix so the list refreshes after a refund, return or exchange.
     queryKey: ['order-for-return', locationId, 'recent'],
@@ -54,18 +56,38 @@ export function RecentOrders({
     },
   });
 
+  const term = filter.trim().toLowerCase();
+  const rows = (recent.data ?? []).filter(
+    (o) =>
+      !term ||
+      o.pickup_code.toLowerCase().includes(term) ||
+      o.order_number.toLowerCase().includes(term) ||
+      (o.pickup_name ?? '').toLowerCase().includes(term),
+  );
+
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold">Completed orders, last {WINDOW_DAYS} days</h2>
+      <input
+        aria-label="Search recent orders"
+        className={inputClass}
+        placeholder="Search by name, pickup code or order number"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
       {recent.isPending ? (
         <Loading />
       ) : recent.error ? (
         <QueryError error={recent.error} onRetry={() => void recent.refetch()} />
-      ) : recent.data.length === 0 ? (
-        <Empty>No completed orders at this location in the last {WINDOW_DAYS} days.</Empty>
+      ) : rows.length === 0 ? (
+        <Empty>
+          {term
+            ? 'No orders match that search.'
+            : `No completed orders at this location in the last ${WINDOW_DAYS} days.`}
+        </Empty>
       ) : (
         <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-          {recent.data.map((o) => (
+          {rows.map((o) => (
             <li key={o.order_id}>
               <button
                 type="button"

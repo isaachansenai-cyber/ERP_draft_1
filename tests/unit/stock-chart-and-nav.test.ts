@@ -74,6 +74,7 @@ describe('navigation by role (ADR 0033)', () => {
     for (const role of ['manager', 'owner']) {
       expect(labels(role)).toContain('Dashboard');
       expect(labels(role)).toContain('Inventory');
+      expect(labels(role)).toContain('Customer invoices');
       expect(labels(role)).toContain('Labels');
       expect(labels(role)).toContain('Settings & setup');
       expect(labels(role)).not.toContain('Waste reports');
