@@ -36,6 +36,7 @@ const NAV: Array<{ to: string; label: string; end: boolean; managersOnly?: boole
   { to: '/kitchen', label: 'Kitchen', end: false },
   { to: '/inventory', label: 'Inventory', end: false },
   { to: '/returns', label: 'Refunds & returns', end: false },
+  { to: '/customer-invoices', label: 'Customer invoices', end: false, managersOnly: true },
   { to: '/purchasing', label: 'Purchasing', end: false, managersOnly: true },
   { to: '/invoices', label: 'Supplier invoices', end: false, managersOnly: true },
   { to: '/planning', label: 'Planning', end: false, managersOnly: true },
