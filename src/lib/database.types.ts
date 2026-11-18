@@ -2286,6 +2286,9 @@ isOneToOne: false
 "get_hours_report":
 { Args: { "p_from": string,"p_location_id": string,"p_to": string }; Returns: Json
                            },
+"get_item_stock_history":
+{ Args: { "p_days"?: number,"p_item_id": string,"p_location_id": string }; Returns: Json
+                           },
 "get_matchable_receipt_lines":
 { Args: { "p_location_id": string,"p_supplier_id": string }; Returns: Json
                            },
@@ -2302,6 +2305,9 @@ isOneToOne: false
 { Args: { "p_location_id": string }; Returns: Json
                            },
 "get_public_app_mode":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"get_reorder_alerts":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "get_replenishment_plan":
@@ -2342,6 +2348,9 @@ isOneToOne: false
                            },
 "list_staff_access":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"list_stock_items":
+{ Args: { "p_location_id": string }; Returns: Json
                            },
 "list_waste_reports":
 { Args: { "p_location_id": string,"p_status"?: string }; Returns: Json
