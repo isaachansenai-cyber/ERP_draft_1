@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Decimal from 'decimal.js';
-import { useState } from 'react';
-import { NavLink, Navigate, useParams } from 'react-router-dom';
+import { Fragment, useState } from 'react';
+import { NavLink, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { StockHistoryPanel } from '../components/StockHistoryChart';
 import {
   Badge,
   Button,
@@ -19,7 +20,13 @@ import { formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
 import { useRpcMutation } from '../lib/useRpcMutation';
 import { usePosMenu } from './PosPage';
-import { CountsPanel, QuarantineAction, TransfersPanel, WastePanel } from './inventory/ControlsPanels';
+import {
+  CountsPanel,
+  QuarantineAction,
+  TransfersPanel,
+  WastePanel,
+  type StockItemLite,
+} from './inventory/ControlsPanels';
 
 interface StockLot {
   lot_id: string;
@@ -241,35 +248,45 @@ export function InventoryPage() {
   const { selectedLocation } = useAuth();
   const queryClient = useQueryClient();
   const locationId = selectedLocation?.location_id;
+  // Employees only report waste here (ADR 0033); the stock overview is managers-only on the server.
+  const isManager = Boolean(selectedLocation) && selectedLocation?.role !== 'employee';
   const stock = useQuery({
     queryKey: ['stock', locationId],
-    enabled: Boolean(locationId),
+    enabled: Boolean(locationId) && isManager,
     queryFn: () => callRpc<StockOverview>('get_stock_overview', { p_location_id: locationId! }),
   });
-  const menu = usePosMenu(locationId);
+  // Item names for the count, waste and transfer forms (no quantities).
+  const stockItems = useQuery({
+    queryKey: ['stock-items', locationId],
+    enabled: Boolean(locationId),
+    queryFn: () => callRpc<StockItemLite[]>('list_stock_items', { p_location_id: locationId! }),
+  });
+  const menu = usePosMenu(isManager ? locationId : undefined);
   const [filter, setFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openChart = searchParams.get('chart');
   const { tab } = useParams();
 
   if (!selectedLocation || !locationId) return <Notice tone="warning">Choose a location.</Notice>;
-  const isManager = selectedLocation.role !== 'employee';
-  const tabs = [
-    { id: 'stock', label: 'Stock & lots' },
-    ...(isManager ? [{ id: 'counts', label: 'Counts' }] : []),
-    { id: 'waste', label: 'Waste reports' },
-    ...(isManager ? [{ id: 'transfers', label: 'Transfers' }] : []),
-  ];
-  const current = tab ?? 'stock';
-  if (!tabs.some((t) => t.id === current)) return <Navigate to="/inventory" replace />;
+  const tabs = isManager
+    ? [
+        { id: 'stock', label: 'Stock & lots' },
+        { id: 'counts', label: 'Counts' },
+        { id: 'waste', label: 'Waste reports' },
+        { id: 'transfers', label: 'Transfers' },
+      ]
+    : [{ id: 'waste', label: 'Waste reports' }];
+  const current = tab ?? (isManager ? 'stock' : 'waste');
+  if (!tabs.some((t) => t.id === current) || (!isManager && !tab))
+    return <Navigate to={isManager ? '/inventory' : '/inventory/waste'} replace />;
   const refreshStock = () => void queryClient.invalidateQueries({ queryKey: ['stock', locationId] });
-  const lite = (stock.data?.items ?? []).map((i) => ({
-    item_id: i.item_id,
-    name: i.name,
-    base_unit: i.base_unit,
-    item_type: i.item_type,
-  }));
+  const toggleChart = (itemId: string) =>
+    setSearchParams(openChart === itemId ? {} : { chart: itemId }, { replace: true });
+  const lite = stockItems.data ?? [];
   const items = (stock.data?.items ?? []).filter((i) =>
     `${i.item_id} ${i.name}`.toLowerCase().includes(filter.toLowerCase()),
   );
+  const columns = 6 + (stock.data?.shows_costs ? 2 : 0);
 
   return (
     <section aria-labelledby="inventory-heading" className="flex flex-col gap-4">
@@ -291,10 +308,10 @@ export function InventoryPage() {
         ))}
       </nav>
       {current !== 'stock' ? (
-        stock.isPending ? (
+        stockItems.isPending ? (
           <Loading />
-        ) : stock.error ? (
-          <QueryError error={stock.error} onRetry={() => void stock.refetch()} />
+        ) : stockItems.error ? (
+          <QueryError error={stockItems.error} onRetry={() => void stockItems.refetch()} />
         ) : current === 'counts' ? (
           <CountsPanel locationId={locationId} items={lite} />
         ) : current === 'waste' ? (
@@ -352,61 +369,84 @@ export function InventoryPage() {
                 </thead>
                 <tbody>
                   {items.map((i) => (
-                    <tr key={i.item_id} className="border-b border-slate-200 align-top">
-                      <td className="p-2">
-                        <span className="font-mono">{i.item_id}</span> {i.name}
-                        {i.below_reorder_point ? (
+                    <Fragment key={i.item_id}>
+                      <tr className="border-b border-slate-200 align-top">
+                        <td className="p-2">
+                          <span className="font-mono">{i.item_id}</span> {i.name}
+                          {i.below_reorder_point ? (
+                            <>
+                              {' '}
+                              <Badge tone="warn">Below reorder point</Badge>
+                            </>
+                          ) : null}
+                        </td>
+                        <td className="p-2">
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span>
+                              {qty(i.on_hand)} {i.base_unit}
+                            </span>
+                            <Button
+                              variant="secondary"
+                              className="px-3"
+                              aria-expanded={openChart === i.item_id}
+                              aria-controls={`history-row-${i.item_id}`}
+                              aria-label={`${openChart === i.item_id ? 'Hide' : 'Show'} stock chart for ${i.name}`}
+                              onClick={() => toggleChart(i.item_id)}
+                            >
+                              {openChart === i.item_id ? 'Hide chart' : 'Chart'}
+                            </Button>
+                          </span>
+                        </td>
+                        <td className="p-2">{qty(i.reserved)}</td>
+                        <td className="p-2">{qty(i.quarantined)}</td>
+                        <td className="p-2 font-semibold">
+                          {qty(i.available)}
+                          {Number(i.expired_on_hand) > 0 ? (
+                            <span className="block text-xs text-red-800">{qty(i.expired_on_hand)} expired</span>
+                          ) : null}
+                        </td>
+                        {stock.data.shows_costs ? (
                           <>
-                            {' '}
-                            <Badge tone="warn">Below reorder point</Badge>
+                            <td className="p-2">${qty(i.avg_unit_cost)}</td>
+                            <td className="p-2">${i.stock_value ?? '0.00'}</td>
                           </>
                         ) : null}
-                      </td>
-                      <td className="p-2">
-                        {qty(i.on_hand)} {i.base_unit}
-                      </td>
-                      <td className="p-2">{qty(i.reserved)}</td>
-                      <td className="p-2">{qty(i.quarantined)}</td>
-                      <td className="p-2 font-semibold">
-                        {qty(i.available)}
-                        {Number(i.expired_on_hand) > 0 ? (
-                          <span className="block text-xs text-red-800">{qty(i.expired_on_hand)} expired</span>
-                        ) : null}
-                      </td>
-                      {stock.data.shows_costs ? (
-                        <>
-                          <td className="p-2">${qty(i.avg_unit_cost)}</td>
-                          <td className="p-2">${i.stock_value ?? '0.00'}</td>
-                        </>
+                        <td className="p-2">
+                          {i.lots.length === 0 ? (
+                            '—'
+                          ) : (
+                            <details>
+                              <summary className="min-h-11 cursor-pointer py-2">{i.lots.length} lot(s)</summary>
+                              <ul className="text-xs">
+                                {i.lots.map((l) => (
+                                  <li key={`${l.lot_id}-${l.condition}`}>
+                                    {l.lot_code} · {qty(l.on_hand)} on hand, {qty(l.reserved)} reserved · use-by{' '}
+                                    {l.use_by_date ?? 'none'} · {l.condition}
+                                    {!l.eligible ? ' · not eligible' : ''} · received {formatDateTime(l.received_at)}
+                                    {isManager && Number(l.on_hand) > 0 ? (
+                                      <QuarantineAction
+                                        lotId={l.lot_id}
+                                        lotCode={l.lot_code}
+                                        condition={l.condition}
+                                        free={new Decimal(l.on_hand).minus(l.reserved).toString()}
+                                        onDone={refreshStock}
+                                      />
+                                    ) : null}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          )}
+                        </td>
+                      </tr>
+                      {openChart === i.item_id ? (
+                        <tr id={`history-row-${i.item_id}`} className="border-b border-slate-300">
+                          <td colSpan={columns} className="p-2">
+                            <StockHistoryPanel locationId={locationId} itemId={i.item_id} />
+                          </td>
+                        </tr>
                       ) : null}
-                      <td className="p-2">
-                        {i.lots.length === 0 ? (
-                          '—'
-                        ) : (
-                          <details>
-                            <summary className="min-h-11 cursor-pointer py-2">{i.lots.length} lot(s)</summary>
-                            <ul className="text-xs">
-                              {i.lots.map((l) => (
-                                <li key={`${l.lot_id}-${l.condition}`}>
-                                  {l.lot_code} · {qty(l.on_hand)} on hand, {qty(l.reserved)} reserved · use-by{' '}
-                                  {l.use_by_date ?? 'none'} · {l.condition}
-                                  {!l.eligible ? ' · not eligible' : ''} · received {formatDateTime(l.received_at)}
-                                  {isManager && Number(l.on_hand) > 0 ? (
-                                    <QuarantineAction
-                                      lotId={l.lot_id}
-                                      lotCode={l.lot_code}
-                                      condition={l.condition}
-                                      free={new Decimal(l.on_hand).minus(l.reserved).toString()}
-                                      onDone={refreshStock}
-                                    />
-                                  ) : null}
-                                </li>
-                              ))}
-                            </ul>
-                          </details>
-                        )}
-                      </td>
-                    </tr>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
