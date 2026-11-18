@@ -78,23 +78,14 @@ test('a manager’s CSV export equals the screen; other locations show only allo
   }
 });
 
-test('employees get no export at all, and their screen withholds cost and margin', async ({ page }) => {
+test('employees get no dashboard and no export (ADR 0033)', async ({ page }) => {
   await signIn(page, 'DEMO-LOC-PRO-EMP-1');
+  await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveCount(0);
   await page.goto('./#/dashboard');
-  await expect(page.getByTestId('report-scope')).toContainText('demo operational');
-  await expect(page.getByRole('button', { name: 'Export CSV' })).toHaveCount(0); // exports are owner/manager only
-  const headers = await page.locator('thead th').allTextContents();
-  const cells = await page.getByTestId('summary-LOC-PRO').locator('td').allTextContents();
-  for (const label of [
-    'COGS',
-    'Gross margin',
-    'Waste cost (total)',
-    'Inventory value (now)',
-    'Supplier balance (now)',
-  ]) {
-    expect(cells[headers.indexOf(label)]).toBe('—');
-  }
-  await expect(page.locator('[data-testid^="summary-"]')).toHaveCount(1);
+  await expect(page.getByText('This screen is for managers and the owner.')).toBeVisible();
+  await expect(page.getByTestId('report-scope')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Export CSV' })).toHaveCount(0);
+  await expect(page.locator('[data-testid^="summary-"]')).toHaveCount(0);
 });
 
 test('planning, hours and supplier reports show scope, source and refresh indicators', async ({ page }) => {

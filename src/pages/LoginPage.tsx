@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
+import { sessionEndedNoticePending, useAuth } from '../auth/AuthContext';
 import { DataModeBanner, OfflineBanner } from '../components/AppShell';
 import { Button, Field, inputClass, Notice } from '../components/ui';
 import { callRpc } from '../lib/rpc';
@@ -13,6 +13,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sessionEnded] = useState(sessionEndedNoticePending);
 
   const mode = useQuery({
     queryKey: ['public-app-mode'],
@@ -52,6 +53,13 @@ export function LoginPage() {
           <div className="mt-4">
             <Notice tone="error" title="Not configured">
               {configError}
+            </Notice>
+          </div>
+        ) : null}
+        {sessionEnded ? (
+          <div className="mt-4">
+            <Notice tone="warning" title="Your session ended">
+              Please sign in again. This happens when the sign-in expires or is ended on the server.
             </Notice>
           </div>
         ) : null}

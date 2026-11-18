@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { navFor } from '../lib/nav';
 import { useOnlineStatus } from '../lib/useOnlineStatus';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Button, Loading } from './ui';
@@ -27,24 +28,6 @@ export function OfflineBanner() {
     </div>
   );
 }
-
-// Navigation is a convenience only; every screen and RPC is authorized server-side.
-const NAV: Array<{ to: string; label: string; end: boolean; managersOnly?: boolean }> = [
-  { to: '/', label: 'Overview', end: true },
-  { to: '/dashboard', label: 'Dashboard', end: false },
-  { to: '/pos', label: 'POS', end: false },
-  { to: '/kitchen', label: 'Kitchen', end: false },
-  { to: '/inventory', label: 'Inventory', end: false },
-  { to: '/returns', label: 'Refunds & returns', end: false },
-  { to: '/customer-invoices', label: 'Customer invoices', end: false, managersOnly: true },
-  { to: '/purchasing', label: 'Purchasing', end: false, managersOnly: true },
-  { to: '/invoices', label: 'Supplier invoices', end: false, managersOnly: true },
-  { to: '/planning', label: 'Planning', end: false, managersOnly: true },
-  { to: '/serve', label: 'What can we serve', end: false },
-  { to: '/staff', label: 'Staff time', end: false },
-  { to: '/labels', label: 'Labels', end: false },
-  { to: '/settings', label: 'Settings & setup', end: false },
-];
 
 export function AppShell() {
   const { context, selectedLocation, selectLocation, signOut } = useAuth();
@@ -88,7 +71,7 @@ export function AppShell() {
           </Button>
         </div>
         <nav aria-label="Main" className="mx-auto flex max-w-6xl flex-wrap gap-1 px-4">
-          {NAV.filter((n) => !n.managersOnly || selectedLocation?.role !== 'employee').map((n) => (
+          {navFor(selectedLocation?.role).map((n) => (
             <NavLink
               key={n.to}
               to={n.to}

@@ -29,6 +29,7 @@ const MANAGER_ROUTES = [
   '#/pos',
   '#/kitchen',
   '#/inventory',
+  '#/inventory?chart=ING-001',
   '#/inventory/counts',
   '#/inventory/waste',
   '#/inventory/transfers',
@@ -53,7 +54,6 @@ const MANAGER_ROUTES = [
 ];
 const EMPLOYEE_ROUTES = [
   '#/',
-  '#/dashboard',
   '#/pos',
   '#/kitchen',
   '#/inventory',
@@ -61,7 +61,6 @@ const EMPLOYEE_ROUTES = [
   '#/returns',
   '#/serve',
   '#/staff',
-  '#/labels',
 ];
 
 async function settle(page: Page, route: string) {

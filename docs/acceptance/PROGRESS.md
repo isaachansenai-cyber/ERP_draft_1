@@ -286,3 +286,24 @@ Checklist now: **30 PASS, 3 PARTIAL (AC30, AC31, AC32), 1 NOT_RUN (AC33).** All 
 ### Open items for the operator
 
 See "What the operator must do or accept" in `ACCEPTANCE_REPORT.md`: live hosting (AC30), the hosted restore rehearsal, the hosted performance rerun, on-site device checks, real operating values for every gate, and the ADR decisions to confirm.
+
+## Post-launch changes (operator requests, 2026-11-18)
+
+### Delivered
+
+- **Item stock chart** (ADR 0034): a Chart button beside each on-hand count in Inventory opens on-hand history with the reorder point line, daily usage/waste/delivery bars, a 7/30/90-day toggle, the suggested order quantity and the next expected delivery. Managers and owner only.
+- **Needs reordering card** (ADR 0034): on Overview, for the location's manager only (not the owner, not employees). It refreshes every minute and stores nothing.
+- **Employee scope** (ADR 0033): employees lose the Dashboard, Labels, Settings and the stock list. The sales summary, stock overview and raw stock tables are now refused on the server. Employees can still submit waste reports.
+- **Sessions** (ADR 0035): Sign out ends only this device's session, and an ended session lands on sign-in with an explanation instead of error screens.
+
+### Evidence
+
+- Migration `0023` and pgTAP `007_stock_history_alerts.test.sql`.
+- Integration: `tests/integration/ops/m5-stock-history-alerts.test.ts`.
+- Browser: `tests/e2e/stock-alerts-session.spec.ts`, plus updated foundation, reports, transaction, staff-planning and tablet specs.
+- Unit: `tests/unit/stock-chart-and-nav.test.ts` and `rpc-errors.test.ts`.
+
+### Notes
+
+- `docs/acceptance/evidence/perf-AC33.*` records the earlier run, whose employee loop still read the sales summary. The load script no longer does, so a rerun's numbers will differ slightly.
+- The owner's POS error at Provo could not be reproduced on current code. The session fix targets the cause seen in the hosted logs, and the exact error text is still wanted.

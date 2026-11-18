@@ -202,7 +202,7 @@ grant execute on function ... to authenticated;
 
 - **Owner:** everything, all locations, including memberships, company catalog and recipe versions, setup gates and demo reset (demo only).
 - **Manager:** full operational control at assigned location(s). Reads other locations' **aggregated sales totals and availability only**. No membership writes. Approves discounts, post-start cancellations, over-receipts, discrepancies, refunds, returns and exchanges at their own location.
-- **Employee:** POS and kitchen at assigned location(s); cancel an unstarted order (audited); submit waste *reports*; own published shifts; own clock in/out; minimal customer lookup and create for an order; own-location daily sales summary. **No** costs, margins, customer lists, discounts, refunds, invoices, exports or permission edits.
+- **Employee:** POS and kitchen at assigned location(s); cancel an unstarted order (audited); submit waste *reports*; own published shifts; own clock in/out; minimal customer lookup and create for an order. **No** dashboard or sales summary, stock list, labels or settings (operator decision, ADR 0033), and **no** costs, margins, customer lists, discounts, refunds, invoices, exports or permission edits.
 - A frontend role selector or a client-sent `location_id` never grants access. The location selector only filters among locations the server says the user may access.
 - Every row of this matrix needs at least one **negative** API integration test, where the forbidden caller gets `unauthorized` or zero rows.
 

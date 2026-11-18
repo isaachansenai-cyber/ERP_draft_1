@@ -123,7 +123,6 @@ async function timed(
 const pick = <T>(arr: readonly T[], i: number) => arr[i % arr.length]!;
 
 async function employeeLoop(c: SupabaseClient, loc: string, iterations: number, seed: number, samples: Sample[]) {
-  const today = (await c.rpc('get_my_context')).data?.business_date as string;
   for (let i = 0; i < iterations; i++) {
     await timed(samples, 'get_pos_menu', 'query', () => c.rpc('get_pos_menu', { p_location_id: loc }));
     const lines = [{ item_id: pick([...DISHES, ...RETAIL], seed + i), quantity: 1 + ((seed + i) % 2) }];
@@ -178,10 +177,8 @@ async function employeeLoop(c: SupabaseClient, loc: string, iterations: number, 
       );
     }
     if (i % 3 === 0) {
+      // Employees no longer read the sales summary (ADR 0033).
       await timed(samples, 'get_serve_view', 'query', () => c.rpc('get_serve_view', { p_location_id: loc }));
-      await timed(samples, 'get_sales_summary_day', 'query', () =>
-        c.rpc('get_sales_summary', { p_from: today, p_to: today, p_location_ids: [loc] }),
-      );
     }
   }
 }
@@ -191,6 +188,7 @@ async function managerLoop(c: SupabaseClient, loc: string, iterations: number, s
   const monthAgo = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
   for (let i = 0; i < iterations; i++) {
     await timed(samples, 'get_stock_overview', 'query', () => c.rpc('get_stock_overview', { p_location_id: loc }));
+    await timed(samples, 'get_reorder_alerts', 'query', () => c.rpc('get_reorder_alerts'));
     await timed(samples, 'get_sales_summary_30d', 'query', () =>
       c.rpc('get_sales_summary', { p_from: monthAgo, p_to: today, p_location_ids: [loc] }),
     );

@@ -41,7 +41,7 @@ async function query<T = Record<string, string>>(text: string, params: unknown[]
 }
 
 test('all 47 items print as Code 128 labels; the scanner test reads the readable ID back', async ({ page }) => {
-  await signIn(page, 'DEMO-LOC-PRO-EMP-1');
+  await signIn(page, 'DEMO-LOC-PRO-MAN-1');
   await page.goto('./#/labels');
   const sheet = page.getByTestId('label-sheet');
   await expect(sheet.locator('li')).toHaveCount(47);

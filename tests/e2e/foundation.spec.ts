@@ -43,11 +43,19 @@ test('an employee sees only their location and no owner controls', async ({ page
   const options = page.locator('#location-select option');
   await expect(options).toHaveText(['Spanish Fork']);
   await expect(page.getByTestId('signed-in-as')).toContainText('employee');
+  await expect(page.getByRole('link', { name: 'Settings & setup' })).toHaveCount(0);
+  for (const route of ['./#/settings/setup', './#/settings/staff']) {
+    await page.goto(route);
+    await expect(page.getByText('This screen is for managers and the owner.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Confirm…|Reopen…/ })).toHaveCount(0);
+  }
+});
+
+test('a manager sees the owner-only gate note on Pilot setup but cannot confirm gates', async ({ page }) => {
+  await signIn(page, 'DEMO-LOC-SFO-MAN-1');
   await page.goto('./#/settings/setup');
   await expect(page.getByText('Only the owner can confirm or reopen gates.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Confirm…|Reopen…/ })).toHaveCount(0);
-  await page.goto('./#/settings/staff');
-  await expect(page.getByText('Staff access is managed by the owner and location managers.')).toBeVisible();
 });
 
 test('offline: posting is disabled and the app says nothing was saved', async ({ page, context }) => {

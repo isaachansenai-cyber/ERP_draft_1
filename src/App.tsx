@@ -23,6 +23,18 @@ const PurchasingPage = lazy(() => import('./pages/PurchasingPage').then((m) => (
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const StaffPage = lazy(() => import('./pages/StaffPage').then((m) => ({ default: m.StaffPage })));
 
+/** Screens employees do not use (ADR 0033). The server refuses their data as well. */
+function ManagersOnly({ children }: { children: JSX.Element }) {
+  const { selectedLocation } = useAuth();
+  if (selectedLocation?.role === 'employee')
+    return (
+      <Notice tone="warning" title="Not permitted">
+        This screen is for managers and the owner.
+      </Notice>
+    );
+  return children;
+}
+
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { session, context, contextLoading, contextError, refreshContext, signOut } = useAuth();
   const location = useLocation();
@@ -62,7 +74,14 @@ export function App() {
           }
         >
           <Route index element={<OverviewPage />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route
+            path="dashboard"
+            element={
+              <ManagersOnly>
+                <DashboardPage />
+              </ManagersOnly>
+            }
+          />
           <Route path="pos" element={<PosPage />} />
           <Route path="kitchen" element={<KitchenPage />} />
           <Route path="inventory" element={<InventoryPage />} />
@@ -76,11 +95,32 @@ export function App() {
           <Route path="serve" element={<ServePage />} />
           <Route path="staff" element={<StaffPage />} />
           <Route path="staff/:tab" element={<StaffPage />} />
-          <Route path="labels" element={<LabelsPage />} />
+          <Route
+            path="labels"
+            element={
+              <ManagersOnly>
+                <LabelsPage />
+              </ManagersOnly>
+            }
+          />
           <Route path="purchasing" element={<PurchasingPage />} />
           <Route path="purchasing/:tab" element={<PurchasingPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="settings/:tab" element={<SettingsPage />} />
+          <Route
+            path="settings"
+            element={
+              <ManagersOnly>
+                <SettingsPage />
+              </ManagersOnly>
+            }
+          />
+          <Route
+            path="settings/:tab"
+            element={
+              <ManagersOnly>
+                <SettingsPage />
+              </ManagersOnly>
+            }
+          />
           <Route
             path="*"
             element={
