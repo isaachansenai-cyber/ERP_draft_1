@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { ApprovalFields, approvalArgs, emptyApproval, type Approval } from '../components/ApprovalFields';
+import { OrderReceipt } from '../components/OrderReceipt';
 import { Badge, Button, Empty, Field, inputClass, Loading, MutationStatus, Notice, QueryError } from '../components/ui';
 import {
   clearDraft,
@@ -392,6 +393,13 @@ export function PosPage() {
             <span className="font-semibold">Total {formatCents(order.total_cents)}</span>
           </p>
           <RecordTender order={order} onRecorded={(o) => setOrder(o)} />
+          {order.balance_due_cents <= 0 ? (
+            <OrderReceipt
+              orderId={order.order_id}
+              locationName={selectedLocation.location_name}
+              version={order.paid_cents}
+            />
+          ) : null}
           <Button
             variant="secondary"
             onClick={() => {
