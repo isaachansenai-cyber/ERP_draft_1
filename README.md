@@ -43,13 +43,13 @@ Acceptance checklist today: **33 PASS, 1 PARTIAL** (AC30: the live GitHub Pages 
 | Route | Who | What it does |
 |---|---|---|
 | `#/login` | everyone | Staff sign-in. No self sign-up. The data-mode banner (PILOT/DEMO) comes from the server. |
-| `#/` Overview | all staff | Signed-in identity, location and role, business date, posting status, open setup gates |
-| `#/dashboard` | all staff (scoped) | Sales summary per location: completed orders, gross sales, discounts, refunds, net sales, tax, recorded payments and refunds paid out, average order value, COGS (less retail COGS reversed), gross margin, waste with its breakdown (post-start cancellations, posted waste reports, transit losses), count variance, inventory and in-transit value, supplier balance and overdue, pending prep cost, low-stock items, fulfillment time, cancellations. Cost, stock-value and supplier figures are for managers and the owner only. Date range, location scope and (demo only) a historical data source. CSV export uses the same server function. |
+| `#/` Overview | all staff | Signed-in identity, location and role, business date, posting status, open setup gates. Managers also get a **Needs reordering** card for their location (items whose available stock is below the reorder point, re-checked every minute; not shown to the owner or employees). |
+| `#/dashboard` | managers, owner | Sales summary per location: completed orders, gross sales, discounts, refunds, net sales, tax, recorded payments and refunds paid out, average order value, COGS (less retail COGS reversed), gross margin, waste with its breakdown (post-start cancellations, posted waste reports, transit losses), count variance, inventory and in-transit value, supplier balance and overdue, pending prep cost, low-stock items, fulfillment time, cancellations. Cost, stock-value and supplier figures are for managers and the owner only. Date range, location scope and (demo only) a historical data source. CSV export uses the same server function. |
 | `#/pos` | staff at the location | Menu with live "available now" counts and the limiting ingredient, plus a barcode/keyboard-wedge input. Scanning `ING-*` shows "Ingredient — not sellable". The cart is kept as a labeled **unsent draft**. Also: optional customer search/create, pickup name, kitchen note, manager-approved discount (with PIN dialog for employees), an estimated total, **Accept order**, then record the payment. |
 | `#/kitchen` | staff at the location | Queue in three columns (accepted, preparing, ready) showing pickup code, name, items, age, ETA and prep notes. Explicit **Start preparation**, **Mark ready** and **Complete pickup** (blocked until the balance due is 0). **Cancel** releases stock before start; after start it records waste with manager approval. If a payment was already recorded, the cancellation records its refund too (manager approval, refund method). Refreshes every 10 s. |
-| `#/inventory` | staff (costs: managers) | Per item: on hand, reserved, quarantined, available, expired, lots with use-by. Average cost and value for managers. One-time **opening count** form. Menu availability on/off switches. Managers can **quarantine** part of a lot or **release** it. |
+| `#/inventory` | managers, owner | Per item: on hand, reserved, quarantined, available, expired, lots with use-by, average cost and value. A **Chart** button beside each on-hand count opens on-hand history with the reorder point line, daily usage/waste/delivery bars (7/30/90 days), the suggested order quantity and the next expected delivery. One-time **opening count** form. Menu availability on/off switches. Managers can **quarantine** part of a lot or **release** it. |
 | `#/inventory/counts` | managers | Start a count (all items or a filtered set) that snapshots each lot; enter physical quantities; post with a reason. A count is rejected if stock moved after its snapshot, and can never go below reserved stock. |
-| `#/inventory/waste` | staff submit, managers decide | Employees report waste (items, quantities, reason, note). Nothing moves until a manager **posts** it (removing unreserved stock: quarantined, then expired, then earliest use-by) or **rejects** it with a reason. Costs are shown to managers only. |
+| `#/inventory/waste` | staff submit, managers decide | Shown to employees as "Waste reports" (their only Inventory screen). Employees report waste (items, quantities, reason, note). Nothing moves until a manager **posts** it (removing unreserved stock: quarantined, then expired, then earliest use-by) or **rejects** it with a reason. Costs are shown to managers only. |
 | `#/inventory/transfers` | managers | Create a transfer to another location, **dispatch** it (stock goes in transit), and at the destination **receive** what arrived, recording any loss with a reason. Partial receipts keep the rest in transit. |
 | `#/returns` | staff (employees with a manager PIN) | Find a completed order by number or pickup code, then **refund** units (from the original price, discount and tax), record a **retail return** (goods go to held custody, optional refund) or an **exchange** for another retail item, all in one step. |
 | `#/returns/custody` | managers | Returned goods awaiting a decision: **restock** at the original cost (only unopened shelf-stable retail, only if the return policy allows it) or **dispose** with a note. |
@@ -63,10 +63,10 @@ Acceptance checklist today: **33 PASS, 1 PARTIAL** (AC30: the live GitHub Pages 
 | `#/staff` | all staff | Clock in/out and unpaid breaks on the server clock, my published shifts, my hours for 14 days. |
 | `#/staff/schedule` | managers | Create draft shifts (Denver times), publish, change times (reason needed once published), cancel with a reason. |
 | `#/staff/time` | managers | Hours per staff member per local business date, open-entry exceptions, entries with breaks and correction history; **Correct…** with a mandatory reason. |
-| `#/labels` | all staff | Code 128 labels for every item (readable ID, name, base unit), category filter, **Print**, and a scanner test field. |
-| `#/settings/setup` | all view, owner acts | Pilot setup gates with status, who confirmed and evidence. Confirm/reopen. Enable posting. |
+| `#/labels` | managers, owner | Code 128 labels for every item (readable ID, name, base unit), category filter, **Print**, and a scanner test field. |
+| `#/settings/setup` | managers view, owner acts | Pilot setup gates with status, who confirmed and evidence. Confirm/reopen. Enable posting. |
 | `#/settings/taxes-prices` | owner (tax), managers (prices) | Effective-dated tax rates and menu prices. Past values can never be rewritten. |
-| `#/settings/return-policy` | all view, owner edits | Retail return window and whether unopened shelf-stable returns may go back into stock |
+| `#/settings/return-policy` | managers view, owner edits | Retail return window and whether unopened shelf-stable returns may go back into stock |
 | `#/settings/staff` | owner (managers view) | Staff records, link invited sign-in accounts, grant/revoke roles |
 | `#/settings/account` | owners, managers | Set the manager approval PIN |
 
@@ -145,6 +145,7 @@ Money rules:
 | `0020_staff_time.sql` | Shifts (no overlap across locations), time entries (one open per employee, no overlap), breaks, immutable corrections, hours report split at Denver midnight |
 | `0021_planning.sql` | Forecast overrides, forecast with provenance and same-day netting, MRP projection and proposals, `private.eoq`, EOQ inputs and settings, What can we serve, menu-mix preview; planning gate becomes confirmable |
 | `0022_demo_reset_m4.sql` | Demo reset clears the Milestone 4 tables |
+| `0023_stock_history_alerts_employee_scope.sql` | Item stock history, manager reorder alerts, item names for the waste form; employees lose the sales summary, stock overview and raw stock tables (ADR 0033, 0034) |
 
 ### RPCs available to signed-in staff (each authorizes server-side)
 
@@ -155,7 +156,7 @@ Money rules:
 | Gates and posting | `confirm_setup_gate`, `reopen_setup_gate`, `enable_posting` |
 | Prices, taxes, menu | `set_location_tax_rate`, `set_location_item_price`, `set_menu_availability`, `get_pos_menu` |
 | Suppliers and purchasing | `set_supplier_terms`, `set_supplier_item_pack`, `create_purchase_order`, `submit_purchase_order`, `receive_purchase_order`, `cancel_purchase_order_balance` |
-| Stock | `post_opening_count`, `get_stock_overview`, `change_stock_condition` |
+| Stock | `post_opening_count`, `get_stock_overview`, `get_item_stock_history`, `get_reorder_alerts`, `list_stock_items`, `change_stock_condition` |
 | Counts and waste | `start_stock_count`, `post_stock_count`, `cancel_stock_count`, `submit_waste_report`, `decide_waste_report`, `list_waste_reports` |
 | Transfers | `create_transfer`, `dispatch_transfer`, `cancel_transfer`, `receive_transfer` |
 | Refunds and returns | `set_return_policy`, `get_order_for_return`, `record_refund`, `process_return`, `process_exchange`, `decide_return_custody`, `list_return_custody` |
