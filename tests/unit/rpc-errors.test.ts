@@ -27,6 +27,15 @@ describe('classifyError separates definite rejections from uncertain outcomes', 
     });
   });
 
+  it('a signed-out request (401) is a session problem, not a permission refusal', () => {
+    expect(classifyError({ code: '42501', message: 'permission denied for function get_pos_menu' }, 401)).toMatchObject(
+      {
+        code: 'session_expired',
+        outcome: 'uncertain',
+      },
+    );
+  });
+
   it('network failures and server errors are uncertain', () => {
     expect(classifyError({ message: 'TypeError: Failed to fetch' }, null).outcome).toBe('uncertain');
     expect(classifyError({ code: '', message: 'Bad gateway' }, 502).outcome).toBe('uncertain');

@@ -57,11 +57,13 @@ export function classifyError(error: RawError, httpStatus: number | null): RpcEr
   if (code === 'P0001') {
     return new RpcError(error.message ?? 'unknown_error', 'rejected', parseDetail(error.details), httpStatus);
   }
-  if (code === '42501') {
-    return new RpcError('unauthorized', 'rejected', parseDetail(error.details), httpStatus, error.message);
-  }
+  // 401 means the request carried no valid sign-in (expired or revoked
+  // session, or none at all), even when Postgres also reports 42501.
   if (httpStatus === 401 || code === 'PGRST301' || code === 'PGRST303') {
     return new RpcError('session_expired', 'uncertain', null, httpStatus, error.message);
+  }
+  if (code === '42501') {
+    return new RpcError('unauthorized', 'rejected', parseDetail(error.details), httpStatus, error.message);
   }
   if (httpStatus !== null && httpStatus >= 400 && httpStatus < 500 && code.startsWith('PGRST')) {
     // Request never reached a function body (bad arguments, unknown function).
@@ -70,6 +72,17 @@ export function classifyError(error: RawError, httpStatus: number | null): RpcEr
   if (code === '23505') return new RpcError('conflict:duplicate', 'rejected', parseDetail(error.details), httpStatus);
   if (code === '40001' || code === '40P01') return new RpcError('conflict:retry', 'rejected', null, httpStatus);
   return new RpcError('network_uncertain', 'uncertain', null, httpStatus, error.message);
+}
+
+/** Fired on window when a server call reports that the session is no longer valid. */
+export const SESSION_EXPIRED_EVENT = 'app:session-expired';
+
+function notifySessionExpired(): void {
+  try {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  } catch {
+    /* non-browser test environment */
+  }
 }
 
 export async function callRpc<T = unknown, N extends RpcName = RpcName>(
@@ -83,8 +96,14 @@ export async function callRpc<T = unknown, N extends RpcName = RpcName>(
     // supabase-js' generic typing for rpc() is strict; args are checked by RpcArgs above.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await (supabase.rpc as any)(name, args).abortSignal(controller.signal);
-    if (res.error)
-      throw classifyError(res.error as RawError, typeof res.status === 'number' && res.status > 0 ? res.status : null);
+    if (res.error) {
+      const classified = classifyError(
+        res.error as RawError,
+        typeof res.status === 'number' && res.status > 0 ? res.status : null,
+      );
+      if (classified.code === 'session_expired') notifySessionExpired();
+      throw classified;
+    }
     // Approval-gated RPCs return {ok:false, error} instead of raising so that
     // failed-PIN counters persist (ADR 0006): a definite, uncommitted rejection.
     const data = res.data as unknown;

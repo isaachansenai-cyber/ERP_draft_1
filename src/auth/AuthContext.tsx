@@ -1,8 +1,36 @@
 import type { Session } from '@supabase/supabase-js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { callRpc } from '../lib/rpc';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { callRpc, SESSION_EXPIRED_EVENT } from '../lib/rpc';
 import { supabase } from '../lib/supabase';
+
+const SESSION_ENDED_KEY = 'session-ended';
+
+/** Remember (for the sign-in page) that the session ended without the user signing out. */
+function markSessionEnded(): void {
+  try {
+    window.sessionStorage.setItem(SESSION_ENDED_KEY, '1');
+  } catch {
+    /* per-tab convenience only */
+  }
+}
+
+/** Whether the sign-in page should explain that the session ended (cleared on the next sign-in). */
+export function sessionEndedNoticePending(): boolean {
+  try {
+    return window.sessionStorage.getItem(SESSION_ENDED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function clearSessionEnded(): void {
+  try {
+    window.sessionStorage.removeItem(SESSION_ENDED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 export type Role = 'owner' | 'manager' | 'employee';
 
@@ -54,13 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [locationId, setLocationId] = useState<string | null>(readStoredLocation);
+  const signingOut = useRef(false);
+  const hadSession = useRef(false);
+  const checkingExpiry = useRef(false);
 
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active) setSession(data.session);
+      if (!active) return;
+      hadSession.current = Boolean(data.session);
+      setSession(data.session);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      // A sign-out the user did not ask for (refresh token rejected or revoked):
+      // tell them on the sign-in page instead of leaving broken screens behind.
+      if (event === 'SIGNED_OUT' && hadSession.current && !signingOut.current) markSessionEnded();
+      if (event === 'SIGNED_IN') clearSessionEnded();
+      hadSession.current = Boolean(next);
       setSession(next);
     });
     return () => {
@@ -68,6 +106,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data.subscription.unsubscribe();
     };
   }, []);
+
+  // A server call reported the session as invalid: try one refresh; if that
+  // fails, end the session on this device so the user is sent to sign in.
+  useEffect(() => {
+    async function onExpired() {
+      if (checkingExpiry.current || !hadSession.current) return;
+      checkingExpiry.current = true;
+      try {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error || !data.session) {
+          markSessionEnded();
+          signingOut.current = true;
+          await supabase.auth.signOut({ scope: 'local' });
+          signingOut.current = false;
+          queryClient.clear();
+        } else {
+          await queryClient.invalidateQueries();
+        }
+      } finally {
+        checkingExpiry.current = false;
+      }
+    }
+    const handler = () => void onExpired();
+    window.addEventListener(SESSION_EXPIRED_EVENT, handler);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handler);
+  }, [queryClient]);
 
   const userId = session?.user.id ?? null;
   const contextQuery = useQuery({
@@ -94,8 +158,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await queryClient.invalidateQueries({ queryKey: ['my-context'] });
   }, [queryClient]);
 
+  // Sign out of THIS device only. The default ('global') would also end every
+  // other device's session for the same account (shared tablets, demo logins).
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    signingOut.current = true;
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } finally {
+      signingOut.current = false;
+    }
     queryClient.clear();
   }, [queryClient]);
 
