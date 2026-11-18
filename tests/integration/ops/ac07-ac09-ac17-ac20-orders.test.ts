@@ -478,19 +478,10 @@ describe('AC20 money reconciliation in the sales summary', () => {
     expect(overlap!.n).toBe(0);
   });
 
-  it('role limits: employees get a daily summary without costs; managers see only totals for other locations', async () => {
+  it('role limits: employees get no sales summary (ADR 0033); managers see only totals for other locations', async () => {
     const today = inject('opsToday');
     const e = await as('proEmployee');
-    const emp = await ok<{ locations: Array<Record<string, unknown>> }>(e, 'get_sales_summary', {
-      p_from: today,
-      p_to: today,
-    });
-    expect(emp.locations.map((l) => l.location_id)).toEqual([LOC]);
-    expect(emp.locations[0]!.cogs_cents).toBeNull();
-    expect(emp.locations[0]!.gross_margin_cents).toBeNull();
-    expect(await code(e, 'get_sales_summary', { p_from: '2026-01-01', p_to: today })).toBe(
-      'validation:employee_daily_summary_only',
-    );
+    expect(await code(e, 'get_sales_summary', { p_from: today, p_to: today })).toBe('unauthorized');
     expect(await code(e, 'get_sales_summary', { p_from: today, p_to: today, p_location_ids: ['LOC-SLC'] })).toBe(
       'unauthorized',
     );
