@@ -48,11 +48,7 @@ const METHOD_LABEL: Record<string, string> = {
 function SourceSelect({ value, onChange, demo }: { value: Source; onChange: (s: Source) => void; demo: boolean }) {
   if (!demo) return null;
   return (
-    <Field
-      label="Demand source"
-      htmlFor="planning-source"
-      hint="Demo only: the synthetic history is an explicit, labeled alternative"
-    >
+    <Field label="Demand source" htmlFor="planning-source">
       <select
         id="planning-source"
         className={inputClass}
@@ -140,7 +136,7 @@ function ForecastPanel({ locationId, demo, today }: { locationId: string; demo: 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end gap-3">
-        <Field label="As of" htmlFor="forecast-asof" hint="History used: dates before this day only">
+        <Field label="As of" htmlFor="forecast-asof">
           <input
             id="forecast-asof"
             type="date"
@@ -160,10 +156,6 @@ function ForecastPanel({ locationId, demo, today }: { locationId: string; demo: 
           <p className="text-xs text-slate-600" data-testid="forecast-scope">
             {f.data.data_label} · as of {f.data.as_of} · history {f.data.history.first_date ?? 'none'} to{' '}
             {f.data.history.last_date ?? '—'} · America/Denver · refreshed {formatDateTime(f.data.refreshed_at)}
-          </p>
-          <p className="text-xs text-slate-600">
-            Each cell: forecast servings/units, then what remains after today&apos;s fulfilled, in-progress and accepted
-            orders (those already hold their ingredients). Retail demand is kept separate from the dish recipes.
           </p>
           <ScrollRegion label="Forecast by day">
             <table className="border-collapse bg-white text-xs" data-testid="forecast-table">
@@ -210,40 +202,38 @@ function ForecastPanel({ locationId, demo, today }: { locationId: string; demo: 
               </tbody>
             </table>
           </ScrollRegion>
-          {selected ? (
-            (() => {
-              const d = f.data.items
-                .find((i) => i.item_id === selected.item)!
-                .days.find((x) => x.date === selected.date)!;
-              return (
-                <div className="rounded-md border border-slate-400 bg-white p-3 text-sm">
-                  <p className="font-semibold">
-                    {selected.item} on {selected.date}
-                  </p>
-                  <p>
-                    Method: {METHOD_LABEL[d.method] ?? d.method} · observations {d.observations}
-                    {d.window_from ? ` · window ${d.window_from} to ${d.window_to}` : ''} · computed {qty(d.base_qty)}
-                    {d.override_qty != null ? ` · manager forecast ${d.override_qty} (“${d.override_reason}”)` : ''}
-                  </p>
-                  <p>
-                    Today&apos;s orders: fulfilled {d.fulfilled_qty}, in preparation {d.in_progress_qty}, accepted{' '}
-                    {d.accepted_qty} · remaining to plan {qty(d.residual_qty)}
-                  </p>
-                  {selected.date >= today ? (
-                    <OverrideForm
-                      key={`${selected.item}:${selected.date}`}
-                      locationId={locationId}
-                      itemId={selected.item}
-                      date={selected.date}
-                      onDone={refresh}
-                    />
-                  ) : null}
-                </div>
-              );
-            })()
-          ) : (
-            <p className="text-xs">Select a cell to see how it was computed or to enter a manager forecast.</p>
-          )}
+          {selected
+            ? (() => {
+                const d = f.data.items
+                  .find((i) => i.item_id === selected.item)!
+                  .days.find((x) => x.date === selected.date)!;
+                return (
+                  <div className="rounded-md border border-slate-400 bg-white p-3 text-sm">
+                    <p className="font-semibold">
+                      {selected.item} on {selected.date}
+                    </p>
+                    <p>
+                      Method: {METHOD_LABEL[d.method] ?? d.method} · observations {d.observations}
+                      {d.window_from ? ` · window ${d.window_from} to ${d.window_to}` : ''} · computed {qty(d.base_qty)}
+                      {d.override_qty != null ? ` · manager forecast ${d.override_qty} (“${d.override_reason}”)` : ''}
+                    </p>
+                    <p>
+                      Today&apos;s orders: fulfilled {d.fulfilled_qty}, in preparation {d.in_progress_qty}, accepted{' '}
+                      {d.accepted_qty} · remaining to plan {qty(d.residual_qty)}
+                    </p>
+                    {selected.date >= today ? (
+                      <OverrideForm
+                        key={`${selected.item}:${selected.date}`}
+                        locationId={locationId}
+                        itemId={selected.item}
+                        date={selected.date}
+                        onDone={refresh}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })()
+            : null}
         </>
       )}
     </div>
@@ -350,10 +340,8 @@ function ProjectionPanel({ locationId, demo, today }: { locationId: string; demo
         <QueryError error={plan.error} onRetry={() => void plan.refetch()} />
       ) : (
         <>
-          <p className="text-xs text-slate-600">
-            {plan.data.data_label} · from {plan.data.as_of} · projected = previous + receipts on their expected date −
-            requirements · starts from available stock (reservations and quarantine excluded) · refreshed{' '}
-            {formatDateTime(plan.data.refreshed_at)}
+          <p className="text-xs text-slate-600" data-testid="projection-scope">
+            {plan.data.data_label} · from {plan.data.as_of} · refreshed {formatDateTime(plan.data.refreshed_at)}
           </p>
           {plan.data.items.filter((i) => !onlyShort || i.shortage_date).length === 0 ? (
             <Empty>No projected shortages in the next 14 days.</Empty>
@@ -542,7 +530,7 @@ function SettingsForm({
             onChange={(e) => setHolding(e.target.value)}
           />
         </Field>
-        <Field label="Max cover days (freshness cap)" htmlFor="set-cover" hint="Manager-confirmed; never inferred">
+        <Field label="Max cover days (freshness cap)" htmlFor="set-cover">
           <input
             id="set-cover"
             inputMode="numeric"

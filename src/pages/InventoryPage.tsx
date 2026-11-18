@@ -107,11 +107,6 @@ function OpeningCountForm({
       }}
     >
       <h2 className="text-lg font-semibold">Post opening count (once per location)</h2>
-      <p className="text-sm">
-        Enter the verified physical count in each item&apos;s base unit and its verified unit cost (USD per base unit).
-        Leave an item blank if there is none. Items marked “use-by” need a date in the pilot. Posting is final; later
-        differences go through counts and reason-coded adjustments.
-      </p>
       <div className="max-h-[28rem] overflow-auto">
         <table className="w-full border-collapse bg-white text-sm">
           <thead className="sticky top-0 bg-white">
@@ -333,9 +328,6 @@ export function InventoryPage() {
                 onChange={(e) => setFilter(e.target.value)}
               />
             </Field>
-            <p className="text-xs text-slate-600">
-              Available = eligible sellable on hand − reservations. Expired or quarantined stock is never available.
-            </p>
           </div>
           {items.length === 0 ? (
             <Empty>No stocked items match.</Empty>
@@ -428,7 +420,6 @@ export function InventoryPage() {
           <h2 id="availability-heading" className="text-lg font-semibold">
             Menu availability at this location
           </h2>
-          <p className="text-sm text-slate-700">Switching an item off blocks it on the POS. It never creates stock.</p>
           {menu.isPending ? (
             <Loading />
           ) : menu.error ? (

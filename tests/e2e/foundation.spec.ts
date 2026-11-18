@@ -34,7 +34,7 @@ test('owner signs in; hash deep links survive a full reload under the base path'
   await page.goto('./#/settings/setup');
   await page.reload();
   await expect(page).toHaveURL(/\/ERP_draft_1\/#\/settings\/setup$/);
-  await expect(page.getByText('Pilot setup gates')).toBeVisible();
+  await expect(page.getByText('Roles verified').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reopen…' }).first()).toBeVisible();
 });
 

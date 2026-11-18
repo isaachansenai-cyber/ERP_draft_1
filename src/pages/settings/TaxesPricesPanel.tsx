@@ -74,11 +74,7 @@ function TaxRates({ locationId, canEdit, today }: { locationId: string; canEdit:
             if (rate) void m.submit({ p_location_id: locationId, p_rate: Number(rate), p_effective_from: effective });
           }}
         >
-          <Field
-            label="New rate (%)"
-            htmlFor="tax-percent"
-            hint="e.g. 7.25 — confirm the rate with the tax authority first"
-          >
+          <Field label="New rate (%)" htmlFor="tax-percent">
             <input
               id="tax-percent"
               inputMode="decimal"
@@ -262,8 +258,7 @@ export function TaxesPricesPanel() {
   return (
     <div className="flex flex-col gap-8">
       <p className="text-sm text-slate-700">
-        Showing <span className="font-semibold">{selectedLocation.location_name}</span>. Rates and prices are
-        effective-dated: a new entry never rewrites past orders.
+        Showing <span className="font-semibold">{selectedLocation.location_name}</span>.
       </p>
       <TaxRates locationId={selectedLocation.location_id} canEdit={context.is_owner} today={context.business_date} />
       <MenuPrices locationId={selectedLocation.location_id} canEdit={isManagerHere} today={context.business_date} />

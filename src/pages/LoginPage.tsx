@@ -48,9 +48,6 @@ export function LoginPage() {
       <OfflineBanner />
       <main className="mx-auto mt-16 max-w-md rounded-lg border border-slate-300 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold">{mode.data?.company_name ?? 'Meats Around the World'}</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Staff sign-in. Accounts are created by the owner; there is no self sign-up.
-        </p>
         {configError ? (
           <div className="mt-4">
             <Notice tone="error" title="Not configured">

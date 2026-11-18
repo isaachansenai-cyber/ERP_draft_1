@@ -32,10 +32,6 @@ export function AccountPanel() {
       }}
     >
       <h2 className="text-lg font-semibold">Manager approval PIN</h2>
-      <p className="text-sm text-slate-700">
-        Used to approve discounts, post-start cancellations and similar actions at a shared terminal. Five wrong
-        attempts lock the PIN for 15 minutes. The PIN is stored only as a one-way hash.
-      </p>
       <p>{context.has_manager_pin ? <Badge tone="good">PIN set</Badge> : <Badge tone="warn">No PIN set</Badge>}</p>
       <Field label="New PIN (6–12 digits)" htmlFor="pin">
         <input

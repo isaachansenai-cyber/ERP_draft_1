@@ -57,7 +57,6 @@ export function RecentOrders({
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold">Completed orders, last {WINDOW_DAYS} days</h2>
-      <p className="text-xs text-slate-700">Newest first. Scroll for more, then click an order to open it.</p>
       {recent.isPending ? (
         <Loading />
       ) : recent.error ? (

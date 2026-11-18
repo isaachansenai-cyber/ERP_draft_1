@@ -197,7 +197,7 @@ function NewInvoice({ locationId, today, onDone }: { locationId: string; today: 
             ))}
           </select>
         </Field>
-        <Field label="Invoice number" htmlFor="inv-number" hint="Compared ignoring case and spaces">
+        <Field label="Invoice number" htmlFor="inv-number">
           <input id="inv-number" className={inputClass} value={number} onChange={(e) => setNumber(e.target.value)} />
         </Field>
         <Field label="Invoice date" htmlFor="inv-date">
@@ -570,7 +570,6 @@ function InvoiceDetailPanel({ invoiceId, onChanged }: { invoiceId: string; onCha
         <div className="flex flex-wrap items-end gap-2 rounded-md border border-amber-600 bg-amber-50 p-2">
           <p className="w-full text-sm">
             This invoice differs from what was received. Payment is blocked until a manager accepts the discrepancy.
-            Stock and cost are never revalued from an invoice.
           </p>
           <Field label="Why it is accepted" htmlFor="inv-disc-note">
             <input
@@ -704,11 +703,7 @@ function InvoiceDetailPanel({ invoiceId, onChanged }: { invoiceId: string; onCha
       {d.payments.length + d.credits.length > 0 ? (
         <div className="flex flex-col gap-2">
           <h4 className="font-semibold">Payments and credits</h4>
-          <Field
-            label="Reason for a reversal"
-            htmlFor="reverse-reason"
-            hint="Reversals add a linked record; nothing is edited"
-          >
+          <Field label="Reason for a reversal" htmlFor="reverse-reason">
             <input
               id="reverse-reason"
               className={inputClass}
@@ -818,10 +813,6 @@ export function InvoicesPage() {
       <h1 id="invoices-heading" className="text-2xl font-bold">
         Supplier invoices — {selectedLocation.location_name}
       </h1>
-      <p className="text-sm text-slate-700">
-        Accounts payable records only. Invoices never change stock or cost; payments record money handled outside the
-        app. Overdue is judged by the due date against today&apos;s date in America/Denver.
-      </p>
       <div className="flex flex-wrap items-end gap-2">
         <Field label="Show" htmlFor="inv-status">
           <select id="inv-status" className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>

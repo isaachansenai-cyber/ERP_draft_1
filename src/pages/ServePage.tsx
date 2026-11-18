@@ -67,10 +67,6 @@ function MenuMix({ locationId }: { locationId: string }) {
       <h2 id="mix-heading" className="text-lg font-semibold">
         Menu-mix simulator (preview only)
       </h2>
-      <p className="text-sm text-slate-700">
-        Enter a combination to see combined ingredient needs. Shared ingredients (such as chicken and garlic) are added
-        up across dishes. Nothing is reserved or ordered.
-      </p>
       <div className="grid gap-2 sm:grid-cols-3">
         {(menu.data ?? []).map((i) => (
           <Field key={i.item_id} label={`${i.name} (${i.item_id})`} htmlFor={`mix-${i.item_id}`}>
@@ -106,10 +102,7 @@ function MenuMix({ locationId }: { locationId: string }) {
           <Notice
             tone={result.feasible ? 'success' : 'warning'}
             title={result.feasible ? 'Feasible with current stock' : 'Not enough stock'}
-          >
-            Preview only. A proposed replenishment becomes an order only when saved from Planning → Ingredient
-            projection or Purchasing.
-          </Notice>
+          />
           <ScrollRegion label="Menu-mix results">
             <table className="w-full border-collapse text-sm" data-testid="mix-table">
               <thead>

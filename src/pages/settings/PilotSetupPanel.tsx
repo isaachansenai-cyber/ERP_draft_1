@@ -256,10 +256,7 @@ export function PilotSetupPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Notice tone="info" title="Pilot setup gates">
-        Each gate keeps a workflow switched off until the owner enters and confirms real operating values. Gates are
-        never confirmed automatically. {isOwner ? null : 'Only the owner can confirm or reopen gates.'}
-      </Notice>
+      {isOwner ? null : <Notice tone="info">Only the owner can confirm or reopen gates.</Notice>}
       {isOwner && !context?.posting_enabled ? <EnablePosting /> : null}
       {SECTIONS.map((section) => {
         const rows = gates.data.filter((g) => g.scope_type === section.scope);

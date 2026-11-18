@@ -136,7 +136,7 @@ test('planning shows forecast provenance and the labeled history source; EOQ set
   await expect(page.getByText('Unconstrained EOQ 447.214')).toBeVisible();
 
   await page.getByRole('link', { name: 'Ingredient projection' }).click();
-  await expect(page.getByText(/projected = previous \+ receipts on their expected date/)).toBeVisible();
+  await expect(page.getByTestId('projection-scope')).toContainText('demo operational');
 });
 
 test('What can we serve shows independent potentials; a manager mix aggregates shared chicken', async ({

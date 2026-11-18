@@ -443,9 +443,6 @@ export function PosPage() {
               })}
             </ul>
           )}
-          <p className="mt-2 text-xs text-slate-600">
-            Availability counts are independent per dish; dishes share ingredients, so they cannot all be sold at once.
-          </p>
         </div>
 
         <div className="flex flex-col gap-3 rounded-lg border border-slate-300 bg-white p-4">
@@ -530,9 +527,6 @@ export function PosPage() {
             <dt className="font-bold">Total (estimate)</dt>
             <dd className="text-right font-bold">{formatCents(estimate.total)}</dd>
           </dl>
-          <p className="text-xs text-slate-600">
-            The server recalculates prices, discount and tax and reserves stock when you accept.
-          </p>
           <Button
             onClick={submitOrder}
             disabled={

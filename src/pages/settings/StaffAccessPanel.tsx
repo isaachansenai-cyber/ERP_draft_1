@@ -47,11 +47,7 @@ function CreateEmployee() {
       }}
     >
       <h3 className="font-semibold">Add staff record</h3>
-      <Field
-        label="Display name"
-        htmlFor="new-employee-name"
-        hint="No pay rates, tax IDs or personal identifiers are stored (PRD §11)."
-      >
+      <Field label="Display name" htmlFor="new-employee-name">
         <input id="new-employee-name" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
       <Button type="submit" disabled={!m.canPost || !name.trim()}>
@@ -84,9 +80,6 @@ function LinkAccount({ staff }: { staff: StaffRow[] }) {
       }}
     >
       <h3 className="font-semibold">Link sign-in account</h3>
-      <p className="text-xs text-slate-700">
-        Invite the person through Supabase Auth first, then link their email here.
-      </p>
       <Field label="Staff record" htmlFor="link-employee">
         <select
           id="link-employee"
@@ -275,9 +268,6 @@ export function StaffAccessPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      {isOwner ? null : (
-        <Notice tone="info">Managers can view staff at their locations. Only the owner changes roles.</Notice>
-      )}
       {staff.data.length === 0 ? (
         <Empty>No staff records yet.</Empty>
       ) : (

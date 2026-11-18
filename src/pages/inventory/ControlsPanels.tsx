@@ -191,10 +191,6 @@ function DraftCount({ count, onDone }: { count: StockCount; onDone: (message: st
       <h3 className="font-semibold">
         Count {count.count_number} — started {formatDateTime(count.created_at)}
       </h3>
-      <p className="text-xs text-slate-700">
-        Enter what you physically count per lot. Lines left blank are recorded as matching the snapshot. If any counted
-        item moves (sale, receipt, waste) before you post, the count is rejected and must be restarted.
-      </p>
       <div className="max-h-96 overflow-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 bg-white">
@@ -485,10 +481,6 @@ export function WastePanel({
         }}
       >
         <h3 className="font-semibold">Report waste</h3>
-        <p className="text-xs text-slate-700">
-          A report does not change stock. A manager reviews it and posts it, which removes unreserved stock (quarantined
-          first, then expired, then earliest use-by).
-        </p>
         {lines.map((l, idx) => (
           <div key={idx} className="flex flex-wrap items-end gap-2">
             <Field label={`Item ${idx + 1}`} htmlFor={`waste-item-${idx}`}>
@@ -634,10 +626,6 @@ function ReceiveTransfer({ t, onDone }: { t: Transfer; onDone: () => void }) {
         });
       }}
     >
-      <p className="text-xs">
-        Record what actually arrived. Anything still unaccounted for stays in transit. Losses need a reason. Expired
-        stock arrives quarantined.
-      </p>
       {open.map((l) => (
         <div key={l.transfer_line_id} className="flex flex-wrap items-end gap-2 border-b border-emerald-200 pb-2">
           <p className="w-full text-sm">
@@ -861,10 +849,6 @@ export function TransfersPanel({ locationId, items }: { locationId: string; item
           ))}
         </ul>
       )}
-      <Notice tone="info" title="Reconciliation">
-        Every line keeps dispatched = received + lost + in transit. In-transit stock belongs to neither location&apos;s
-        available stock.
-      </Notice>
     </div>
   );
 }
