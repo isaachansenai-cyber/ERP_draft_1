@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { navFor } from '../lib/nav';
+import { EXPECTED_SCHEMA_VERSION, useSchemaStatus } from '../lib/schemaVersion';
 import { useOnlineStatus } from '../lib/useOnlineStatus';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Button, Loading } from './ui';
@@ -15,6 +16,23 @@ export function DataModeBanner({ mode }: { mode: 'pilot' | 'demo' | undefined })
       className={`px-4 py-1 text-center text-sm font-bold tracking-wide ${demo ? 'bg-amber-300 text-amber-950' : 'bg-slate-900 text-white'}`}
     >
       {demo ? 'DEMO — synthetic data' : 'PILOT — real data'}
+    </div>
+  );
+}
+
+/** Warns when the app and its database are from different releases (ADR 0036). */
+export function SchemaBanner() {
+  const status = useSchemaStatus();
+  if (!status.data || status.data.state === 'ok') return null;
+  return (
+    <div
+      role="alert"
+      data-testid="schema-banner"
+      className="bg-red-800 px-4 py-2 text-center text-sm font-semibold text-white"
+    >
+      {status.data.state === 'database_behind'
+        ? `Database out of date: this app needs database version ${EXPECTED_SCHEMA_VERSION}, but the connected database is at ${status.data.database ?? 'an earlier version (before 24)'}. Some screens will not load and nothing they show is saved. An operator must apply the latest migrations (demo: run "Demo project setup").`
+        : 'A newer version of this app is available. Reload the page to update it.'}
     </div>
   );
 }
@@ -35,6 +53,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <DataModeBanner mode={context?.data_mode} />
+      <SchemaBanner />
       <OfflineBanner />
       <header className="border-b border-slate-300 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">

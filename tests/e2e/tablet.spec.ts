@@ -26,6 +26,8 @@ async function signIn(page: Page, employeeId: string) {
 const MANAGER_ROUTES = [
   '#/',
   '#/dashboard',
+  '#/dashboard/accounting',
+  '#/catalog',
   '#/pos',
   '#/kitchen',
   '#/inventory',
@@ -135,6 +137,8 @@ test('portrait tablet: principal screens fit without sideways page scrolling', a
     '#/staff',
     '#/labels',
     '#/dashboard',
+    '#/dashboard/accounting',
+    '#/catalog',
     '#/planning',
   ]) {
     await settle(page, route);

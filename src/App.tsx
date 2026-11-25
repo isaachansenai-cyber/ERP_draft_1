@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { OverviewPage } from './pages/OverviewPage';
 
 // Screens load on demand (route-level code splitting); login and overview stay in the main bundle.
+const CatalogPage = lazy(() => import('./pages/CatalogPage').then((m) => ({ default: m.CatalogPage })));
 const CustomerInvoicesPage = lazy(() =>
   import('./pages/CustomerInvoicesPage').then((m) => ({ default: m.CustomerInvoicesPage })),
 );
@@ -82,6 +83,14 @@ export function App() {
               </ManagersOnly>
             }
           />
+          <Route
+            path="dashboard/:tab"
+            element={
+              <ManagersOnly>
+                <DashboardPage />
+              </ManagersOnly>
+            }
+          />
           <Route path="pos" element={<PosPage />} />
           <Route path="kitchen" element={<KitchenPage />} />
           <Route path="inventory" element={<InventoryPage />} />
@@ -92,6 +101,14 @@ export function App() {
           <Route path="invoices" element={<InvoicesPage />} />
           <Route path="planning" element={<PlanningPage />} />
           <Route path="planning/:tab" element={<PlanningPage />} />
+          <Route
+            path="catalog"
+            element={
+              <ManagersOnly>
+                <CatalogPage />
+              </ManagersOnly>
+            }
+          />
           <Route path="serve" element={<ServePage />} />
           <Route path="staff" element={<StaffPage />} />
           <Route path="staff/:tab" element={<StaffPage />} />

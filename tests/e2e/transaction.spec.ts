@@ -82,7 +82,11 @@ test('POS → kitchen → simulated payment → pickup, with scanner rules', asy
   const cells = await summaryRow.locator('td').allTextContents();
   const headers = await page.locator('thead th').allTextContents();
   expect(Number(cells[headers.indexOf('Completed orders')])).toBeGreaterThanOrEqual(1);
-  expect(cells[headers.indexOf('COGS')]).not.toBe('—');
+  // Cost figures live on the Accounting tab (ADR 0039).
+  await page.getByRole('link', { name: 'Accounting' }).click();
+  const costHeaders = await page.locator('thead th').allTextContents();
+  const costCells = await page.getByTestId('summary-LOC-PRO').locator('td').allTextContents();
+  expect(costCells[costHeaders.indexOf('COGS')]).not.toBe('—');
 });
 
 test('a POS acceptance whose response is lost is confirmed by its request key — one order, no duplicate', async ({

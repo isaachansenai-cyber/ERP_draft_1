@@ -65,6 +65,10 @@ export function classifyError(error: RawError, httpStatus: number | null): RpcEr
   if (code === '42501') {
     return new RpcError('unauthorized', 'rejected', parseDetail(error.details), httpStatus, error.message);
   }
+  if (code === 'PGRST202') {
+    // The function does not exist on this database: it is older than the app (ADR 0036).
+    return new RpcError('schema_out_of_date', 'rejected', { postgrest_code: code }, httpStatus, error.message);
+  }
   if (httpStatus !== null && httpStatus >= 400 && httpStatus < 500 && code.startsWith('PGRST')) {
     // Request never reached a function body (bad arguments, unknown function).
     return new RpcError('request_invalid', 'rejected', { postgrest_code: code }, httpStatus, error.message);

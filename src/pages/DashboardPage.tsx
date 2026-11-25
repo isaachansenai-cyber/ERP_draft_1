@@ -1,134 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Navigate, NavLink, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Button, Empty, Field, inputClass, Loading, QueryError, ScrollRegion } from '../components/ui';
-import { formatCents, formatDateTime } from '../lib/format';
+import { formatDateTime } from '../lib/format';
 import { callRpc } from '../lib/rpc';
+import { cell, rowsForTab, TABS, toCsv, type SalesSummary } from '../lib/salesSummary';
 
-export interface SummaryRow {
-  location_id: string;
-  location_name: string;
-  access: 'full' | 'summary' | 'employee';
-  completed_orders: number;
-  net_sales_cents: number;
-  gross_sales_cents?: number;
-  discount_cents?: number;
-  refund_cents?: number;
-  tax_cents?: number;
-  recorded_tenders_cents?: number;
-  average_order_value_cents?: number | null;
-  cogs_cents?: number | null;
-  gross_margin_cents?: number | null;
-  waste_cost_cents?: number | null;
-  pending_preparation_cost_cents?: number | null;
-  low_stock_items?: number | null;
-  average_fulfillment_minutes?: number | null;
-  fulfillment_samples?: number;
-  cancelled_orders?: number;
-  recorded_refunds_cents?: number;
-  refunded_orders?: number;
-  cogs_reversed_cents?: number | null;
-  waste_breakdown?: {
-    post_start_cancellations_cents: number;
-    waste_reports_cents: number;
-    transit_loss_cents: number;
-    posted_waste_reports: number;
-  } | null;
-  waste_reports_cents?: number | null;
-  transit_loss_cents?: number | null;
-  cancellation_waste_cents?: number | null;
-  count_variance_cents?: number | null;
-  inventory_value_cents?: number | null;
-  in_transit_value_cents?: number | null;
-  supplier_outstanding_cents?: number | null;
-  supplier_overdue_cents?: number | null;
-  supplier_overdue_invoices?: number | null;
-}
-
-export interface SalesSummary {
-  source: 'operational' | 'historical';
-  data_label: string;
-  date_from: string;
-  date_to: string;
-  timezone: string;
-  currency: string;
-  refreshed_at: string;
-  payments_note: string;
-  locations: SummaryRow[];
-}
-
-const COLUMNS: Array<{ key: keyof SummaryRow; label: string; money?: boolean }> = [
-  { key: 'completed_orders', label: 'Completed orders' },
-  { key: 'gross_sales_cents', label: 'Gross sales', money: true },
-  { key: 'discount_cents', label: 'Discounts', money: true },
-  { key: 'refund_cents', label: 'Refunds', money: true },
-  { key: 'net_sales_cents', label: 'Net sales', money: true },
-  { key: 'tax_cents', label: 'Tax (separate)', money: true },
-  { key: 'recorded_tenders_cents', label: 'Recorded payments', money: true },
-  { key: 'recorded_refunds_cents', label: 'Recorded refunds paid out', money: true },
-  { key: 'average_order_value_cents', label: 'Avg order value', money: true },
-  { key: 'cogs_cents', label: 'COGS', money: true },
-  { key: 'gross_margin_cents', label: 'Gross margin', money: true },
-  { key: 'cogs_reversed_cents', label: 'Retail COGS reversed', money: true },
-  { key: 'waste_cost_cents', label: 'Waste cost (total)', money: true },
-  { key: 'cancellation_waste_cents', label: '· post-start cancellations', money: true },
-  { key: 'waste_reports_cents', label: '· posted waste reports', money: true },
-  { key: 'transit_loss_cents', label: '· transit losses', money: true },
-  { key: 'count_variance_cents', label: 'Count variance', money: true },
-  { key: 'inventory_value_cents', label: 'Inventory value (now)', money: true },
-  { key: 'in_transit_value_cents', label: 'In transit out (now)', money: true },
-  { key: 'supplier_outstanding_cents', label: 'Supplier balance (now)', money: true },
-  { key: 'supplier_overdue_cents', label: 'Supplier overdue (now)', money: true },
-  { key: 'pending_preparation_cost_cents', label: 'Pending prep cost', money: true },
-  { key: 'low_stock_items', label: 'Low-stock items' },
-  { key: 'average_fulfillment_minutes', label: 'Avg fulfillment (min)' },
-  { key: 'cancelled_orders', label: 'Cancelled orders' },
-];
-
-/** Render a metric; null/undefined (not permitted or zero denominator) shows "—". */
-export function cell(row: SummaryRow, key: keyof SummaryRow, money?: boolean): string {
-  const v = row[key];
-  if (v === null || v === undefined) return '—';
-  return money ? formatCents(Number(v)) : String(v);
-}
-
-/** CSV built from exactly the rows the server returned for this filter (same authorization). */
-export function toCsv(summary: SalesSummary): string {
-  const header = [
-    'location_id',
-    'location_name',
-    'access',
-    ...COLUMNS.map((c) => c.key),
-    'data_source',
-    'date_from',
-    'date_to',
-    'currency',
-    'refreshed_at',
-  ];
-  const esc = (v: unknown) => {
-    const s = v === null || v === undefined ? '' : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const lines = summary.locations.map((r) =>
-    [
-      r.location_id,
-      r.location_name,
-      r.access,
-      ...COLUMNS.map((c) => r[c.key]),
-      summary.data_label,
-      summary.date_from,
-      summary.date_to,
-      summary.currency,
-      summary.refreshed_at,
-    ]
-      .map(esc)
-      .join(','),
-  );
-  return [header.join(','), ...lines].join('\n');
-}
+export { cell, ACCOUNTING_COLUMNS, rowsForTab, SALES_COLUMNS, TABS, toCsv } from '../lib/salesSummary';
+export type { DashboardTab, SalesSummary, SummaryRow } from '../lib/salesSummary';
 
 export function DashboardPage() {
   const { context, selectedLocation } = useAuth();
+  const { tab } = useParams();
   const today = context?.business_date ?? '';
   const isEmployee = !context?.is_owner && !context?.roles.some((r) => r.role === 'manager');
   const [from, setFrom] = useState(today);
@@ -160,12 +44,16 @@ export function DashboardPage() {
     }),
   });
 
+  if (tab !== 'sales' && tab !== 'accounting') return <Navigate to="/dashboard/sales" replace />;
+  const current = TABS.find((t) => t.id === tab)!;
+  const rows = summary.data ? rowsForTab(summary.data.locations, current.id) : [];
+
   function exportCsv() {
     if (!summary.data) return;
-    const blob = new Blob([toCsv(summary.data)], { type: 'text/csv' });
+    const blob = new Blob([toCsv(summary.data, current.id)], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `sales-${summary.data.source}-${summary.data.date_from}-${summary.data.date_to}.csv`;
+    a.download = `${current.id}-${summary.data.source}-${summary.data.date_from}-${summary.data.date_to}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -173,8 +61,21 @@ export function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-heading" className="flex flex-col gap-4">
       <h1 id="dashboard-heading" className="text-2xl font-bold">
-        Sales dashboard
+        Dashboard
       </h1>
+      <nav aria-label="Dashboard sections" className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <NavLink
+            key={t.id}
+            to={`/dashboard/${t.id}`}
+            className={({ isActive }) =>
+              `inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-semibold ${isActive ? 'border-emerald-800 bg-emerald-800 text-white' : 'border-slate-400 bg-white'}`
+            }
+          >
+            {t.label}
+          </NavLink>
+        ))}
+      </nav>
       <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => e.preventDefault()}>
         <Field label={isEmployee ? 'Business date' : 'From'} htmlFor="dash-from">
           <input
@@ -237,16 +138,26 @@ export function DashboardPage() {
             {summary.data.date_to} ({summary.data.timezone}) · {summary.data.currency} · refreshed{' '}
             {formatDateTime(summary.data.refreshed_at)}
           </p>
-          <p className="text-xs text-slate-600">{summary.data.payments_note}</p>
-          {summary.data.locations.length === 0 ? (
-            <Empty>No locations in scope.</Empty>
+          {current.id === 'sales' ? (
+            <p className="text-xs text-slate-600">{summary.data.payments_note}</p>
+          ) : summary.data.source === 'historical' ? (
+            <p className="text-xs text-slate-600">
+              Demo historical data holds sales only; cost, waste, stock and supplier figures show “—”.
+            </p>
+          ) : null}
+          {rows.length === 0 ? (
+            <Empty>
+              {current.id === 'accounting' && summary.data.locations.length > 0
+                ? 'Accounting figures are shown only for the locations you manage.'
+                : 'No locations in scope.'}
+            </Empty>
           ) : (
-            <ScrollRegion label="Sales summary by location">
+            <ScrollRegion label={`${current.label} summary by location`}>
               <table className="w-full border-collapse bg-white text-sm">
                 <thead>
                   <tr className="border-b border-slate-400 text-left">
                     <th className="p-2">Location</th>
-                    {COLUMNS.map((c) => (
+                    {current.columns.map((c) => (
                       <th key={c.key} className="p-2">
                         {c.label}
                       </th>
@@ -254,7 +165,7 @@ export function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {summary.data.locations.map((r) => (
+                  {rows.map((r) => (
                     <tr
                       key={r.location_id}
                       className="border-b border-slate-200"
@@ -266,7 +177,7 @@ export function DashboardPage() {
                           <span className="block text-xs font-normal">Sales totals only</span>
                         ) : null}
                       </td>
-                      {COLUMNS.map((c) => (
+                      {current.columns.map((c) => (
                         <td key={c.key} className="p-2">
                           {cell(r, c.key, c.money)}
                         </td>

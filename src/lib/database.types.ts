@@ -1199,17 +1199,23 @@ isOneToOne: false
                   ]
                 },"recipe_versions": {
                   Row: {
-                    "activated_at": string | null,"basis": string,"created_at": string,"created_by": string | null,"parent_base_unit": string,"parent_item_id": string,"parent_item_type": string,"provenance": string,"recipe_version_id": string,"source": string,"status": string,"superseded_at": string | null,"version_no": number
+                    "activated_at": string | null,"activated_by": string | null,"basis": string,"change_note": string | null,"created_at": string,"created_by": string | null,"draft_revision": number,"parent_base_unit": string,"parent_item_id": string,"parent_item_type": string,"provenance": string,"recipe_version_id": string,"source": string,"status": string,"superseded_at": string | null,"version_no": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "activated_at"?: string | null,"basis": string,"created_at"?: string,"created_by"?: string | null,"parent_base_unit"?: string,"parent_item_id": string,"parent_item_type"?: string,"provenance": string,"recipe_version_id"?: string,"source": string,"status"?: string,"superseded_at"?: string | null,"version_no": number
+                    "activated_at"?: string | null,"activated_by"?: string | null,"basis": string,"change_note"?: string | null,"created_at"?: string,"created_by"?: string | null,"draft_revision"?: number,"parent_base_unit"?: string,"parent_item_id": string,"parent_item_type"?: string,"provenance": string,"recipe_version_id"?: string,"source": string,"status"?: string,"superseded_at"?: string | null,"version_no": number
                   }
                   Update: {
-                    "activated_at"?: string | null,"basis"?: string,"created_at"?: string,"created_by"?: string | null,"parent_base_unit"?: string,"parent_item_id"?: string,"parent_item_type"?: string,"provenance"?: string,"recipe_version_id"?: string,"source"?: string,"status"?: string,"superseded_at"?: string | null,"version_no"?: number
+                    "activated_at"?: string | null,"activated_by"?: string | null,"basis"?: string,"change_note"?: string | null,"created_at"?: string,"created_by"?: string | null,"draft_revision"?: number,"parent_base_unit"?: string,"parent_item_id"?: string,"parent_item_type"?: string,"provenance"?: string,"recipe_version_id"?: string,"source"?: string,"status"?: string,"superseded_at"?: string | null,"version_no"?: number
                   }
                   Relationships: [
                     {
+      foreignKeyName: "recipe_versions_activated_by_fkey"
+      columns: ["activated_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
       foreignKeyName: "recipe_versions_created_by_fkey"
       columns: ["created_by"]
 isOneToOne: false
@@ -1629,6 +1635,44 @@ isOneToOne: false
       referencedColumns: ["code"]
     }
                   ]
+                },"supplier_change_requests": {
+                  Row: {
+                    "current_at_request": NonNullable<Json>,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"location_id": string,"note": string,"proposed": NonNullable<Json>,"request_id": string,"requested_at": string,"requested_by": string,"status": string,"supplier_id": string,"supplier_version_at_request": number,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "current_at_request": NonNullable<Json>,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"location_id": string,"note": string,"proposed": NonNullable<Json>,"request_id"?: string,"requested_at"?: string,"requested_by": string,"status"?: string,"supplier_id": string,"supplier_version_at_request": number,"version"?: number
+                  }
+                  Update: {
+                    "current_at_request"?: NonNullable<Json>,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"location_id"?: string,"note"?: string,"proposed"?: NonNullable<Json>,"request_id"?: string,"requested_at"?: string,"requested_by"?: string,"status"?: string,"supplier_id"?: string,"supplier_version_at_request"?: number,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "supplier_change_requests_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "supplier_change_requests_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "supplier_change_requests_requested_by_fkey"
+      columns: ["requested_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "supplier_change_requests_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["supplier_id"]
+    }
+                  ]
                 },"supplier_credit_reversals": {
                   Row: {
                     "credit_id": string,"reason": string,"request_key": string | null,"reversed_at": string,"reversed_by": string
@@ -1771,14 +1815,14 @@ isOneToOne: false
                   ]
                 },"supplier_items": {
                   Row: {
-                    "archived_at": string | null,"cost_basis": string | null,"created_at": string,"effective_date": string | null,"is_primary": boolean,"is_purchasable": boolean,"item_id": string,"lead_time_basis": string | null,"pack_base_qty": number | null,"pack_cost_cents": number | null,"pack_description": string | null,"procurement_lead_days": number | null,"provenance": string,"source": string,"supplier_id": string,"supplier_item_id": string,"unit_cost": number | null,"updated_at": string
+                    "archived_at": string | null,"cost_basis": string | null,"created_at": string,"effective_date": string | null,"is_primary": boolean,"is_purchasable": boolean,"item_id": string,"lead_time_basis": string | null,"lead_updated_at": string | null,"lead_updated_by": string | null,"pack_base_qty": number | null,"pack_cost_cents": number | null,"pack_description": string | null,"procurement_lead_days": number | null,"provenance": string,"source": string,"supplier_id": string,"supplier_item_id": string,"unit_cost": number | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"cost_basis"?: string | null,"created_at"?: string,"effective_date"?: string | null,"is_primary"?: boolean,"is_purchasable"?: boolean,"item_id": string,"lead_time_basis"?: string | null,"pack_base_qty"?: number | null,"pack_cost_cents"?: number | null,"pack_description"?: string | null,"procurement_lead_days"?: number | null,"provenance": string,"source": string,"supplier_id": string,"supplier_item_id"?: string,"unit_cost"?: number | null,"updated_at"?: string
+                    "archived_at"?: string | null,"cost_basis"?: string | null,"created_at"?: string,"effective_date"?: string | null,"is_primary"?: boolean,"is_purchasable"?: boolean,"item_id": string,"lead_time_basis"?: string | null,"lead_updated_at"?: string | null,"lead_updated_by"?: string | null,"pack_base_qty"?: number | null,"pack_cost_cents"?: number | null,"pack_description"?: string | null,"procurement_lead_days"?: number | null,"provenance": string,"source": string,"supplier_id": string,"supplier_item_id"?: string,"unit_cost"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "archived_at"?: string | null,"cost_basis"?: string | null,"created_at"?: string,"effective_date"?: string | null,"is_primary"?: boolean,"is_purchasable"?: boolean,"item_id"?: string,"lead_time_basis"?: string | null,"pack_base_qty"?: number | null,"pack_cost_cents"?: number | null,"pack_description"?: string | null,"procurement_lead_days"?: number | null,"provenance"?: string,"source"?: string,"supplier_id"?: string,"supplier_item_id"?: string,"unit_cost"?: number | null,"updated_at"?: string
+                    "archived_at"?: string | null,"cost_basis"?: string | null,"created_at"?: string,"effective_date"?: string | null,"is_primary"?: boolean,"is_purchasable"?: boolean,"item_id"?: string,"lead_time_basis"?: string | null,"lead_updated_at"?: string | null,"lead_updated_by"?: string | null,"pack_base_qty"?: number | null,"pack_cost_cents"?: number | null,"pack_description"?: string | null,"procurement_lead_days"?: number | null,"provenance"?: string,"source"?: string,"supplier_id"?: string,"supplier_item_id"?: string,"unit_cost"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1787,6 +1831,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "items"
       referencedColumns: ["item_id","is_purchasable"]
+    },{
+      foreignKeyName: "supplier_items_lead_updated_by_fkey"
+      columns: ["lead_updated_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
     },{
       foreignKeyName: "supplier_items_supplier_id_fkey"
       columns: ["supplier_id"]
@@ -1861,17 +1911,23 @@ isOneToOne: false
                   ]
                 },"suppliers": {
                   Row: {
-                    "address": string | null,"archived_at": string | null,"based_in": string | null,"contact_email": string | null,"contact_email_provenance": string | null,"contact_verification": string,"created_at": string,"name": string,"payment_terms_days": number | null,"payment_terms_provenance": string | null,"phone": string | null,"provenance": string,"source": string,"source_note": string | null,"supplier_id": string,"supplier_type": string | null,"updated_at": string,"what_we_buy": string | null
+                    "address": string | null,"archived_at": string | null,"based_in": string | null,"contact_email": string | null,"contact_email_provenance": string | null,"contact_provenance": string | null,"contact_updated_at": string | null,"contact_updated_by": string | null,"contact_verification": string,"created_at": string,"name": string,"payment_terms_days": number | null,"payment_terms_provenance": string | null,"phone": string | null,"provenance": string,"source": string,"source_note": string | null,"supplier_id": string,"supplier_type": string | null,"updated_at": string,"version": number,"what_we_buy": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"archived_at"?: string | null,"based_in"?: string | null,"contact_email"?: string | null,"contact_email_provenance"?: string | null,"contact_verification"?: string,"created_at"?: string,"name": string,"payment_terms_days"?: number | null,"payment_terms_provenance"?: string | null,"phone"?: string | null,"provenance": string,"source": string,"source_note"?: string | null,"supplier_id": string,"supplier_type"?: string | null,"updated_at"?: string,"what_we_buy"?: string | null
+                    "address"?: string | null,"archived_at"?: string | null,"based_in"?: string | null,"contact_email"?: string | null,"contact_email_provenance"?: string | null,"contact_provenance"?: string | null,"contact_updated_at"?: string | null,"contact_updated_by"?: string | null,"contact_verification"?: string,"created_at"?: string,"name": string,"payment_terms_days"?: number | null,"payment_terms_provenance"?: string | null,"phone"?: string | null,"provenance": string,"source": string,"source_note"?: string | null,"supplier_id": string,"supplier_type"?: string | null,"updated_at"?: string,"version"?: number,"what_we_buy"?: string | null
                   }
                   Update: {
-                    "address"?: string | null,"archived_at"?: string | null,"based_in"?: string | null,"contact_email"?: string | null,"contact_email_provenance"?: string | null,"contact_verification"?: string,"created_at"?: string,"name"?: string,"payment_terms_days"?: number | null,"payment_terms_provenance"?: string | null,"phone"?: string | null,"provenance"?: string,"source"?: string,"source_note"?: string | null,"supplier_id"?: string,"supplier_type"?: string | null,"updated_at"?: string,"what_we_buy"?: string | null
+                    "address"?: string | null,"archived_at"?: string | null,"based_in"?: string | null,"contact_email"?: string | null,"contact_email_provenance"?: string | null,"contact_provenance"?: string | null,"contact_updated_at"?: string | null,"contact_updated_by"?: string | null,"contact_verification"?: string,"created_at"?: string,"name"?: string,"payment_terms_days"?: number | null,"payment_terms_provenance"?: string | null,"phone"?: string | null,"provenance"?: string,"source"?: string,"source_note"?: string | null,"supplier_id"?: string,"supplier_type"?: string | null,"updated_at"?: string,"version"?: number,"what_we_buy"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "suppliers_contact_updated_by_fkey"
+      columns: ["contact_updated_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
                   ]
                 },"tenders": {
                   Row: {
@@ -2205,6 +2261,9 @@ isOneToOne: false
 "accept_order":
 { Args: { "p_approver_employee_id"?: string,"p_customer_id"?: string,"p_discount_percent"?: number,"p_discount_reason"?: string,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_pickup_name"?: string,"p_pin"?: string,"p_request_key": string }; Returns: Json
                            },
+"activate_recipe_version":
+{ Args: { "p_change_note"?: string,"p_expected_revision": number,"p_recipe_version_id": string,"p_request_key": string }; Returns: Json
+                           },
 "calculate_eoq":
 { Args: { "p_annual_demand": number,"p_holding_cost": number,"p_max_cover_days"?: number,"p_min_order_base"?: number,"p_ordering_cost_cents": number,"p_pack_base_qty"?: number }; Returns: Json
                            },
@@ -2262,8 +2321,14 @@ isOneToOne: false
 "decide_return_custody":
 { Args: { "p_custody_id": string,"p_decision": string,"p_note"?: string,"p_request_key": string }; Returns: Json
                            },
+"decide_supplier_change_request":
+{ Args: { "p_decision": string,"p_expected_version": number,"p_note"?: string,"p_request_id": string,"p_request_key": string }; Returns: Json
+                           },
 "decide_waste_report":
 { Args: { "p_decision": string,"p_expected_version": number,"p_note"?: string,"p_request_key": string,"p_waste_report_id": string }; Returns: Json
+                           },
+"discard_recipe_draft":
+{ Args: { "p_expected_revision": number,"p_recipe_version_id": string,"p_request_key": string }; Returns: Json
                            },
 "dispatch_transfer":
 { Args: { "p_expected_version": number,"p_request_key": string,"p_transfer_id": string }; Returns: Json
@@ -2307,6 +2372,9 @@ isOneToOne: false
 "get_public_app_mode":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"get_recipes":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "get_reorder_alerts":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -2318,6 +2386,9 @@ isOneToOne: false
                            },
 "get_sales_summary":
 { Args: { "p_from": string,"p_location_ids"?: (string)[],"p_source"?: string,"p_to": string }; Returns: Json
+                           },
+"get_schema_version":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "get_serve_view":
 { Args: { "p_location_id": string }; Returns: Json
@@ -2351,6 +2422,9 @@ isOneToOne: false
                            },
 "list_stock_items":
 { Args: { "p_location_id": string }; Returns: Json
+                           },
+"list_supplier_change_requests":
+{ Args: { "p_status"?: string }; Returns: Json
                            },
 "list_waste_reports":
 { Args: { "p_location_id": string,"p_status"?: string }; Returns: Json
@@ -2406,6 +2480,9 @@ isOneToOne: false
 "revoke_membership":
 { Args: { "p_membership_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
                            },
+"save_recipe_draft":
+{ Args: { "p_expected_revision": number,"p_lines": Json,"p_recipe_version_id": string,"p_request_key": string }; Returns: Json
+                           },
 "search_customers":
 { Args: { "p_location_id": string,"p_query": string }; Returns: Json
                            },
@@ -2448,17 +2525,26 @@ isOneToOne: false
 "start_order_preparation":
 { Args: { "p_estimated_ready_at"?: string,"p_expected_version": number,"p_order_id": string,"p_request_key": string }; Returns: Json
                            },
+"start_recipe_draft":
+{ Args: { "p_dish_id": string,"p_request_key": string }; Returns: Json
+                           },
 "start_stock_count":
 { Args: { "p_item_ids"?: (string)[],"p_location_id": string,"p_request_key": string }; Returns: Json
                            },
 "submit_purchase_order":
 { Args: { "p_expected_version": number,"p_po_id": string,"p_request_key": string }; Returns: Json
                            },
+"submit_supplier_change_request":
+{ Args: { "p_changes": Json,"p_location_id": string,"p_note": string,"p_request_key": string,"p_supplier_id": string }; Returns: Json
+                           },
 "submit_waste_report":
 { Args: { "p_lines": Json,"p_location_id": string,"p_note"?: string,"p_reason_code": string,"p_request_key": string }; Returns: Json
                            },
 "update_shift":
 { Args: { "p_ends_at": string,"p_expected_version": number,"p_note"?: string,"p_reason"?: string,"p_request_key": string,"p_shift_id": string,"p_starts_at": string }; Returns: Json
+                           },
+"update_supplier_details":
+{ Args: { "p_changes": Json,"p_expected_version": number,"p_request_key": string,"p_supplier_id": string }; Returns: Json
                            },
 "void_supplier_invoice":
 { Args: { "p_expected_version": number,"p_invoice_id": string,"p_reason": string,"p_request_key": string }; Returns: Json

@@ -8,6 +8,8 @@ const EXACT: Record<string, string> = {
     'The server did not confirm the action (network problem or timeout). It may or may not have been saved.',
   network_offline: 'No connection — nothing was saved.',
   request_invalid: 'The request was not accepted. Refresh the page and try again.',
+  schema_out_of_date:
+    'This screen needs a newer database than the one connected. Nothing was saved. An operator must apply the latest database migrations (for the demo: run "Demo project setup").',
   'conflict:stale_version': 'Someone else changed this record. Refresh to see the latest version, then try again.',
   'conflict:request_key_reused': 'This action was already used for a different request. Start the action again.',
   'conflict:request_in_progress': 'The same request is still being processed. Wait a moment and check again.',
