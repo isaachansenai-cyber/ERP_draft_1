@@ -116,6 +116,8 @@ export function MutationStatus<T>({
   }
   switch (state.kind) {
     case 'success':
+      // An empty successText means the parent shows the confirmation (the form is about to remount).
+      if (!successText) return null;
       return (
         <Notice tone="success">
           {successText}

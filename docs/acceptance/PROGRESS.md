@@ -307,3 +307,39 @@ See "What the operator must do or accept" in `ACCEPTANCE_REPORT.md`: live hostin
 
 - `docs/acceptance/evidence/perf-AC33.*` records the earlier run, whose employee loop still read the sales summary. The load script no longer does, so a rerun's numbers will differ slightly.
 - The owner's POS error at Provo could not be reproduced on current code. The session fix targets the cause seen in the hosted logs, and the exact error text is still wanted.
+
+## Post-launch changes (operator requests, 2026-11-25)
+
+### Reported bugs
+
+- **Spanish Fork waste reports and item charts** did not load on the hosted demo. Both screens call functions from migration `0023`. The site was redeployed with that code on 2026-11-18, but the hosted demo database was last set up on 2026-11-14 and never received `0023`. Both work on current code (regression: `tests/e2e/owner-tools.spec.ts`). **Fix on the hosted demo:** run Actions → Demo project setup (applies `0023`–`0026`; also issues new demo passwords), then deploy Pages.
+- **Guard (ADR 0036):** `get_schema_version` plus a "Database out of date" banner after sign-in, and a missing function now reads as `schema_out_of_date` instead of a generic error. `docs/ops/deployment.md` now says to update the database before deploying Pages.
+
+### Delivered
+
+- **Owner recipe editing** (ADR 0037, migration `0025`): Recipes screen (`#/catalog`). The owner edits a draft copy (amounts, add/remove ingredients), saves and activates it with a note; managers read only. Accepted orders keep their original recipe; the `recipes_verified` gate is not reopened.
+- **Supplier edits and change requests** (ADR 0038, migration `0026`): owner Edit button for phone, email, address and per-item lead days ("Owner-entered"); managers submit change requests that the owner approves or rejects from Overview.
+- **Overview "Today's sales" card and Dashboard tabs** (ADR 0039): managers see their location, the owner sees every location plus a total; the Dashboard splits into Sales and Accounting with per-tab CSV.
+
+### CI failure on PR #7 and fix
+
+- The CI `database` job failed on one browser test, "the owner edits a recipe and activates it": `Draft saved.` was never visible. `db lint` and every other step passed. Cause: a confirmed save reloads the recipe card, which remounts the editor and wiped its success message before it could be read (locally the reload happened to be slower). The same pattern had already been fixed for supplier forms. Fix: the dish card now shows the confirmation for start, save, activate and discard (`b57d13d`).
+- PR #7 was merged with that failure, so `main` at `93a6a1c` still has the failing test until the fix is merged.
+
+### Evidence (local run of every CI step, 2026-11-25)
+
+| Step | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `prettier --check src tests scripts` | clean |
+| `npm run test:unit` | 55 passed |
+| `supabase db lint --level warning --fail-on warning` | no findings |
+| `npm run test:db` (pgTAP, incl. `008_recipes_suppliers.test.sql`) | 176 passed |
+| `npm run test:integration` (pilot / ops incl. `m6-recipes-suppliers.test.ts` / demo) | 49 / 89 / 28 passed |
+| `npm run test:e2e -- --trace off` (incl. `owner-tools.spec.ts`) | 40 passed |
+| secret scan of the repository and `dist/` | passed |
+
+Checklist evidence added to AC03, AC07, AC09, AC31 and AC32 (all still PASS). AC30 stays PARTIAL.
+
+### Open items
+
+- Hosted demo: run Demo project setup, then deploy Pages, after the fix is on `main`.
