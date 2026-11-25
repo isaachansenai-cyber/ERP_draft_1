@@ -123,11 +123,14 @@ function DraftEditor({
   draft,
   ingredients,
   onChanged,
+  onDone,
 }: {
   dish: Dish;
   draft: NonNullable<Dish['draft']>;
   ingredients: Ingredient[];
   onChanged: () => void;
+  /** A confirmed save/activate/discard reloads the card and remounts this editor, so the card shows the message. */
+  onDone: (message: string) => void;
 }) {
   const [rows, setRows] = useState<EditRow[]>(() =>
     draft.lines.map((l) => ({ item_id: l.item_id, quantity: qty(l.quantity_per_serving) })),
@@ -142,21 +145,21 @@ function DraftEditor({
     'save_recipe_draft',
     `recipe-save:${draft.recipe_version_id}:${draft.draft_revision}`,
     {
-      onSuccess: onChanged,
+      onSuccess: () => onDone('Draft saved. It is not used by any order until you activate it.'),
     },
   );
   const activate = useRpcMutation(
     'activate_recipe_version',
     `recipe-activate:${draft.recipe_version_id}:${draft.draft_revision}`,
     {
-      onSuccess: onChanged,
+      onSuccess: () => onDone('Recipe activated for new orders. Orders already accepted keep their recipe.'),
     },
   );
   const discard = useRpcMutation(
     'discard_recipe_draft',
     `recipe-discard:${draft.recipe_version_id}:${draft.draft_revision}`,
     {
-      onSuccess: onChanged,
+      onSuccess: () => onDone('Draft discarded. The active recipe is unchanged.'),
     },
   );
 
@@ -248,7 +251,7 @@ function DraftEditor({
       </div>
       <MutationStatus
         state={save.state}
-        successText="Draft saved. It is not used by any order until you activate it."
+        successText=""
         onRetry={() => void save.retry()}
         onCheckAgain={() => void save.checkAgain()}
       />
@@ -306,13 +309,13 @@ function DraftEditor({
         </div>
         <MutationStatus
           state={activate.state}
-          successText="Recipe activated for new orders."
+          successText=""
           onRetry={() => void activate.retry()}
           onCheckAgain={() => void activate.checkAgain()}
         />
         <MutationStatus
           state={discard.state}
-          successText="Draft discarded."
+          successText=""
           onRetry={() => void discard.retry()}
           onCheckAgain={() => void discard.checkAgain()}
         />
@@ -332,8 +335,13 @@ function DishCard({
   ingredients: Ingredient[];
   onChanged: () => void;
 }) {
+  const [confirmed, setConfirmed] = useState<string | null>(null);
+  const done = (message: string) => {
+    setConfirmed(message);
+    onChanged();
+  };
   const start = useRpcMutation<DraftResult>('start_recipe_draft', `recipe-start:${dish.dish_id}`, {
-    onSuccess: onChanged,
+    onSuccess: () => done('Draft started. Change the ingredients below, save, then activate.'),
   });
   return (
     <section
@@ -365,6 +373,7 @@ function DishCard({
         </>
       ) : null}
 
+      {confirmed ? <Notice tone="success">{confirmed}</Notice> : null}
       {canEdit ? (
         dish.draft ? (
           <DraftEditor
@@ -373,17 +382,24 @@ function DishCard({
             draft={dish.draft}
             ingredients={ingredients}
             onChanged={onChanged}
+            onDone={done}
           />
         ) : (
           <div className="flex flex-col gap-2">
             <div>
-              <Button disabled={!start.canPost} onClick={() => void start.submit({ p_dish_id: dish.dish_id })}>
+              <Button
+                disabled={!start.canPost}
+                onClick={() => {
+                  setConfirmed(null);
+                  void start.submit({ p_dish_id: dish.dish_id });
+                }}
+              >
                 Edit recipe
               </Button>
             </div>
             <MutationStatus
               state={start.state}
-              successText="Draft started."
+              successText=""
               onRetry={() => void start.retry()}
               onCheckAgain={() => void start.checkAgain()}
             />
