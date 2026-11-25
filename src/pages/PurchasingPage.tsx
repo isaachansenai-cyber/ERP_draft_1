@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { SupplierDetailsForm, SupplierRequestsList } from '../components/SupplierRequests';
 import { Badge, Button, Empty, Field, inputClass, Loading, MutationStatus, Notice, QueryError } from '../components/ui';
 import { formatCents, formatDateTime, parseDollarsToCents } from '../lib/format';
 import { supabase } from '../lib/supabase';
@@ -19,14 +20,19 @@ interface SupplierItem {
   cost_basis: string | null;
   procurement_lead_days: number | null;
   lead_time_basis: string | null;
+  lead_updated_at: string | null;
   items: { name: string; base_unit: string; requires_use_by: boolean } | null;
 }
 
 interface Supplier {
   supplier_id: string;
   name: string;
+  version: number;
   phone: string | null;
   contact_email: string | null;
+  address: string | null;
+  contact_provenance: string | null;
+  contact_updated_at: string | null;
   contact_verification: string;
   payment_terms_days: number | null;
   payment_terms_provenance: string | null;
@@ -64,7 +70,7 @@ function useSuppliers() {
       const { data, error } = await supabase
         .from('suppliers')
         .select(
-          'supplier_id, name, phone, contact_email, contact_verification, payment_terms_days, payment_terms_provenance, supplier_items(supplier_item_id, supplier_id, item_id, is_primary, pack_description, pack_base_qty, pack_cost_cents, cost_basis, procurement_lead_days, lead_time_basis, items!supplier_items_item_id_is_purchasable_fkey(name, base_unit, requires_use_by))',
+          'supplier_id, name, version, phone, contact_email, address, contact_provenance, contact_updated_at, contact_verification, payment_terms_days, payment_terms_provenance, supplier_items(supplier_item_id, supplier_id, item_id, is_primary, pack_description, pack_base_qty, pack_cost_cents, cost_basis, procurement_lead_days, lead_time_basis, lead_updated_at, items!supplier_items_item_id_is_purchasable_fkey(name, base_unit, requires_use_by))',
         )
         .order('supplier_id');
       if (error) throw error;
@@ -563,7 +569,12 @@ function PackEditor({ si, canEdit }: { si: SupplierItem; canEdit: boolean }) {
           <Badge tone="bad">Not entered</Badge>
         )}{' '}
         <span className="text-xs">
-          Lead time {si.procurement_lead_days ?? '—'} d ({si.lead_time_basis ?? 'unknown'}; not a supplier quote)
+          Lead time {si.procurement_lead_days ?? '—'} d{' '}
+          {si.lead_updated_at ? (
+            <Badge tone="good">Owner-entered {formatDateTime(si.lead_updated_at)}</Badge>
+          ) : (
+            <>({si.lead_time_basis ?? 'unknown'}; not a supplier quote)</>
+          )}
         </span>
       </p>
       {canEdit ? (
@@ -639,7 +650,42 @@ function PackEditor({ si, canEdit }: { si: SupplierItem; canEdit: boolean }) {
   );
 }
 
-function SuppliersPanel({ canEdit }: { canEdit: boolean }) {
+function SupplierContact({ s, canEdit, locationId }: { s: Supplier; canEdit: boolean; locationId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-700">
+        <span>
+          Phone {s.phone ?? 'not supplied'} · Email {s.contact_email ?? 'not supplied'} · Address{' '}
+          {s.address ?? 'not supplied'}
+        </span>
+        {s.contact_updated_at ? (
+          <Badge tone="good">Owner-entered {formatDateTime(s.contact_updated_at)}</Badge>
+        ) : (
+          <Badge tone="warn">Source list, unverified</Badge>
+        )}
+        <span>{s.contact_verification}</span>
+      </p>
+      {open ? (
+        <SupplierDetailsForm
+          supplier={s}
+          mode={canEdit ? 'edit' : 'request'}
+          locationId={locationId}
+          onDone={() => setOpen(false)}
+          onCancel={() => setOpen(false)}
+        />
+      ) : (
+        <div>
+          <Button variant="secondary" onClick={() => setOpen(true)}>
+            {canEdit ? `Edit ${s.supplier_id} details` : `Request change to ${s.supplier_id}`}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SuppliersPanel({ canEdit, locationId }: { canEdit: boolean; locationId: string }) {
   const suppliers = useSuppliers();
   if (suppliers.isPending) return <Loading />;
   if (suppliers.error) return <QueryError error={suppliers.error} onRetry={() => void suppliers.refetch()} />;
@@ -649,18 +695,22 @@ function SuppliersPanel({ canEdit }: { canEdit: boolean }) {
         Supplier contacts come from the source list and are <strong>not independently verified</strong>. Missing phone
         numbers stay blank.{' '}
         {canEdit
-          ? 'Enter real terms and packs, then confirm the matching gates under Settings → Pilot setup.'
-          : 'Only the owner edits terms and packs.'}
+          ? 'Enter real contacts, lead times, terms and packs, then confirm the matching gates under Settings → Pilot setup.'
+          : 'Only the owner edits suppliers. Use “Request change” to send the owner new details a supplier gave you.'}
       </Notice>
+      <section aria-labelledby="supplier-requests-heading" className="flex flex-col gap-2">
+        <h2 id="supplier-requests-heading" className="text-lg font-semibold">
+          {canEdit ? 'Change requests waiting for you' : 'Your change requests'}
+        </h2>
+        <SupplierRequestsList status={canEdit ? 'pending' : undefined} compact={!canEdit} />
+      </section>
       <ul className="flex flex-col gap-3">
         {suppliers.data.map((s) => (
           <li key={s.supplier_id} className="rounded-md border border-slate-300 bg-white p-3">
             <p className="font-semibold">
               {s.supplier_id} {s.name}
             </p>
-            <p className="text-xs text-slate-700">
-              Phone {s.phone ?? 'not supplied'} · Email {s.contact_email ?? 'not supplied'} · {s.contact_verification}
-            </p>
+            <SupplierContact s={s} canEdit={canEdit} locationId={locationId} />
             <SupplierTerms supplier={s} canEdit={canEdit} />
             <ul>
               {s.supplier_items.map((si) => (
@@ -709,7 +759,7 @@ export function PurchasingPage() {
       {tab === 'orders' ? (
         <PurchaseOrders locationId={selectedLocation.location_id} />
       ) : (
-        <SuppliersPanel canEdit={Boolean(context?.is_owner)} />
+        <SuppliersPanel canEdit={Boolean(context?.is_owner)} locationId={selectedLocation.location_id} />
       )}
     </section>
   );

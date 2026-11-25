@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { to: '/inventory', label: 'Inventory', end: false, employee: { to: '/inventory/waste', label: 'Waste reports' } },
   { to: '/returns', label: 'Refunds & returns', end: false },
   { to: '/customer-invoices', label: 'Customer invoices', end: false, managersOnly: true },
+  { to: '/catalog', label: 'Recipes', end: false, managersOnly: true },
   { to: '/purchasing', label: 'Purchasing', end: false, managersOnly: true },
   { to: '/invoices', label: 'Supplier invoices', end: false, managersOnly: true },
   { to: '/planning', label: 'Planning', end: false, managersOnly: true },

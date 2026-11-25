@@ -67,15 +67,25 @@ async function exportAndCompare(page: Page) {
 test('a manager’s CSV export equals the screen; other locations show only allowed summary fields', async ({ page }) => {
   await signIn(page, 'DEMO-LOC-PRO-MAN-1');
   await page.goto('./#/dashboard');
+  // Sales tab (ADR 0039): every location, sales columns only.
   const { csv } = await exportAndCompare(page);
   const own = csv.find((r) => r.location_id === 'LOC-PRO')!;
   expect(own.access).toBe('full');
-  for (const other of csv.filter((r) => r.location_id !== 'LOC-PRO')) {
-    expect(other.access).toBe('summary');
-    expect(other.cogs_cents).toBe('');
-    expect(other.gross_margin_cents).toBe('');
-    expect(other.supplier_outstanding_cents).toBe('');
-  }
+  expect(own.report).toBe('sales');
+  expect(Object.keys(own)).not.toContain('cogs_cents');
+  for (const other of csv.filter((r) => r.location_id !== 'LOC-PRO')) expect(other.access).toBe('summary');
+  // Accounting tab: only the location this manager runs.
+  await page.getByRole('link', { name: 'Accounting' }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click(),
+  ]);
+  const accounting = parseCsv(readFileSync((await download.path())!, 'utf8'));
+  expect(accounting.map((r) => r.location_id)).toEqual(['LOC-PRO']);
+  expect(accounting[0]!.report).toBe('accounting');
+  const headers = await page.locator('thead th').allTextContents();
+  const cells = await page.getByTestId('summary-LOC-PRO').locator('td').allTextContents();
+  expect(accounting[0]!.cogs_cents).toBe(cents(cells[headers.indexOf('COGS')]!));
 });
 
 test('employees get no dashboard and no export (ADR 0033)', async ({ page }) => {

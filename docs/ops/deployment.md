@@ -2,10 +2,10 @@
 
 Deployment is an **operator action**.
 
-Current state (2026-11-14):
+Current state (2026-11-25):
 
-- The **demo** is live. The Supabase project `qfvtpgxguaftrprxprof` has the migrations applied and is in demo mode with the demo data imported and the demo logins created by **Actions → Demo project setup**.
-- The Pages site `https://isaachansenai-cyber.github.io/ERP_draft_1/` serves the demo build.
+- The **demo** is live. The Supabase project `qfvtpgxguaftrprxprof` is in demo mode with the demo data imported and the demo logins created by **Actions → Demo project setup**, last run on 2026-11-14. It therefore has migrations up to `0022` only.
+- The Pages site `https://isaachansenai-cyber.github.io/ERP_draft_1/` serves the 2026-11-18 build, which needs migration `0023`. That mismatch is why waste reports and item charts fail on the hosted demo (ADR 0036). Re-running Demo project setup applies the missing migrations; it also issues new demo passwords.
 - No pilot project exists yet.
 
 There are always two separate Supabase projects: a resettable **demo** and an isolated **pilot**. A frontend setting is never the isolation boundary. Each gets its own build.
@@ -66,5 +66,6 @@ Then publish `dist/` with any static host.
 ## 4. Updates
 
 - **Schema:** add a new migration (never edit an applied one). Take a manual backup (`backup-restore.md`), then `supabase db push` to the demo first and run the acceptance suite there, then the pilot.
+- **Order matters:** when a release adds a migration, update the database first (demo: **Actions → Demo project setup**, which applies only the missing migrations), then deploy Pages. A site newer than its database shows a red "Database out of date" banner after sign-in (ADR 0036). Bump `EXPECTED_SCHEMA_VERSION` in `src/lib/schemaVersion.ts` with every migration.
 - **Frontend:** re-run the Pages workflow for the target.
 - **Rollback:** frontend, re-run the workflow from the previous commit. Database, restore from the backup taken before the change (see `backup-restore.md`); migrations are not reversed by hand.
