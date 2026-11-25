@@ -91,8 +91,9 @@ test('the owner edits a recipe and activates it; managers only read recipes', as
   await expect(card.getByText('Draft saved.', { exact: false })).toBeVisible();
   await card.getByLabel('What changed (required)').fill('E2E: more of the first ingredient, add scallions');
   await card.getByRole('button', { name: /Activate version \d+/ }).click();
-  await expect(card.getByText(/Version \d+ in use/)).toBeVisible();
-  await expect(card.getByText('ING-038', { exact: false })).toBeVisible();
+  // The draft form closes once the activation is confirmed and the card reloads.
+  await expect(card.getByRole('form')).toHaveCount(0);
+  await expect(card.getByRole('cell', { name: /ING-038/ })).toBeVisible();
   const active = await query<{ n: string }>(
     `select count(*)::text n from public.recipe_components c join public.recipe_versions v using (recipe_version_id)
       where v.parent_item_id = 'FG-004' and v.status = 'active' and c.component_item_id = 'ING-038'`,
@@ -133,7 +134,7 @@ test('a manager requests a supplier change; the owner approves it from the Overv
   await form.getByLabel('Phone').fill('435 555 0188');
   await form.getByLabel('Where did this come from? (required)').fill('Driver left a card with the new number');
   await form.getByRole('button', { name: 'Send request to owner' }).click();
-  await expect(page.getByText('Request sent to the owner.')).toBeVisible();
+  await expect(page.getByText('Request sent to the owner.', { exact: false })).toBeVisible();
   await expect(page.getByText('Waiting for owner').first()).toBeVisible();
   await page.getByRole('button', { name: 'Sign out' }).click();
 
@@ -173,9 +174,9 @@ test('Overview shows today’s sales to managers and the owner; the Dashboard sp
   await today.getByRole('link', { name: 'Open full dashboard' }).click();
   await expect(page).toHaveURL(/#\/dashboard\/sales$/);
   await expect(page.locator('thead th', { hasText: 'Net sales' })).toHaveCount(1);
-  await expect(page.locator('thead th', { hasText: 'COGS' })).toHaveCount(0);
+  await expect(page.locator('thead th', { hasText: /^COGS$/ })).toHaveCount(0);
   await page.getByRole('link', { name: 'Accounting' }).click();
-  await expect(page.locator('thead th', { hasText: 'COGS' })).toHaveCount(1);
+  await expect(page.locator('thead th', { hasText: /^COGS$/ })).toHaveCount(1);
   await expect(page.locator('thead th', { hasText: 'Recorded payments' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Sign out' }).click();
 

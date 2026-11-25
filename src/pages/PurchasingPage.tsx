@@ -652,6 +652,7 @@ function PackEditor({ si, canEdit }: { si: SupplierItem; canEdit: boolean }) {
 
 function SupplierContact({ s, canEdit, locationId }: { s: Supplier; canEdit: boolean; locationId: string }) {
   const [open, setOpen] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-1">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-700">
@@ -671,12 +672,23 @@ function SupplierContact({ s, canEdit, locationId }: { s: Supplier; canEdit: boo
           supplier={s}
           mode={canEdit ? 'edit' : 'request'}
           locationId={locationId}
-          onDone={() => setOpen(false)}
+          onDone={(message) => {
+            setSaved(message);
+            setOpen(false);
+          }}
           onCancel={() => setOpen(false)}
         />
       ) : (
-        <div>
-          <Button variant="secondary" onClick={() => setOpen(true)}>
+        <div className="flex flex-col gap-2">
+          {saved ? <Notice tone="success">{saved}</Notice> : null}
+          <Button
+            variant="secondary"
+            className="self-start"
+            onClick={() => {
+              setSaved(null);
+              setOpen(true);
+            }}
+          >
             {canEdit ? `Edit ${s.supplier_id} details` : `Request change to ${s.supplier_id}`}
           </Button>
         </div>

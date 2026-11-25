@@ -89,7 +89,8 @@ export function SupplierDetailsForm({
   supplier: EditableSupplier;
   mode: 'edit' | 'request';
   locationId: string;
-  onDone: () => void;
+  /** Called after the server confirms; the form closes, so the parent shows the message. */
+  onDone: (message: string) => void;
   onCancel: () => void;
 }) {
   const queryClient = useQueryClient();
@@ -102,16 +103,16 @@ export function SupplierDetailsForm({
     ),
   );
   const [note, setNote] = useState('');
-  const done = () => {
+  const done = (message: string) => {
     void queryClient.invalidateQueries({ queryKey: ['suppliers'] });
     void queryClient.invalidateQueries({ queryKey: SUPPLIER_REQUESTS_KEY });
-    onDone();
+    onDone(message);
   };
   const edit = useRpcMutation('update_supplier_details', `supplier-edit:${supplier.supplier_id}:${supplier.version}`, {
-    onSuccess: done,
+    onSuccess: () => done('Supplier details saved.'),
   });
   const request = useRpcMutation('submit_supplier_change_request', `supplier-request:${supplier.supplier_id}`, {
-    onSuccess: done,
+    onSuccess: () => done('Request sent to the owner. Nothing changes until the owner approves it.'),
   });
   const m = mode === 'edit' ? edit : request;
 
