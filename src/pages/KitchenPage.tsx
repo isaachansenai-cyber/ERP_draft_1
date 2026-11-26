@@ -6,6 +6,7 @@ import { Badge, Button, Empty, Field, inputClass, Loading, MutationStatus, Notic
 import { formatCents, formatDateTime } from '../lib/format';
 import { supabase } from '../lib/supabase';
 import { useRpcMutation } from '../lib/useRpcMutation';
+import { formatKitchenTime, kitchenSchedule } from '../lib/webOrders';
 import { RecordTender, type OrderResult } from './PosPage';
 
 interface KitchenOrder {
@@ -26,12 +27,19 @@ interface KitchenOrder {
   tender_mode: 'SIMULATED' | 'MANUAL_EXTERNAL';
   accepted_at: string;
   estimated_ready_at: string | null;
+  channel: 'pos' | 'web';
+  requested_pickup_at: string | null;
   order_lines: Array<{
     line_no: number;
     revision: number;
     quantity: number;
     item_id: string;
-    items: { name: string; lead_time_note: string | null; prep_lead_days: number | null } | null;
+    items: {
+      name: string;
+      lead_time_note: string | null;
+      prep_lead_days: number | null;
+      prep_minutes: number | null;
+    } | null;
   }>;
   tenders: Array<{ amount_cents: number }>;
 }
@@ -51,15 +59,33 @@ function useKitchenQueue(locationId: string | undefined) {
       const { data, error } = await supabase
         .from('orders')
         .select(
-          'order_id, order_number, pickup_code, status, version, revision, pickup_name, note, has_kitchen_items, total_cents, gross_cents, discount_cents, net_cents, tax_cents, tender_mode, accepted_at, estimated_ready_at, order_lines(line_no, revision, quantity, item_id, items!order_lines_item_id_is_sellable_fkey(name, lead_time_note, prep_lead_days)), tenders(amount_cents)',
+          'order_id, order_number, pickup_code, status, version, revision, pickup_name, note, has_kitchen_items, total_cents, gross_cents, discount_cents, net_cents, tax_cents, tender_mode, accepted_at, estimated_ready_at, channel, requested_pickup_at, order_lines(line_no, revision, quantity, item_id, items!order_lines_item_id_is_sellable_fkey(name, lead_time_note, prep_lead_days, prep_minutes)), tenders(amount_cents)',
         )
         .eq('location_id', locationId!)
         .in('status', ['accepted', 'preparing', 'ready'])
         .order('accepted_at');
       if (error) throw error;
-      return data as unknown as KitchenOrder[];
+      // Web orders queue by their pickup time; till orders by when they were taken.
+      return (data as unknown as KitchenOrder[]).sort((a, b) =>
+        (a.requested_pickup_at ?? a.accepted_at).localeCompare(b.requested_pickup_at ?? b.accepted_at),
+      );
     },
   });
+}
+
+function currentLines(order: KitchenOrder) {
+  return order.order_lines.filter((l) => l.revision === order.revision).sort((a, b) => a.line_no - b.line_no);
+}
+
+function scheduleOf(order: KitchenOrder) {
+  return kitchenSchedule(
+    order,
+    currentLines(order).map((l) => ({
+      quantity: l.quantity,
+      prep_minutes: l.items?.prep_minutes ?? null,
+      prep_lead_days: l.items?.prep_lead_days ?? null,
+    })),
+  );
 }
 
 function ageMinutes(iso: string): number {
@@ -87,7 +113,8 @@ function OrderCard({ order, locationId, isManager }: { order: KitchenOrder; loca
   });
   const cancel = useRpcMutation('cancel_order', `cancel:${order.order_id}:${order.version}`, { onSuccess: refresh });
 
-  const lines = order.order_lines.filter((l) => l.revision === order.revision).sort((a, b) => a.line_no - b.line_no);
+  const lines = currentLines(order);
+  const schedule = scheduleOf(order);
   const paid = order.tenders.reduce((s, t) => s + t.amount_cents, 0);
   const balance = order.total_cents - paid;
   const afterStart = order.status !== 'accepted';
@@ -103,10 +130,22 @@ function OrderCard({ order, locationId, isManager }: { order: KitchenOrder; loca
         <p className="mr-auto text-lg font-bold">
           <span className="font-mono">{order.pickup_code}</span> {order.pickup_name ? `· ${order.pickup_name}` : ''}
         </p>
-        <Badge tone={ageMinutes(order.accepted_at) > 30 ? 'warn' : 'neutral'}>
-          {ageMinutes(order.accepted_at)} min
-        </Badge>
+        {order.channel === 'web' ? <Badge tone="neutral">Web order</Badge> : null}
+        {schedule.pickupAt ? null : (
+          <Badge tone={ageMinutes(order.accepted_at) > 30 ? 'warn' : 'neutral'}>
+            {ageMinutes(order.accepted_at)} min
+          </Badge>
+        )}
       </div>
+      {schedule.pickupAt && schedule.startBy ? (
+        <p className="text-sm" data-testid={`schedule-${order.pickup_code}`}>
+          <span className="font-semibold">Pickup {formatKitchenTime(schedule.pickupAt)}</span> · start by{' '}
+          {formatKitchenTime(schedule.startBy)}
+          {schedule.prepAhead ? (
+            <span className="block text-xs text-amber-800">Needs prep the day before (see dish notes).</span>
+          ) : null}
+        </p>
+      ) : null}
       <ul className="text-sm">
         {lines.map((l) => (
           <li key={l.line_no}>
@@ -306,6 +345,15 @@ export function KitchenPage() {
           Refresh
         </Button>
       </div>
+      {isManager && queue.data ? (
+        <NoShowSweep
+          locationId={locationId}
+          overdue={queue.data.filter(
+            (o) =>
+              o.channel === 'web' && o.requested_pickup_at !== null && o.requested_pickup_at < new Date().toISOString(),
+          )}
+        />
+      ) : null}
       {queue.isPending ? (
         <Loading />
       ) : queue.error ? (
@@ -313,7 +361,7 @@ export function KitchenPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           {COLUMNS.map((c) => {
-            const orders = queue.data.filter((o) => o.status === c.status);
+            const orders = queue.data.filter((o) => o.status === c.status && !scheduleOf(o).laterDay);
             return (
               <div key={c.status} className="rounded-lg bg-slate-100 p-3">
                 <h2 className="mb-2 text-lg font-semibold">
@@ -336,8 +384,110 @@ export function KitchenPage() {
               </div>
             );
           })}
+          <ScheduledLane
+            orders={queue.data.filter((o) => scheduleOf(o).laterDay)}
+            locationId={locationId}
+            isManager={isManager}
+          />
         </div>
       )}
     </section>
+  );
+}
+
+/** Web orders for a later day: listed apart so today's queue stays clear (BUILD_PLAN §5.3). */
+function ScheduledLane({
+  orders,
+  locationId,
+  isManager,
+}: {
+  orders: KitchenOrder[];
+  locationId: string;
+  isManager: boolean;
+}) {
+  return (
+    <div className="rounded-lg bg-slate-100 p-3 lg:col-span-3" data-testid="scheduled-lane">
+      <h2 className="mb-2 text-lg font-semibold">Scheduled for later days ({orders.length})</h2>
+      {orders.length === 0 ? (
+        <Empty>No orders for later days.</Empty>
+      ) : (
+        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {orders.map((o) => (
+            <OrderCard key={`${o.order_id}:${o.version}`} order={o} locationId={locationId} isManager={isManager} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * End-of-day no-shows (owner decision; migration 0029): cancels this location's
+ * website orders whose pickup time has passed. Started or ready orders are
+ * recorded as waste; demo simulated payments get their simulated refund; a real
+ * recorded payment is left for the counter and listed.
+ */
+function NoShowSweep({ locationId, overdue }: { locationId: string; overdue: KitchenOrder[] }) {
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const sweep = useRpcMutation<{ cancelled: string[]; skipped: Array<{ order_number: string; reason: string }> }>(
+    'cancel_uncollected_web_orders',
+    `no-show:${locationId}`,
+    {
+      onSuccess: () => {
+        setConfirming(false);
+        void queryClient.invalidateQueries({ queryKey: ['kitchen', locationId] });
+      },
+    },
+  );
+  const result = 'kind' in sweep.state && sweep.state.kind === 'success' ? sweep.state.result : null;
+  if (overdue.length === 0 && !result) return null;
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-amber-700 bg-amber-50 p-3" data-testid="no-show-sweep">
+      {overdue.length > 0 ? (
+        <p className="font-semibold">
+          {overdue.length} website {overdue.length === 1 ? 'order is' : 'orders are'} past the pickup time and not
+          collected: {overdue.map((o) => o.pickup_code).join(', ')}.
+        </p>
+      ) : null}
+      {overdue.length > 0 && !confirming ? (
+        <div>
+          <Button variant="secondary" onClick={() => setConfirming(true)}>
+            Cancel uncollected website orders…
+          </Button>
+        </div>
+      ) : null}
+      {confirming ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm">
+            Not started: stock is released. Started or ready: the food is recorded as waste. Demo simulated payments are
+            refunded (simulated). Orders with a real recorded payment are left for you to handle at the counter.
+          </p>
+          <Button
+            variant="danger"
+            disabled={!sweep.canPost}
+            onClick={() => void sweep.submit({ p_location_id: locationId })}
+          >
+            Cancel {overdue.length} {overdue.length === 1 ? 'order' : 'orders'}
+          </Button>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>
+            Keep them
+          </Button>
+        </div>
+      ) : null}
+      <MutationStatus
+        state={sweep.state}
+        successText={
+          result
+            ? `Cancelled ${result.cancelled.length}${result.cancelled.length ? `: ${result.cancelled.join(', ')}` : ''}.` +
+              (result.skipped.length
+                ? ` Left for the counter: ${result.skipped.map((x) => x.order_number).join(', ')}.`
+                : '')
+            : 'Done.'
+        }
+        onRetry={() => void sweep.retry()}
+        onCheckAgain={() => void sweep.checkAgain()}
+      />
+    </div>
   );
 }

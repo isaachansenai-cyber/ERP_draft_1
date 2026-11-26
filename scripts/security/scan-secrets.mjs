@@ -98,14 +98,17 @@ export function scan({ requireDist = false } = {}) {
     const text = readFileSync(join(ROOT, file), 'utf8');
     for (const f of findSecrets(text)) problems.push(`${file}: ${f}`);
   }
-  const dist = join(ROOT, 'dist');
-  if (existsSync(dist)) {
-    for (const p of walk(dist)) {
-      for (const f of findSecrets(readFileSync(p, 'utf8'), { bundle: true }))
-        problems.push(`${relative(ROOT, p)}: ${f}`);
+  // The staff app's bundle and the public website's bundle (site/dist, CLAUDE.md D12).
+  for (const bundle of ['dist', join('site', 'dist')]) {
+    const dir = join(ROOT, bundle);
+    if (existsSync(dir)) {
+      for (const p of walk(dir)) {
+        for (const f of findSecrets(readFileSync(p, 'utf8'), { bundle: true }))
+          problems.push(`${relative(ROOT, p)}: ${f}`);
+      }
+    } else if (requireDist && bundle === 'dist') {
+      problems.push('dist/ not found: run npm run build first');
     }
-  } else if (requireDist) {
-    problems.push('dist/ not found: run npm run build first');
   }
   return problems;
 }
@@ -117,6 +120,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     process.exit(1);
   }
   console.log(
-    `Secret scan passed: repository files${existsSync(join(ROOT, 'dist')) ? ' and dist/' : ''} contain no secrets.`,
+    `Secret scan passed: repository files${existsSync(join(ROOT, 'dist')) ? ' and dist/' : ''}${
+      existsSync(join(ROOT, 'site', 'dist')) ? ' and site/dist/' : ''
+    } contain no secrets.`,
   );
 }

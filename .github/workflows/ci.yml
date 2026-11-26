@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npx prettier --check src tests scripts
+      - run: npx prettier --check src tests scripts site
       - run: npm run test:unit
       - name: Build and scan the bundle for secrets
         run: npm run build && npm run test:secrets -- --require-dist
@@ -29,6 +29,10 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: http://127.0.0.1:54321
           VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      - name: Public website build and browser tests (no database)
+        run: npx playwright install --with-deps chromium && npm run test:site:e2e
+      - name: Scan the public website bundle for secrets
+        run: npm run test:secrets
 
   database:
     runs-on: ubuntu-latest
@@ -47,3 +51,5 @@ jobs:
       - run: npm run test:integration
       - name: End-to-end tests (Playwright)
         run: npx playwright install --with-deps chromium && npm run test:e2e -- --trace off
+      - name: Public website against the local demo ERP (Playwright)
+        run: npm run test:site:live

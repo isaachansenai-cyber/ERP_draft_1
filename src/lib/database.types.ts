@@ -443,14 +443,14 @@ isOneToOne: false
                   ]
                 },"items": {
                   Row: {
-                    "archived_at": string | null,"barcode": string,"barcode_type": string,"base_unit": string,"category": string,"created_at": string,"is_purchasable": boolean | null,"is_sellable": boolean,"item_id": string,"item_type": string,"lead_time_basis": string | null,"lead_time_note": string | null,"name": string,"prep_lead_days": number | null,"primary_supplier_id": string | null,"procurement_lead_days": number | null,"provenance": string,"provenance_detail": NonNullable<Json>,"requires_use_by": boolean,"requires_use_by_basis": string,"source": string,"source_note": string | null,"storage_note": string | null,"updated_at": string
+                    "archived_at": string | null,"barcode": string,"barcode_type": string,"base_unit": string,"category": string,"created_at": string,"is_purchasable": boolean | null,"is_sellable": boolean,"item_id": string,"item_type": string,"lead_time_basis": string | null,"lead_time_note": string | null,"name": string,"prep_lead_days": number | null,"prep_minutes": number | null,"primary_supplier_id": string | null,"procurement_lead_days": number | null,"provenance": string,"provenance_detail": NonNullable<Json>,"requires_use_by": boolean,"requires_use_by_basis": string,"source": string,"source_note": string | null,"storage_note": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"barcode": string,"barcode_type"?: string,"base_unit": string,"category": string,"created_at"?: string,"is_purchasable"?: never,"is_sellable": boolean,"item_id": string,"item_type": string,"lead_time_basis"?: string | null,"lead_time_note"?: string | null,"name": string,"prep_lead_days"?: number | null,"primary_supplier_id"?: string | null,"procurement_lead_days"?: number | null,"provenance": string,"provenance_detail"?: NonNullable<Json>,"requires_use_by"?: boolean,"requires_use_by_basis"?: string,"source": string,"source_note"?: string | null,"storage_note"?: string | null,"updated_at"?: string
+                    "archived_at"?: string | null,"barcode": string,"barcode_type"?: string,"base_unit": string,"category": string,"created_at"?: string,"is_purchasable"?: never,"is_sellable": boolean,"item_id": string,"item_type": string,"lead_time_basis"?: string | null,"lead_time_note"?: string | null,"name": string,"prep_lead_days"?: number | null,"prep_minutes"?: number | null,"primary_supplier_id"?: string | null,"procurement_lead_days"?: number | null,"provenance": string,"provenance_detail"?: NonNullable<Json>,"requires_use_by"?: boolean,"requires_use_by_basis"?: string,"source": string,"source_note"?: string | null,"storage_note"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "archived_at"?: string | null,"barcode"?: string,"barcode_type"?: string,"base_unit"?: string,"category"?: string,"created_at"?: string,"is_purchasable"?: never,"is_sellable"?: boolean,"item_id"?: string,"item_type"?: string,"lead_time_basis"?: string | null,"lead_time_note"?: string | null,"name"?: string,"prep_lead_days"?: number | null,"primary_supplier_id"?: string | null,"procurement_lead_days"?: number | null,"provenance"?: string,"provenance_detail"?: NonNullable<Json>,"requires_use_by"?: boolean,"requires_use_by_basis"?: string,"source"?: string,"source_note"?: string | null,"storage_note"?: string | null,"updated_at"?: string
+                    "archived_at"?: string | null,"barcode"?: string,"barcode_type"?: string,"base_unit"?: string,"category"?: string,"created_at"?: string,"is_purchasable"?: never,"is_sellable"?: boolean,"item_id"?: string,"item_type"?: string,"lead_time_basis"?: string | null,"lead_time_note"?: string | null,"name"?: string,"prep_lead_days"?: number | null,"prep_minutes"?: number | null,"primary_supplier_id"?: string | null,"procurement_lead_days"?: number | null,"provenance"?: string,"provenance_detail"?: NonNullable<Json>,"requires_use_by"?: boolean,"requires_use_by_basis"?: string,"source"?: string,"source_note"?: string | null,"storage_note"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -587,6 +587,32 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "locations"
       referencedColumns: ["location_id"]
+    }
+                  ]
+                },"location_opening_hours": {
+                  Row: {
+                    "closes_at": string,"location_id": string,"opens_at": string,"updated_at": string,"updated_by": string | null,"weekday": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "closes_at": string,"location_id": string,"opens_at": string,"updated_at"?: string,"updated_by"?: string | null,"weekday": number
+                  }
+                  Update: {
+                    "closes_at"?: string,"location_id"?: string,"opens_at"?: string,"updated_at"?: string,"updated_by"?: string | null,"weekday"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "location_opening_hours_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "location_opening_hours_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
     }
                   ]
                 },"location_tax_rates": {
@@ -913,14 +939,14 @@ isOneToOne: false
                   ]
                 },"orders": {
                   Row: {
-                    "accepted_at": string,"accepted_by": string,"business_date": string,"cancel_approved_by": string | null,"cancel_note": string | null,"cancel_reason_code": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"completed_at": string | null,"completed_business_date": string | null,"completed_by": string | null,"customer_id": string | null,"discount_approved_by": string | null,"discount_cents": number,"discount_percent": number,"discount_reason": string | null,"estimated_ready_at": string | null,"gross_cents": number,"has_kitchen_items": boolean,"location_id": string,"net_cents": number,"note": string | null,"order_id": string,"order_number": string,"pickup_code": string,"pickup_name": string | null,"provenance": string,"ready_at": string | null,"revision": number,"started_at": string | null,"started_by": string | null,"status": string,"tax_cents": number,"tax_rate": number,"tender_mode": string,"total_cents": number,"version": number
+                    "accepted_at": string,"accepted_by": string,"business_date": string,"cancel_approved_by": string | null,"cancel_note": string | null,"cancel_reason_code": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"channel": string,"completed_at": string | null,"completed_business_date": string | null,"completed_by": string | null,"customer_id": string | null,"discount_approved_by": string | null,"discount_cents": number,"discount_percent": number,"discount_reason": string | null,"estimated_ready_at": string | null,"gross_cents": number,"has_kitchen_items": boolean,"location_id": string,"net_cents": number,"note": string | null,"order_id": string,"order_number": string,"pickup_code": string,"pickup_name": string | null,"provenance": string,"ready_at": string | null,"requested_pickup_at": string | null,"revision": number,"started_at": string | null,"started_by": string | null,"status": string,"tax_cents": number,"tax_rate": number,"tender_mode": string,"total_cents": number,"version": number,"web_token": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string,"accepted_by": string,"business_date": string,"cancel_approved_by"?: string | null,"cancel_note"?: string | null,"cancel_reason_code"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"completed_at"?: string | null,"completed_business_date"?: string | null,"completed_by"?: string | null,"customer_id"?: string | null,"discount_approved_by"?: string | null,"discount_cents"?: number,"discount_percent"?: number,"discount_reason"?: string | null,"estimated_ready_at"?: string | null,"gross_cents"?: number,"has_kitchen_items"?: boolean,"location_id": string,"net_cents"?: number,"note"?: string | null,"order_id"?: string,"order_number": string,"pickup_code": string,"pickup_name"?: string | null,"provenance"?: string,"ready_at"?: string | null,"revision"?: number,"started_at"?: string | null,"started_by"?: string | null,"status": string,"tax_cents"?: number,"tax_rate": number,"tender_mode": string,"total_cents"?: number,"version"?: number
+                    "accepted_at"?: string,"accepted_by": string,"business_date": string,"cancel_approved_by"?: string | null,"cancel_note"?: string | null,"cancel_reason_code"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"channel"?: string,"completed_at"?: string | null,"completed_business_date"?: string | null,"completed_by"?: string | null,"customer_id"?: string | null,"discount_approved_by"?: string | null,"discount_cents"?: number,"discount_percent"?: number,"discount_reason"?: string | null,"estimated_ready_at"?: string | null,"gross_cents"?: number,"has_kitchen_items"?: boolean,"location_id": string,"net_cents"?: number,"note"?: string | null,"order_id"?: string,"order_number": string,"pickup_code": string,"pickup_name"?: string | null,"provenance"?: string,"ready_at"?: string | null,"requested_pickup_at"?: string | null,"revision"?: number,"started_at"?: string | null,"started_by"?: string | null,"status": string,"tax_cents"?: number,"tax_rate": number,"tender_mode": string,"total_cents"?: number,"version"?: number,"web_token"?: string | null
                   }
                   Update: {
-                    "accepted_at"?: string,"accepted_by"?: string,"business_date"?: string,"cancel_approved_by"?: string | null,"cancel_note"?: string | null,"cancel_reason_code"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"completed_at"?: string | null,"completed_business_date"?: string | null,"completed_by"?: string | null,"customer_id"?: string | null,"discount_approved_by"?: string | null,"discount_cents"?: number,"discount_percent"?: number,"discount_reason"?: string | null,"estimated_ready_at"?: string | null,"gross_cents"?: number,"has_kitchen_items"?: boolean,"location_id"?: string,"net_cents"?: number,"note"?: string | null,"order_id"?: string,"order_number"?: string,"pickup_code"?: string,"pickup_name"?: string | null,"provenance"?: string,"ready_at"?: string | null,"revision"?: number,"started_at"?: string | null,"started_by"?: string | null,"status"?: string,"tax_cents"?: number,"tax_rate"?: number,"tender_mode"?: string,"total_cents"?: number,"version"?: number
+                    "accepted_at"?: string,"accepted_by"?: string,"business_date"?: string,"cancel_approved_by"?: string | null,"cancel_note"?: string | null,"cancel_reason_code"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"channel"?: string,"completed_at"?: string | null,"completed_business_date"?: string | null,"completed_by"?: string | null,"customer_id"?: string | null,"discount_approved_by"?: string | null,"discount_cents"?: number,"discount_percent"?: number,"discount_reason"?: string | null,"estimated_ready_at"?: string | null,"gross_cents"?: number,"has_kitchen_items"?: boolean,"location_id"?: string,"net_cents"?: number,"note"?: string | null,"order_id"?: string,"order_number"?: string,"pickup_code"?: string,"pickup_name"?: string | null,"provenance"?: string,"ready_at"?: string | null,"requested_pickup_at"?: string | null,"revision"?: number,"started_at"?: string | null,"started_by"?: string | null,"status"?: string,"tax_cents"?: number,"tax_rate"?: number,"tender_mode"?: string,"total_cents"?: number,"version"?: number,"web_token"?: string | null
                   }
                   Relationships: [
                     {
@@ -2249,6 +2275,84 @@ isOneToOne: false
       referencedColumns: ["employee_id"]
     }
                   ]
+                },"web_menu_content": {
+                  Row: {
+                    "allergen_note": string | null,"allergen_reviewed_at": string | null,"allergen_reviewed_by": string | null,"country": string | null,"description": string,"image_path": string | null,"is_sellable": boolean,"item_id": string,"provenance": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allergen_note"?: string | null,"allergen_reviewed_at"?: string | null,"allergen_reviewed_by"?: string | null,"country"?: string | null,"description": string,"image_path"?: string | null,"is_sellable"?: boolean,"item_id": string,"provenance"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "allergen_note"?: string | null,"allergen_reviewed_at"?: string | null,"allergen_reviewed_by"?: string | null,"country"?: string | null,"description"?: string,"image_path"?: string | null,"is_sellable"?: boolean,"item_id"?: string,"provenance"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "web_menu_content_allergen_reviewed_by_fkey"
+      columns: ["allergen_reviewed_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    },{
+      foreignKeyName: "web_menu_content_item_id_is_sellable_fkey"
+      columns: ["item_id","is_sellable"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["item_id","is_sellable"]
+    },{
+      foreignKeyName: "web_menu_content_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
+                },"web_order_contacts": {
+                  Row: {
+                    "created_at": string,"email": string,"name": string,"order_id": string,"phone": string,"phone_digits": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"email": string,"name": string,"order_id": string,"phone": string,"phone_digits"?: never
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string,"name"?: string,"order_id"?: string,"phone"?: string,"phone_digits"?: never
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "web_order_contacts_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: true
+      referencedRelation: "orders"
+      referencedColumns: ["order_id"]
+    }
+                  ]
+                },"web_ordering_settings": {
+                  Row: {
+                    "days_ahead": number,"enabled": boolean,"location_id": string,"max_per_line": number,"orders_per_slot": number,"slot_minutes": number,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "days_ahead"?: number,"enabled"?: boolean,"location_id": string,"max_per_line"?: number,"orders_per_slot"?: number,"slot_minutes"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "days_ahead"?: number,"enabled"?: boolean,"location_id"?: string,"max_per_line"?: number,"orders_per_slot"?: number,"slot_minutes"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "web_ordering_settings_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: true
+      referencedRelation: "locations"
+      referencedColumns: ["location_id"]
+    },{
+      foreignKeyName: "web_ordering_settings_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["employee_id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -2281,6 +2385,9 @@ isOneToOne: false
                            },
 "cancel_transfer":
 { Args: { "p_expected_version": number,"p_request_key": string,"p_transfer_id": string }; Returns: Json
+                           },
+"cancel_uncollected_web_orders":
+{ Args: { "p_location_id": string,"p_request_key": string }; Returns: Json
                            },
 "change_stock_condition":
 { Args: { "p_lot_id": string,"p_note"?: string,"p_quantity": number,"p_reason_code"?: string,"p_request_key": string,"p_to_condition": string }; Returns: Json
@@ -2492,11 +2599,17 @@ isOneToOne: false
 "set_forecast_override":
 { Args: { "p_business_date": string,"p_item_id": string,"p_location_id": string,"p_quantity": number,"p_reason": string,"p_request_key": string }; Returns: Json
                            },
+"set_item_prep_minutes":
+{ Args: { "p_item_id": string,"p_prep_minutes": number,"p_request_key": string }; Returns: Json
+                           },
 "set_location_item_price":
 { Args: { "p_effective_from": string,"p_item_id": string,"p_location_id": string,"p_price_cents": number,"p_request_key": string }; Returns: Json
                            },
 "set_location_item_settings":
 { Args: { "p_annual_demand_override"?: number,"p_holding_cost": number,"p_item_id": string,"p_location_id": string,"p_max_cover_days"?: number,"p_ordering_cost_cents": number,"p_reorder_point": number,"p_request_key": string,"p_safety_stock": number }; Returns: Json
+                           },
+"set_location_opening_hours":
+{ Args: { "p_hours": Json,"p_location_id": string,"p_request_key": string }; Returns: Json
                            },
 "set_location_tax_rate":
 { Args: { "p_effective_from": string,"p_location_id": string,"p_rate": number,"p_request_key": string }; Returns: Json
@@ -2515,6 +2628,12 @@ isOneToOne: false
                            },
 "set_supplier_terms":
 { Args: { "p_payment_terms_days": number,"p_request_key": string,"p_supplier_id": string }; Returns: Json
+                           },
+"set_web_menu_content":
+{ Args: { "p_allergen_note": string,"p_allergen_reviewed": boolean,"p_country": string,"p_description": string,"p_image_path": string,"p_item_id": string,"p_request_key": string }; Returns: Json
+                           },
+"set_web_ordering_settings":
+{ Args: { "p_days_ahead": number,"p_enabled": boolean,"p_location_id": string,"p_max_per_line": number,"p_orders_per_slot": number,"p_request_key": string }; Returns: Json
                            },
 "simulate_menu_mix":
 { Args: { "p_location_id": string,"p_mix": Json }; Returns: Json
@@ -2548,6 +2667,24 @@ isOneToOne: false
                            },
 "void_supplier_invoice":
 { Args: { "p_expected_version": number,"p_invoice_id": string,"p_reason": string,"p_request_key": string }; Returns: Json
+                           },
+"web_get_locations":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"web_get_menu":
+{ Args: { "p_location_id": string }; Returns: Json
+                           },
+"web_get_order":
+{ Args: { "p_web_token": string }; Returns: Json
+                           },
+"web_get_pickup_slots":
+{ Args: { "p_lines": Json,"p_location_id": string }; Returns: Json
+                           },
+"web_get_request_result":
+{ Args: { "p_request_key": string }; Returns: Json
+                           },
+"web_place_order":
+{ Args: { "p_contact": Json,"p_lines": Json,"p_location_id": string,"p_note"?: string,"p_pickup_at": string,"p_request_key": string }; Returns: Json
                            }
           }
           Enums: {

@@ -12,6 +12,19 @@ import { assertDemoTarget, connect, isMain, requireEnv, runCli } from '../lib/ta
 import { importSourceMaster, loadSourceMaster } from './import-source-master.ts';
 
 export const DEMO_SEED_PATH = fileURLToPath(new URL('../../data/demo/demo_seed.json', import.meta.url));
+export const WEB_DEMO_SEED_PATH = fileURLToPath(new URL('../../data/demo/web_demo_seed.json', import.meta.url));
+
+/** Website ordering values for the demo (CLAUDE.md D12); the pilot enters its own through Settings. */
+export interface WebDemoSeed {
+  settings: { enabled: boolean; orders_per_slot: number; days_ahead: number; max_per_line: number };
+  opening_hours: { weekdays: number[]; opens_at: string; closes_at: string };
+  prep_minutes: Record<string, number>;
+  menu_content: Array<{ item_id: string; country: string | null; description: string; allergen_note: string | null }>;
+}
+
+export function loadWebDemoSeed(): WebDemoSeed {
+  return JSON.parse(readFileSync(WEB_DEMO_SEED_PATH, 'utf8')) as WebDemoSeed;
+}
 
 interface DemoItem {
   item_id: string;
@@ -330,6 +343,53 @@ export async function importDemoSeed(client: pg.Client, seed = loadDemoSeed()) {
         [locationId, JSON.stringify(lines)],
       );
       inserted.opening_stock_rows = (inserted.opening_stock_rows ?? 0) + lines.length;
+    }
+
+    // Website ordering (D12): settings and hours per location, cook minutes per
+    // dish and website content per sellable item. Allergen notes stay unreviewed.
+    const web = loadWebDemoSeed();
+    for (const locationId of seed.locations.map((l) => l.location_id).sort()) {
+      count(
+        'web_ordering_settings',
+        await client.query(
+          `insert into public.web_ordering_settings (location_id, enabled, orders_per_slot, days_ahead, max_per_line)
+           values ($1,$2,$3,$4,$5) on conflict do nothing`,
+          [
+            locationId,
+            web.settings.enabled,
+            web.settings.orders_per_slot,
+            web.settings.days_ahead,
+            web.settings.max_per_line,
+          ],
+        ),
+      );
+      count(
+        'location_opening_hours',
+        await client.query(
+          `insert into public.location_opening_hours (location_id, weekday, opens_at, closes_at)
+           select $1, d, $3::time, $4::time from unnest($2::smallint[]) d on conflict do nothing`,
+          [locationId, web.opening_hours.weekdays, web.opening_hours.opens_at, web.opening_hours.closes_at],
+        ),
+      );
+    }
+    for (const [itemId, minutes] of Object.entries(web.prep_minutes)) {
+      count(
+        'item_prep_minutes',
+        await client.query(`update public.items set prep_minutes = $2 where item_id = $1 and prep_minutes is null`, [
+          itemId,
+          minutes,
+        ]),
+      );
+    }
+    for (const c of web.menu_content) {
+      count(
+        'web_menu_content',
+        await client.query(
+          `insert into public.web_menu_content (item_id, country, description, allergen_note, provenance)
+           values ($1,$2,$3,$4,'synthetic_demo_seed') on conflict do nothing`,
+          [c.item_id, c.country, c.description, c.allergen_note],
+        ),
+      );
     }
 
     // Synthetic demo return policy: 30-day window; unopened shelf-stable retail

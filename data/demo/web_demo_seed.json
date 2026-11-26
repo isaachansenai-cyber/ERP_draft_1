@@ -1,0 +1,50 @@
+{
+  "dataset_note": "DEMO ONLY. Website ordering settings for the demo database (CLAUDE.md D12, BUILD_PLAN §3). Hours, slot capacity and cook minutes match the owner's answers of 2026-11-25/26; in the pilot the owner enters them through Settings and confirms the web_ordering_enabled gate (D2). Descriptions come from docs/website/content-drafts.md. Allergen notes are drafts and stay unreviewed, so the site shows 'please ask staff'.",
+  "settings": { "enabled": true, "orders_per_slot": 4, "days_ahead": 7, "max_per_line": 10 },
+  "opening_hours": { "weekdays": [1, 2, 3, 4, 5, 6, 7], "opens_at": "12:00", "closes_at": "20:00" },
+  "prep_minutes": { "FG-001": 25, "FG-002": 15, "FG-003": 20, "FG-004": 15, "FG-005": 120 },
+  "menu_content": [
+    {
+      "item_id": "FG-001",
+      "country": "Brazil",
+      "description": "Chicken in a creamy, gently tangy sauce with white rice and crunchy batata palha.",
+      "allergen_note": "Contains dairy (cream). No wheat or nut ingredients in the recipe. Shoestring potatoes and oil: ask staff."
+    },
+    {
+      "item_id": "FG-002",
+      "country": "Mexico",
+      "description": "Three corn tortillas with overnight-marinated pork, pineapple, onion, cilantro and lime.",
+      "allergen_note": "No dairy, wheat or nut ingredients in the recipe. Tortilla and achiote-paste brands vary: ask staff if you avoid wheat."
+    },
+    {
+      "item_id": "FG-003",
+      "country": "Korea",
+      "description": "Double-coated crispy chicken glazed in sweet-and-spicy gochujang, with rice.",
+      "allergen_note": "Contains wheat (flour, soy sauce, gochujang). No dairy or nut ingredients in the recipe."
+    },
+    {
+      "item_id": "FG-004",
+      "country": "France",
+      "description": "Beef braised slowly with mushrooms, carrots and thyme. Alcohol-free.",
+      "allergen_note": "Contains dairy (butter) and wheat (flour). No nut ingredients in the recipe. Made with red grape juice, no wine."
+    },
+    {
+      "item_id": "FG-005",
+      "country": "Mongolia",
+      "description": "Lamb shoulder with potatoes, carrots, onion and garlic, cooked low and slow.",
+      "allergen_note": "No dairy, wheat or nut ingredients in the recipe (lamb, potatoes, carrots, onion, garlic, salt, pepper)."
+    },
+    {
+      "item_id": "RET-001",
+      "country": null,
+      "description": "Demo bottled barbecue sauce (synthetic demo product).",
+      "allergen_note": null
+    },
+    {
+      "item_id": "RET-002",
+      "country": null,
+      "description": "Demo bottled chili sauce (synthetic demo product).",
+      "allergen_note": null
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import { callRpc, RpcError } from './rpc';
  * The database migration this build of the app was written against (ADR 0036).
  * Bump it together with every new migration's get_schema_version().
  */
-export const EXPECTED_SCHEMA_VERSION = 26;
+export const EXPECTED_SCHEMA_VERSION = 29;
 
 export type SchemaStatus =
   | { state: 'ok'; database: number }

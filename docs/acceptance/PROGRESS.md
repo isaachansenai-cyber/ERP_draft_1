@@ -343,3 +343,134 @@ Checklist evidence added to AC03, AC07, AC09, AC31 and AC32 (all still PASS). AC
 ### Open items
 
 - Hosted demo: run Demo project setup, then deploy Pages, after the fix is on `main`.
+
+## Public pickup website — W0 decisions (operator request, 2026-11-26)
+
+Scope change approved in session: a public pickup-ordering website under `/site` (ADR 0040, CLAUDE.md D12). W0 is decisions and drafts only. No code, migrations or tests have changed, so ERP acceptance statuses are unchanged.
+
+- `docs/website/BUILD_PLAN.md`: architecture, `web_*` functions, ERP changes, slot rule, design, tests, milestones W1–W5.
+- `docs/website/content-drafts.md`: site copy on a cultural-exploration theme. **Draft, awaiting owner review**, with bracketed placeholders for facts only the owner can supply.
+- `docs/website/allergen-notes-draft.md`: dairy/nut/wheat notes auto-drafted from recipe ingredient names. **Draft, awaiting owner review**; hidden on the site until approved.
+- Supplied logo (moved to `site/public/brand/logo.webp` in W1).
+
+### Open items (owner)
+- Approve the copy and allergen drafts; confirm the draft `prep_minutes` (two are assumptions) and that web orders don't start before 12:00.
+- Supply licensed food photos, or approve placeholders for the demo.
+
+## Public pickup website — W1 static site (operator request, 2026-11-26)
+
+`site/` is a separate Vite app sharing the root package (ADR 0041). It has the muted navigation bar with the cart icon; a full-height hero that cross-fades every 5 s, with pause/play and slide buttons, starting paused for reduced-motion visitors; alternating half-image/half-text sections; and the Home, Menu, Our Countries, Our Story, FAQ and Cart pages. It is static: no ERP connection, and no prices, availability or orders. The Menu and Cart pages say online ordering opens soon. Images are labelled SVG placeholders, and the copy is the owner-review draft (a footer notice says so).
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `prettier --check src tests scripts site` | clean |
+| `npm run test:unit` | 75 passed, incl. `site-content.test.ts` (dishes match ERP item IDs and prep lead days; palette WCAG AA) and `site-rotation.test.tsx` |
+| `npm run test:site:e2e` | 13 passed: every page renders, survives a refresh and has no axe WCAG 2.1 A/AA violations; hero size, 5 s rotation, pause and reduced motion; navigation; no prices or availability shown; placeholders labelled; 390 px with no sideways scroll, no overlap and a working mobile menu |
+| ERP `npm run build` and secret scan | passed |
+| `test:db`, `test:integration`, `test:e2e` | **not run**: Docker isn't available in this session. W1 changes no ERP code or migrations. |
+
+CI now also checks `site/` formatting and runs the site browser tests (no database) in the `static` job.
+
+## Public pickup website — W2 ERP database (operator request, 2026-11-26)
+
+Migration `0027_web_ordering.sql` (ADR 0042) connects the website to the ERP. Nothing on the website calls it yet (W3).
+
+- **Visitors do not sign in** (owner decision): the public anon key reaches only `get_public_app_mode` and the six `web_*` functions. Auth sign-ups stay off.
+- **Defense in depth.** Ten reference tables that any signed-in session could read are now staff-only.
+- **One acceptance path.** `accept_order` and the new `web_place_order` share `private.accept_order_core` (snapshot, all-or-nothing reservation, state event, audit). The POS suites are unchanged and still pass.
+- **Visitor functions:** `web_get_locations`, `web_get_menu` (prices, Available/Sold out, capped quantity, no costs or exact stock), `web_get_pickup_slots`, `web_place_order` (contact details, slot capacity, at most 3 open orders per phone or e-mail, demo simulated tender by `EMP-WEB`), `web_get_order` (by random token) and `web_get_request_result`.
+- **Owner settings RPCs** for hours, slot capacity, cook minutes and website content. Gate `web_ordering_enabled` per location.
+- Demo values in `data/demo/web_demo_seed.json` (12–8 daily, 4 orders per 15-minute slot, owner-confirmed cook minutes).
+- Correction to the plan: a cart with an overnight dish and Khorkhog is ready from 14:00 the next day, not 12:15 (BUILD_PLAN §4).
+
+### Evidence (local Supabase stack, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `supabase db lint --level warning --fail-on warning` | no findings |
+| `npm run test:db` | 217 passed, incl. `009_web_ordering.test.sql` (41): **every** public function was called as `anon` and as an account without an employee, and only the expected public reads answered; visitors cannot read tables; slot rule incl. closures and both DST changes |
+| `npm run test:integration` | pilot 49, ops 89, demo 39 (incl. `web-ordering.test.ts`, 11: placement through the shared core, kitchen visibility, contact privacy, retry, validation, slot capacity, open-order limit, manager sold-out toggle, web-vs-POS race for the last bottle) |
+| `npm run test:e2e` (staff app) | 40 passed |
+| typecheck, lint, prettier, `test:unit` (75), secret scan | clean |
+
+Existing tests changed only for intended effects: the setup-gate count (17 → 20), the list of functions `anon` may execute (now including the six `web_*` functions) and the schema version (now read from the latest migration file).
+
+### Open items
+- Visitor sign-in: decided, none (ADR 0042). Accepted risk until W5: bogus orders under made-up contacts can hold stock until staff cancel them; slot capacity bounds it.
+- The local stack here pulled images from Docker Hub (`SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io`) because this session's network blocks the default registry's download host.
+
+## Public pickup website — W3 live menu and cart (operator request, 2026-11-26)
+
+Visitors don't sign in (ADR 0042), and W2 was pushed with that change. W3 (ADR 0043) connects the site to the ERP with the public anon key:
+
+- **Location picker**, remembered in the browser, showing each location's hours and whether it is taking online orders.
+- **Live menu** from `web_get_menu`, checked by Zod: price, Available / "Sold out — back soon", prep time, allergen note (or "please ask staff" until reviewed). It refreshes every 30 s and on tab focus, and shows when it last read the ERP.
+- **Cart** per location in the browser, labelled "Not ordered yet", with a count badge on the navigation bar. It is re-priced from the live menu, flags sold-out or over-limit lines, and caps quantities at what the ERP allows. Checkout is W4: the cart says so and nothing is ordered.
+- **Honest failure states**: a paused or closed location, an unreachable ERP ("Nothing was ordered", with a retry) and a build with no backend.
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `prettier --check src tests scripts site` | clean |
+| `npm run test:unit` | 82 passed, incl. `site-cart.test.ts` (cart rules, integer money formatting, wording, menu contract) |
+| `npm run test:site:e2e` (no backend) | 13 passed |
+| `npm run test:site:live` (local demo ERP) | 7 passed: live prices and remembered location; per-location cart priced by the ERP that survives a reload; the 10-per-line cap; a sold-out change in the database appears on its own refresh and clears again (a control run without the refresh fails, as expected); a paused location; an unreachable ERP with retry; 390 px width. axe finds no WCAG A/AA issues on the live menu or cart |
+
+CI runs `test:site:live` in the database job.
+
+## Public pickup website — W4 checkout and staff side (operator request, 2026-11-26)
+
+W3 was pushed first. W4 (migration 0028, ADR 0044):
+
+- **Checkout** (`#/checkout`): order summary with the exact subtotal, tax and total (the menu now carries the location's tax rate); a pickup day and time from the ERP's slots (full slots marked); name, phone, e-mail and an optional note, checked in the browser and again by the ERP; "Simulated payment (demo)" or "Pay at pickup", chosen by the server's data mode. No card fields.
+- **Safe placement**: one request key per checkout. A lost answer is checked with the ERP before anything is shown: placed → receipt; not placed → "you can safely try again"; unknown → "please do not order again yet". Refusals (sold out, slot taken, three open orders, location paused) are explained plainly.
+- **Receipt** (`#/order/<token>`): pickup code, pickup time in Mountain Time, status that refreshes, lines, tax, total and payment; printable.
+- **Kitchen**: a "Web order" badge, pickup and start-by times, a prep-ahead flag, and a "Scheduled for later days" lane; queues sort by pickup time.
+- **Settings → Website** (owner; managers read-only): ordering switch and limits per location, weekly hours, cook minutes, and website text with an allergen note published only after the owner confirms the label check. The Pilot setup list now names the "Website ordering ready" gate.
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `supabase db lint`, typecheck, lint, prettier, secret scan | clean |
+| `npm run test:unit` | 91 passed, incl. `site-checkout.test.ts` (placement outcomes, half-up tax per line, Mountain Time grouping, kitchen start-by) |
+| `npm run test:db` | 221 passed, incl. `010_web_checkout.test.sql` (tax rate in force today, as exact text) |
+| `npm run test:integration` | pilot 49, ops 89, demo 40 (incl. blank-means-none website content, allergen publishing only when reviewed, owner-only) |
+| `npm run test:e2e` (staff app) | 43 passed, incl. `website-staff.spec.ts`: a web order waits in the Scheduled lane with pickup 12:15 and start by 12:00; the owner edits limits, hours, cook time and allergen notes with confirmations staying visible; a manager is read-only |
+| `npm run test:site:e2e` (no backend) | 13 passed |
+| `npm run test:site:live` (demo ERP) | 12 passed, incl. `checkout.spec.ts`: total $41.80 shown at checkout equals the ERP's; missing details; a request that never arrives (not placed, retry places once); an answer lost after commit (found, not placed twice); a slot taken meanwhile |
+
+`foundation.spec.ts` (keyboard test) failed once in a full run because it pressed Tab before the login form rendered; it now waits for the form. It passed 3 of 3 alone before the fix and in the full run after.
+
+## Public pickup website — W5 hardening and launch preparation (operator request, 2026-11-26)
+
+W4 was pushed first. W5 (migration 0029, ADR 0045):
+
+- **End-of-day no-shows** (owner decision): managers cancel a location's uncollected website orders from the kitchen page in one confirmed step, through the existing cancellation rules (stock released, cooked food as waste, demo simulated refund). Orders with a real recorded payment are left for the counter.
+- **Lighter, self-contained site**: the PostgREST client instead of full supabase-js (bundle 585 → 374 KB), fonts bundled instead of Google Fonts, and a build-time Content-Security-Policy that allows network calls to the ERP only.
+- **Measured**: 20 concurrent website visitors on the local stack, reads p95 126 ms (100% within 2 s), order placement p95 165 ms, 0 unexpected errors, all invariants 0 (`docs/acceptance/evidence/perf-web.md`).
+- **Keyboard-only**: a live test places a whole order by focus and keys alone.
+- **Deployment prepared, not run**: `pages.yml` builds the site under `/<repo>/site/`; the secret scan covers both bundles. The workflow's Supabase URL and key are fixed values, not the chosen environment's variables, so a "pilot" run would still use that fixed project: flagged in `docs/ops/deployment.md` for the operator to fix before a pilot deployment.
+- **Runbook**: `docs/ops/website-runbook.md` (owner setup, daily operations, privacy, accepted risks).
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `supabase db lint`, typecheck, lint, prettier | clean |
+| secret scan of the repository, `dist/` and `site/dist/` | passed |
+| `npm run test:unit` | 91 passed |
+| `npm run test:db` | 226 passed, incl. `011_web_no_show.test.sql` |
+| `npm run test:integration` | pilot 49, ops 89, demo 41 (incl. the no-show action: managers only, overdue orders cancelled with the simulated refund and released stock, later pickups untouched) |
+| `npm run test:e2e` (staff app) | 44 passed (incl. the kitchen no-show button) |
+| `npm run test:site:e2e` / `test:site:live` | 13 / 13 passed (incl. keyboard-only checkout) |
+| `npm run perf:web` (demo, local) | targets met |
+
+### Open items (operator)
+- Approve the site copy and allergen notes; supply photos.
+- Decide on publishing (`pages.yml`, after fixing its fixed Supabase values) and on a load test against the hosted demo project.
+- Accepted pilot risk: no captcha, so fake orders under made-up contacts are possible within the per-contact and per-slot limits.
+

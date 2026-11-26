@@ -1,0 +1,75 @@
+{
+  "measured_at": "2026-11-26T04:39:39.920Z",
+  "environment": "local Supabase stack (Docker); API over HTTP to localhost; not a hosted project",
+  "visitors": 20,
+  "iterations": 6,
+  "wall_ms": 1407,
+  "reads": {
+    "calls": 360,
+    "within_2s": 1,
+    "p95_ms": 126
+  },
+  "placements": {
+    "calls": 120,
+    "ok": 116,
+    "p95_ms": 165
+  },
+  "refusal_codes": {
+    "slot_unavailable": 4
+  },
+  "unexpected_errors": [],
+  "invariants": {
+    "slots_over_capacity": 0,
+    "web_orders_without_contact": 0,
+    "demo_web_orders_not_fully_paid": 0,
+    "reservations_above_on_hand": 0,
+    "duplicate_pickup_codes": 0
+  },
+  "per_operation": [
+    {
+      "op": "web_get_locations",
+      "kind": "read",
+      "calls": 120,
+      "ok": 120,
+      "business_refusals": 0,
+      "errors": 0,
+      "p50_ms": 36,
+      "p95_ms": 134,
+      "max_ms": 156
+    },
+    {
+      "op": "web_get_menu",
+      "kind": "read",
+      "calls": 120,
+      "ok": 120,
+      "business_refusals": 0,
+      "errors": 0,
+      "p50_ms": 45,
+      "p95_ms": 100,
+      "max_ms": 149
+    },
+    {
+      "op": "web_get_pickup_slots",
+      "kind": "read",
+      "calls": 120,
+      "ok": 120,
+      "business_refusals": 0,
+      "errors": 0,
+      "p50_ms": 35,
+      "p95_ms": 75,
+      "max_ms": 185
+    },
+    {
+      "op": "web_place_order",
+      "kind": "place",
+      "calls": 120,
+      "ok": 116,
+      "business_refusals": 4,
+      "errors": 0,
+      "p50_ms": 74,
+      "p95_ms": 165,
+      "max_ms": 228
+    }
+  ],
+  "targets_met": true
+}

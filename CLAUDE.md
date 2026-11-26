@@ -43,6 +43,7 @@ Cite PRD sections as `PRD §N`. If this file and the PRD disagree, this file win
 | D9 | **Operating calendar** (gap) | Add `location_closures(location_id, business_date, reason)`. A day is an "open day" unless it is listed there. A business date is the America/Denver calendar date, and the day boundary is local midnight. Forecasts and EOQ use this to count "open days with zero sales" (PRD §10). |
 | D10 | **Pickup code** (gap) | `<LOC short>-<4-digit per-location, per-business-date sequence>`, for example `PRO-0042`. It is generated in the accept-order RPC, unique per (location, business_date). |
 | D11 | **Weighted-average edge case** (gap) | If valued on-hand is ≤ 0 before a receipt, the new average cost equals the receipt unit cost. Count adjustments and non-order waste are costed at the current weighted average. |
+| D12 | **Public pickup website** (scope change, 2026-11-26) | Customer self-ordering **for pickup only** is in scope through a separate public app under `/site` (ADR 0040, `docs/website/BUILD_PLAN.md`). Visitors do not sign in: they call only `public.web_*` functions with the public anon key and read no tables. Web orders go through the same acceptance core as the POS (`channel = 'web'`, system actor `EMP-WEB`). No card fields and no e-mail: demo records a `SIMULATED` tender; the pilot shows "Pay at pickup" and staff record the payment at handover. Gated per location by `web_ordering_enabled`. Customer logins, delivery and real payments stay out of scope. |
 
 ---
 
@@ -78,6 +79,7 @@ Cite PRD sections as `PRD §N`. If this file and the PRD disagree, this file win
 /docs/ops/                         backup-restore.md, manual-outage-fallback.md, deployment.md, pilot-setup.md
 /docs/demo/README.md               how to stand up the demo project and demo users
 /docs/decisions/                   short ADRs for any choice not covered by the PRD or §1
+/docs/website/                     public-site build plan, copy and allergen drafts (D12); the logo lives in site/public/brand/
 /data/source/source_master_data.json        source-only normalization (45 items, 66 BOM, 15 suppliers)
 /data/demo/demo_seed.json, historical_orders_demo.csv, historical_order_lines_demo.csv,
            history_method.json, seed_summary.json, ERP_Seed_and_Setup.xlsx      (DEMO ONLY)
@@ -91,6 +93,7 @@ Cite PRD sections as `PRD §N`. If this file and the PRD disagree, this file win
 /src/                              React app (see §8)
 /tests/integration/                Vitest API/RLS/RPC tests against local stack
 /tests/e2e/                        Playwright
+/site/                             public pickup website (D12): separate Vite app, anon key only
 ```
 
 `.gitignore` must include `.env*` (except `.env.example`), `DEMO_CREDENTIALS.local.md`, `supabase/.temp`, `*.dump`, `exports/` and `pilot-data/`.
@@ -327,4 +330,4 @@ Work in this order. At the end of each milestone, update `docs/acceptance/Accept
 
 ## 13. Explicitly out of scope (PRD §19)
 
-Payroll, wages and taxes; general ledger and accounts receivable; bank and payment integrations; customer self-ordering or logins; table management; loyalty and marketing; maintenance; batch or prepared-food stock; substitutions, modifiers and nested recipes; autonomous supplier ordering or e-mail; camera scanning; offline sync; multi-currency; tips and split tenders; cash-drawer reconciliation; delivery marketplaces; partial fulfillment and item-level post-start cancellation. Exact coverage of the 12-item grading rubric is **unverified** because the rubric text was not supplied, so do not claim it.
+Payroll, wages and taxes; general ledger and accounts receivable; bank and payment integrations; customer logins and any customer self-ordering beyond the pickup website in D12; table management; loyalty and marketing; maintenance; batch or prepared-food stock; substitutions, modifiers and nested recipes; autonomous supplier ordering or e-mail; camera scanning; offline sync; multi-currency; tips and split tenders; cash-drawer reconciliation; delivery marketplaces; partial fulfillment and item-level post-start cancellation. Exact coverage of the 12-item grading rubric is **unverified** because the rubric text was not supplied, so do not claim it.

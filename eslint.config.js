@@ -7,6 +7,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'site/dist',
       'node_modules',
       'supabase/.temp',
       'tools',

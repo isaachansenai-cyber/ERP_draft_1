@@ -4,11 +4,13 @@ import { PilotSetupPanel } from './settings/PilotSetupPanel';
 import { ReturnPolicyPanel } from './settings/ReturnPolicyPanel';
 import { StaffAccessPanel } from './settings/StaffAccessPanel';
 import { TaxesPricesPanel } from './settings/TaxesPricesPanel';
+import { WebsitePanel } from './settings/WebsitePanel';
 
 const TABS = [
   { id: 'setup', label: 'Pilot setup', element: <PilotSetupPanel /> },
   { id: 'taxes-prices', label: 'Taxes & prices', element: <TaxesPricesPanel /> },
   { id: 'return-policy', label: 'Return policy', element: <ReturnPolicyPanel /> },
+  { id: 'website', label: 'Website', element: <WebsitePanel /> },
   { id: 'staff', label: 'Staff access', element: <StaffAccessPanel /> },
   { id: 'account', label: 'My manager PIN', element: <AccountPanel /> },
 ] as const;
