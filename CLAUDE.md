@@ -79,7 +79,7 @@ Cite PRD sections as `PRD §N`. If this file and the PRD disagree, this file win
 /docs/ops/                         backup-restore.md, manual-outage-fallback.md, deployment.md, pilot-setup.md
 /docs/demo/README.md               how to stand up the demo project and demo users
 /docs/decisions/                   short ADRs for any choice not covered by the PRD or §1
-/docs/website/                     public-site build plan, copy and allergen drafts, brand/logo (D12)
+/docs/website/                     public-site build plan, copy and allergen drafts (D12); the logo lives in site/public/brand/
 /data/source/source_master_data.json        source-only normalization (45 items, 66 BOM, 15 suppliers)
 /data/demo/demo_seed.json, historical_orders_demo.csv, historical_order_lines_demo.csv,
            history_method.json, seed_summary.json, ERP_Seed_and_Setup.xlsx      (DEMO ONLY)

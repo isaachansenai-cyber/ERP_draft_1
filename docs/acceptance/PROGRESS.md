@@ -351,8 +351,24 @@ Scope change approved in session: a public pickup-ordering website under `/site`
 - `docs/website/BUILD_PLAN.md`: architecture, `web_*` functions, ERP changes, slot rule, design, tests, milestones W1–W5.
 - `docs/website/content-drafts.md`: site copy on a cultural-exploration theme. **Draft, awaiting owner review**, with bracketed placeholders for facts only the owner can supply.
 - `docs/website/allergen-notes-draft.md`: dairy/nut/wheat notes auto-drafted from recipe ingredient names. **Draft, awaiting owner review**; hidden on the site until approved.
-- `docs/website/brand/logo.webp`: supplied logo.
+- Supplied logo (moved to `site/public/brand/logo.webp` in W1).
 
 ### Open items (owner)
 - Approve the copy and allergen drafts; confirm the draft `prep_minutes` (two are assumptions) and that web orders don't start before 12:00.
 - Supply licensed food photos, or approve placeholders for the demo.
+
+## Public pickup website — W1 static site (operator request, 2026-11-26)
+
+`site/` is a separate Vite app sharing the root package (ADR 0041). It has the muted navigation bar with the cart icon; a full-height hero that cross-fades every 5 s, with pause/play and slide buttons, starting paused for reduced-motion visitors; alternating half-image/half-text sections; and the Home, Menu, Our Countries, Our Story, FAQ and Cart pages. It is static: no ERP connection, and no prices, availability or orders. The Menu and Cart pages say online ordering opens soon. Images are labelled SVG placeholders, and the copy is the owner-review draft (a footer notice says so).
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `prettier --check src tests scripts site` | clean |
+| `npm run test:unit` | 75 passed, incl. `site-content.test.ts` (dishes match ERP item IDs and prep lead days; palette WCAG AA) and `site-rotation.test.tsx` |
+| `npm run test:site:e2e` | 13 passed: every page renders, survives a refresh and has no axe WCAG 2.1 A/AA violations; hero size, 5 s rotation, pause and reduced motion; navigation; no prices or availability shown; placeholders labelled; 390 px with no sideways scroll, no overlap and a working mobile menu |
+| ERP `npm run build` and secret scan | passed |
+| `test:db`, `test:integration`, `test:e2e` | **not run**: Docker isn't available in this session. W1 changes no ERP code or migrations. |
+
+CI now also checks `site/` formatting and runs the site browser tests (no database) in the `static` job.

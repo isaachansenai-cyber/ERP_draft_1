@@ -242,6 +242,18 @@ SUPABASE_SERVICE_ROLE_KEY=... npm run demo:users   # writes DEMO_CREDENTIALS.loc
 
 The integration and e2e suites **reset the local database** and refuse to run against anything but localhost.
 
+### Public website (`site/`)
+
+The customer-facing pickup website is a separate Vite app in `site/` (CLAUDE.md D12, [build plan](docs/website/BUILD_PLAN.md)). It shares this repo's dependencies and lint/typecheck setup. In milestone W1 it is **static**: it has no ERP connection yet and shows no prices or availability. Online ordering arrives in W3–W4.
+
+```bash
+npm run site:dev                                   # http://127.0.0.1:5174/
+VITE_SITE_BASE_PATH=/ERP_draft_1/site/ npm run site:build   # outputs site/dist/
+npm run test:site:e2e                              # builds and serves site/ under its Pages path; no database needed
+```
+
+Site unit tests (palette contrast, hero rotation, content checked against the ERP source data) run in `npm run test:unit`.
+
 ---
 
 ## 6. Build and deploy
@@ -272,6 +284,8 @@ src/                   React app: auth/, components/ (shell, UI kit, approval fi
                        Denver time helpers),
                        pages/ (incl. inventory/ controls, settings/ panels)
 tests/unit|integration/{pilot,ops,demo}|e2e
+site/                  public pickup website (Vite app; D12): content/, components/, pages/, theme/
+tests/site-e2e/        Playwright tests for site/ (no database)
 data/source/           source master data (pilot + demo)
 data/demo/             synthetic demo fixtures and history (demo only)
 docs/                  spec, acceptance (checklist, progress, report, evidence/), ops, demo, decisions

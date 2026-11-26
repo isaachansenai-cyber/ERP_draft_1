@@ -11,5 +11,14 @@
     "types": ["node", "vite/client"],
     "noEmit": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts", "scripts/**/*.ts", "tests/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "site/vite.config.ts",
+    "site/tailwind.config.ts",
+    "playwright.site.config.ts"
+  ]
 }

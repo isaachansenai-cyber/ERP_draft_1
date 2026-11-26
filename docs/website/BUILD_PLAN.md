@@ -1,6 +1,6 @@
 # Public pickup website: build plan
 
-Status: **W0 (decisions) complete. W1 not started.** Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
+Status: **W0 (decisions) and W1 (static site, placeholder images) complete. W2 not started.** W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
 
 This plan adds a public website for Meats Around the World. Customers can browse it, see live availability, and order dishes or retail sauces **for pickup only**. Every order goes straight into the ERP, which handles reservations, the kitchen queue, sales and the accounting effects with the same rules as a POS order.
 
@@ -24,7 +24,7 @@ This plan adds a public website for Meats Around the World. Customers can browse
 | No-shows | **Cancelled by a manager at end of day** (see §5.4). |
 | Allergens | An auto-drafted note per dish for **dairy, nuts and wheat**, derived from recipe ingredient names. The owner must review it before launch ([draft](allergen-notes-draft.md)). |
 | Copy | Drafted around a **cultural exploration and inclusion** theme, for owner review ([drafts](content-drafts.md)). |
-| Logo | Supplied: `docs/website/brand/logo.webp`. |
+| Logo | Supplied: `site/public/brand/logo.webp`. |
 | Domain | The GitHub Pages address for now. |
 | Code location | Same repo, separate app under `/site`, sharing the ERP's Supabase project and migrations. |
 
@@ -202,7 +202,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 | # | Milestone | Exit |
 |---|---|---|
 | **W0** | Decisions | **Done 2026-11-26:** this plan, ADR 0040, CLAUDE.md D12, logo, copy and allergen drafts. |
-| W1 | Static site and design system | `/site` app, palette, hero rotation, navigation, all content pages from the approved drafts, responsive and accessible. No ERP connection yet. Lint, typecheck, unit tests and axe pass. |
+| W1 | Static site and design system | **Done 2026-11-26** (placeholder images, draft copy). `/site` app, palette, hero rotation, navigation, all content pages from the approved drafts, responsive and accessible. No ERP connection yet. Lint, typecheck, unit tests and axe pass. |
 | W2 | ERP database | §3 migrations, `accept_order_core` refactor (POS tests still green), `web_*` functions, pgTAP and the anonymous-access audit. |
 | W3 | Live menu (demo) | Location picker, live availability and caps, 30 s refresh, cart. |
 | W4 | Checkout to kitchen (demo) | Slots, placement, simulated tender, confirmation and status; ERP kitchen badge, Scheduled lane, Settings → Website. |
