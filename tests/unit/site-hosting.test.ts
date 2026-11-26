@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { missingHostedConfig, sitePolicy } from '../../site/vite.config';
 
@@ -24,5 +25,16 @@ describe('hosted website build (ADR 0046)', () => {
   it('lets a connected site call only its own ERP', () => {
     expect(sitePolicy('https://x.supabase.co')).toContain("connect-src 'self' https://x.supabase.co;");
     expect(sitePolicy(undefined)).toContain("connect-src 'self';");
+  });
+
+  it('rewrites browser-only pages to the app shell by its clean address (ADR 0047)', () => {
+    const config = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
+      cleanUrls: boolean;
+      rewrites: { source: string; destination: string }[];
+    };
+    expect(config.cleanUrls).toBe(true);
+    // With cleanUrls on, Vercel does not resolve a rewrite to "/app.html": it answers 404.
+    expect(config.rewrites.map((r) => r.destination)).toEqual(['/app', '/app', '/app']);
+    expect(config.rewrites.map((r) => r.source)).toEqual(['/cart', '/checkout', '/order/:token']);
   });
 });

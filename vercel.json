@@ -9,15 +9,15 @@
   "rewrites": [
     {
       "source": "/cart",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/checkout",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/order/:token",
-      "destination": "/app.html"
+      "destination": "/app"
     }
   ],
   "headers": [
