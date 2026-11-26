@@ -34,7 +34,7 @@ This plan adds a public website for Meats Around the World. Customers can browse
 
 ```
 Browser (public site, /site)          Supabase (same project as the ERP)
-  React + Vite, HashRouter     ──▶    Auth: anonymous sign-in (+ captcha)
+  React + Vite, HashRouter     ──▶    no sign-in: public anon key only
   anon key + URL only                 public.web_* functions (security definer)
   polls menu every 30 s                 └─▶ private.accept_order_core (shared with POS)
                                             └─▶ reservations, order lines, tax snapshot,
@@ -42,7 +42,7 @@ Browser (public site, /site)          Supabase (same project as the ERP)
 Staff ERP (/src) ◀── same tables ──   kitchen queue, POS, dashboards, planning
 ```
 
-- **Visitors** get a Supabase **anonymous sign-in** with Supabase's built-in captcha. That gives each browser a real identity for idempotency and rate limits without customer accounts. Anonymous users have no membership, so every existing staff function already rejects them with `unauthorized`.
+- **Visitors do not sign in** (owner decision, 2026-11-26; ADR 0042). The site calls the `web_*` functions with the public anon key, which can execute nothing else and read no table. Auth sign-ups stay off. Idempotency uses the actor `web` with the request key, a random UUID known only to the browser that sent it.
 - **Access is narrow.** Visitors can call only the `web_*` functions below. They read no tables. A test suite proves this for every public table and every staff function (§7).
 - **One acceptance path.** The body of `accept_order` moves into `private.accept_order_core(actor, channel, ...)`. The POS keeps calling `accept_order`, and the site calls `web_place_order`. Both share the BOM explosion, FEFO reservation, tax and discount rules, pickup-code generation and audit. Web orders are accepted by a system employee, **"Online ordering"** (no Auth login), and marked `channel = 'web'`.
 - **Typed contracts from day one.** Each `web_*` function has a Zod-checked result type in the site, following the RPC-contract recommendation from the 2026-11-25 code review.
@@ -74,7 +74,7 @@ Errors use the ERP's stable codes, for example `insufficient_stock` (naming the 
 | `web_menu_content(item_id, country, description, image_path, allergen_note, allergen_reviewed_by/at)` | Website copy per item. An item without reviewed content is hidden from the site. |
 | Gate `web_ordering_enabled` (per location) | Blocks `web_place_order` until the owner confirms. The existing gates (prices, tax, recipes, opening counts) still apply through the shared core. |
 | System employee `EMP-WEB` "Online ordering" | Actor for web acceptance. It has no Auth user and cannot sign in. |
-| Open-order limit (in `web_place_order`) | At most 3 open web orders per visitor, per phone number and per e-mail. Built: W2. An attempts-per-hour counter was dropped, because a refused attempt rolls back its own count; Supabase Auth's captcha and sign-in rate limits cover repeated attempts (W5). |
+| Open-order limit (in `web_place_order`) | At most 3 open web orders per phone number and per e-mail. Built: W2. Without sign-in there is no per-visitor identity, and an attempts-per-hour counter would roll back with a refused attempt. Abuse limits beyond this (for example per IP at the hosting layer) are reviewed in W5. |
 
 `prep_minutes` and lead days (owner confirmed 2026-11-26, including both 15-minute finishing times). The demo seed loads them from `data/demo/web_demo_seed.json`; the pilot owner enters them with `set_item_prep_minutes`:
 
@@ -116,7 +116,7 @@ All times are America/Denver, and slot generation is tested across DST changes.
 - Reserved ingredients leave walk-in availability immediately, even for a pickup days ahead. This is the "sequestered" inventory.
 - Forecasting already nets accepted orders (AC21), so future web orders feed replenishment proposals automatically.
 - An item shows **Sold out** when the ERP cannot reserve one portion, or when a manager has switched it off with the existing `set_menu_availability`. When stock is received, or a manager switches it back on, the site shows it again on its next refresh. Nobody edits the website.
-- The site refreshes the menu every 30 seconds and on tab focus. Polling is used instead of Realtime, because subscribing anonymous visitors to stock tables would leak data.
+- The site refreshes the menu every 30 seconds and on tab focus. Polling is used instead of Realtime, because subscribing visitors to stock tables would leak data.
 - If stock runs out between browsing and checkout, placement fails with `insufficient_stock` naming the item. Nothing is half-placed, and the cart highlights the line.
 
 ### 5.3 Kitchen and staff screens (ERP changes)
@@ -181,7 +181,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 ## 7. Security and testing
 
 **Security**
-- Anonymous sign-in with captcha.
+- No visitor sign-in: the anon key reaches only the `web_*` functions.
 - Rate limits and slot capacity enforced on the server.
 - Input length and format checks.
 - Contact details returned only through the order's own token.
@@ -215,6 +215,6 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 1. Review and approve the [content drafts](content-drafts.md).
 2. Review and approve the [allergen notes](allergen-notes-draft.md). Each note says "please ask staff" until it is approved.
 3. ~~Confirm the draft `prep_minutes`~~ and ~~the noon kitchen start~~: confirmed 2026-11-26.
-4. Decide whether to keep Supabase Auth sign-ups on for the hosted projects (needed for anonymous website visitors; ADR 0042).
+4. ~~Visitor sign-in~~: decided 2026-11-26, visitors do not sign in (ADR 0042).
 5. Supply licensed food photos (hero rotation plus one per item), or approve the placeholders for the demo.
 6. Real retail-sauce products and labels for the pilot. RET-001 and RET-002 are synthetic demo items.

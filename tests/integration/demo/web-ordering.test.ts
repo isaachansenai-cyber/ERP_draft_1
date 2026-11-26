@@ -1,5 +1,5 @@
 // Public pickup website (CLAUDE.md D12, ADR 0040) in the DEMO database, through
-// the real API as anonymous website visitors: menu and live availability, pickup
+// the real API as website visitors (public anon key, no sign-in): menu and live availability, pickup
 // slots, placement through the shared acceptance core, the simulated tender,
 // retries, slot capacity, rate limits, sold out and back again, a web-vs-POS race
 // for the last unit, and what staff and visitors may (not) see.
@@ -15,11 +15,9 @@ const as = (id: string) => signIn(stack, creds[id]!.email, creds[id]!.password);
 const SLC = 'LOC-SLC';
 const SFO = 'LOC-SFO';
 
+/** A website visitor: the public anon key and no sign-in (ADR 0042). */
 async function visitor(): Promise<SupabaseClient> {
-  const client = anonClient(stack);
-  const { error } = await client.auth.signInAnonymously();
-  if (error) throw new Error(`anonymous sign-in failed: ${error.message}`);
-  return client;
+  return anonClient(stack);
 }
 
 const sql = <T>(text: string, params: unknown[] = []) =>
@@ -128,7 +126,7 @@ afterAll(async () => {
     expect(r.code).toBeNull();
   }
 });
-describe('menu and locations for an anonymous visitor', () => {
+describe('menu and locations for a visitor', () => {
   it('lists the three locations as open, 12:00–20:00 every day', async () => {
     const v = await visitor();
     const r = await rpc(v, 'web_get_locations');
@@ -187,14 +185,14 @@ describe('menu and locations for an anonymous visitor', () => {
     const v = await visitor();
     for (const table of ['items', 'orders', 'customers', 'web_order_contacts', 'recipe_components', 'stock_balances']) {
       const { data, error } = await v.from(table).select('*').limit(5);
-      expect(error, table).toBeNull();
-      expect(data, table).toEqual([]);
+      expect(data, table).toBeNull();
+      expect(error?.code, table).toBe('42501');
     }
-    expect((await rpc(v, 'list_stock_items', { p_location_id: SLC })).code).toBe('unauthorized');
-    expect((await rpc(v, 'accept_order', { p_request_key: randomUUID(), p_location_id: SLC, p_lines: [] })).code).toBe(
-      'unauthorized',
-    );
-    expect((await rpc(v, 'get_sales_summary', { p_from: '2026-01-01', p_to: '2026-12-31' })).code).toBe('unauthorized');
+    expect((await rpc(v, 'list_stock_items', { p_location_id: SLC })).code).toMatch(/^42501:/);
+    expect(
+      (await rpc(v, 'accept_order', { p_request_key: randomUUID(), p_location_id: SLC, p_lines: [] })).code,
+    ).toMatch(/^42501:/);
+    expect((await rpc(v, 'get_sales_summary', { p_from: '2026-01-01', p_to: '2026-12-31' })).code).toMatch(/^42501:/);
   });
 });
 
@@ -296,8 +294,8 @@ describe('placing an order', () => {
     expect(await count()).toEqual(after);
     const check = await rpc(v, 'web_get_request_result', { p_request_key: args.p_request_key });
     expect(check.data).toMatchObject({ status: 'committed', rpc_name: 'web_place_order' });
-    // Another visitor cannot see this visitor's request.
-    expect((await rpc(await visitor(), 'web_get_request_result', { p_request_key: args.p_request_key })).data).toEqual({
+    // A key nobody sent has no result (request keys are random and known only to their sender).
+    expect((await rpc(v, 'web_get_request_result', { p_request_key: randomUUID() })).data).toEqual({
       status: 'not_found',
     });
     created.push(
@@ -361,10 +359,11 @@ describe('capacity and limits', () => {
     }
   });
 
-  it('one visitor can hold at most 3 open orders', async () => {
+  it('one phone number or e-mail can hold at most 3 open orders', async () => {
     const v = await visitor();
+    const same = contact(77);
     for (let i = 0; i < 3; i++) {
-      const r = await place(v, SFO, [{ item_id: 'RET-002', quantity: 1 }]);
+      const r = await place(v, SFO, [{ item_id: 'RET-002', quantity: 1 }], { p_contact: same });
       expect(r.code).toBeNull();
       created.push(
         (
@@ -372,7 +371,14 @@ describe('capacity and limits', () => {
         )[0]!.order_id,
       );
     }
-    expect((await place(v, SFO, [{ item_id: 'RET-002', quantity: 1 }])).code).toBe('rate_limited:open_orders');
+    expect((await place(v, SFO, [{ item_id: 'RET-002', quantity: 1 }], { p_contact: same })).code).toBe(
+      'rate_limited:open_orders',
+    );
+    // The same e-mail with a different phone number is still the same customer.
+    expect(
+      (await place(v, SFO, [{ item_id: 'RET-002', quantity: 1 }], { p_contact: { ...same, phone: '801-555-9999' } }))
+        .code,
+    ).toBe('rate_limited:open_orders');
   });
 });
 

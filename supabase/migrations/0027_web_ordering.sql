@@ -1,13 +1,15 @@
 -- 0027 Public pickup website: ordering through the ERP (CLAUDE.md D12, ADR 0040,
 -- docs/website/BUILD_PLAN.md §2–§5).
 --
--- * Reference tables that any signed-in user could read are now staff-only:
---   website visitors sign in anonymously and also hold the `authenticated` role.
+-- * Website visitors do not sign in: they call the web_* functions with the
+--   public anon key and read no tables (ADR 0042).
+-- * Defense in depth: reference tables that any signed-in session could read are
+--   now staff-only, so an Auth account without an active employee reads nothing.
 -- * One acceptance path: accept_order's body moves to private.accept_order_core,
 --   shared by the POS and web_place_order (system actor EMP-WEB, channel 'web').
 -- * New web tables: opening hours, per-location web settings, per-item website
 --   content and the contact details of web orders (managers and owner only).
--- * Public web_* functions for anonymous visitors; owner RPCs for the settings.
+-- * Public web_* functions for visitors; owner RPCs for the settings.
 -- * Gate web_ordering_enabled per location.
 
 -- ---------------------------------------------------------------------------
@@ -162,14 +164,12 @@ create table public.web_menu_content (
 -- Contact details a customer typed on the website. Append-only.
 create table public.web_order_contacts (
   order_id uuid primary key references public.orders (order_id) on delete restrict,
-  web_user_id uuid not null,
   name text not null check (length(btrim(name)) between 1 and 80),
   phone text not null check (phone ~ '^[0-9+() .-]{7,20}$'),
   phone_digits text generated always as (regexp_replace(phone, '[^0-9]', '', 'g')) stored,
   email text not null check (length(email) <= 120 and email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
   created_at timestamptz not null default now()
 );
-create index web_order_contacts_user on public.web_order_contacts (web_user_id);
 create index web_order_contacts_email on public.web_order_contacts (lower(email));
 create index web_order_contacts_phone on public.web_order_contacts (phone_digits);
 create trigger web_order_contacts_append_only
@@ -427,22 +427,6 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Web ordering helpers
 -- ---------------------------------------------------------------------------
--- Idempotency actor for a website visitor (anonymous sign-in): never an employee ID.
-create function private.require_web_actor()
-returns text
-language plpgsql
-stable
-security definer
-set search_path = ''
-as $$
-begin
-  if auth.uid() is null then
-    perform private.raise_error('unauthorized', jsonb_build_object('reason', 'no_session'));
-  end if;
-  return 'web:' || auth.uid()::text;
-end;
-$$;
-
 -- Opening window of a location on a local date, or null when closed that day.
 create function private.web_day_window(p_location_id text, p_date date, out opens timestamptz, out closes timestamptz)
 language sql
@@ -597,7 +581,7 @@ do $$
 declare
   f text;
 begin
-  foreach f in array array['private.require_web_actor()', 'private.web_day_window(text, date)',
+  foreach f in array array['private.web_day_window(text, date)',
                            'private.web_ordering_status(text)', 'private.web_pickup_slots(text, text[], timestamptz)',
                            'private.portions_available(text)', 'private.web_order_result(uuid)'] loop
     execute format('revoke all on function %s from public, anon, authenticated', f);
@@ -606,7 +590,8 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Public functions for website visitors (anonymous sign-in)
+-- Public functions for website visitors (anon key, no sign-in). Idempotency uses
+-- the actor 'web': a request key is a random UUID only its sender knows.
 -- ---------------------------------------------------------------------------
 create function public.web_get_locations()
 returns jsonb
@@ -616,7 +601,6 @@ security definer
 set search_path = ''
 as $$
 begin
-  perform private.require_web_actor();
   return coalesce((
     select jsonb_agg(jsonb_build_object('location_id', l.location_id, 'name', l.name,
       'ordering_open', private.web_ordering_status(l.location_id) is null,
@@ -643,7 +627,6 @@ declare
   v_status text;
   v_max integer;
 begin
-  perform private.require_web_actor();
   v_status := private.web_ordering_status(p_location_id);
   if v_status = 'unknown_location' then perform private.raise_error('validation:location'); end if;
   select w.max_per_line into v_max from public.web_ordering_settings w where w.location_id = p_location_id;
@@ -688,7 +671,6 @@ declare
   v_status text;
   v_items text[];
 begin
-  perform private.require_web_actor();
   v_status := private.web_ordering_status(p_location_id);
   if v_status = 'unknown_location' then perform private.raise_error('validation:location'); end if;
   if p_lines is null or jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
@@ -716,7 +698,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_actor text := private.require_web_actor();
+  v_actor text := 'web';
   v_cached jsonb;
   v_settings public.web_ordering_settings;
   v_name text := btrim(p_contact ->> 'name');
@@ -766,8 +748,7 @@ begin
 
   if (select count(*) from public.web_order_contacts c join public.orders o using (order_id)
       where o.status in ('accepted', 'preparing', 'ready')
-        and (c.web_user_id = auth.uid() or lower(c.email) = v_email
-             or c.phone_digits = regexp_replace(v_phone, '[^0-9]', '', 'g'))) >= 3 then
+        and (lower(c.email) = v_email or c.phone_digits = regexp_replace(v_phone, '[^0-9]', '', 'g'))) >= 3 then
     perform private.raise_error('rate_limited:open_orders', jsonb_build_object('max_open_orders', 3));
   end if;
 
@@ -781,8 +762,8 @@ begin
 
   v_order_id := private.accept_order_core('EMP-WEB', p_request_key, p_location_id, p_lines, null, v_name, p_note,
     0, null, null, 'web', p_pickup_at);
-  insert into public.web_order_contacts (order_id, web_user_id, name, phone, email)
-  values (v_order_id, auth.uid(), v_name, v_phone, v_email);
+  insert into public.web_order_contacts (order_id, name, phone, email)
+  values (v_order_id, v_name, v_phone, v_email);
 
   -- Demo only: the website's pretend payment is a SIMULATED tender for the total.
   -- The pilot records the real payment at pickup.
@@ -811,7 +792,6 @@ as $$
 declare
   v_result jsonb;
 begin
-  perform private.require_web_actor();
   select private.web_order_result(o.order_id) into v_result from public.orders o where o.web_token = p_web_token;
   if v_result is null then perform private.raise_error('not_found'); end if;
   return v_result;
@@ -827,7 +807,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_actor text := private.require_web_actor();
+  v_actor text := 'web';
   v_row private.request_log;
 begin
   select * into v_row from private.request_log r where r.actor_employee_id = v_actor and r.request_key = p_request_key;
@@ -1002,10 +982,16 @@ do $$
 declare
   f text;
 begin
+  -- Visitor functions: callable with the public anon key (and by signed-in staff).
   foreach f in array array[
     'public.web_get_locations()', 'public.web_get_menu(text)', 'public.web_get_pickup_slots(text, jsonb)',
     'public.web_place_order(uuid, text, jsonb, jsonb, timestamptz, text)', 'public.web_get_order(uuid)',
-    'public.web_get_request_result(uuid)',
+    'public.web_get_request_result(uuid)'] loop
+    execute format('revoke all on function %s from public', f);
+    execute format('grant execute on function %s to anon, authenticated', f);
+  end loop;
+  -- Owner settings: signed-in sessions only; each checks for the owner.
+  foreach f in array array[
     'public.set_web_ordering_settings(uuid, text, boolean, integer, integer, integer)',
     'public.set_location_opening_hours(uuid, text, jsonb)', 'public.set_item_prep_minutes(uuid, text, integer)',
     'public.set_web_menu_content(uuid, text, text, text, text, text, boolean)'] loop

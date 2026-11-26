@@ -2309,14 +2309,14 @@ isOneToOne: false
                   ]
                 },"web_order_contacts": {
                   Row: {
-                    "created_at": string,"email": string,"name": string,"order_id": string,"phone": string,"phone_digits": string | null,"web_user_id": string
+                    "created_at": string,"email": string,"name": string,"order_id": string,"phone": string,"phone_digits": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"email": string,"name": string,"order_id": string,"phone": string,"phone_digits"?: never,"web_user_id": string
+                    "created_at"?: string,"email": string,"name": string,"order_id": string,"phone": string,"phone_digits"?: never
                   }
                   Update: {
-                    "created_at"?: string,"email"?: string,"name"?: string,"order_id"?: string,"phone"?: string,"phone_digits"?: never,"web_user_id"?: string
+                    "created_at"?: string,"email"?: string,"name"?: string,"order_id"?: string,"phone"?: string,"phone_digits"?: never
                   }
                   Relationships: [
                     {

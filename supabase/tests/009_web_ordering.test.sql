@@ -1,11 +1,12 @@
--- Public pickup website (0027): lock-down for anonymous visitors, system actor,
--- gate, grants and the pickup-slot rule with a fixed clock, including both DST
--- changes. Fresh pilot database; rolls back.
+-- Public pickup website (0027): what a visitor (public anon key, no sign-in) and
+-- a signed-in account without an employee can reach, the system actor, the gate,
+-- grants and the pickup-slot rule with a fixed clock, including both DST changes.
+-- Fresh pilot database; rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(43);
+select plan(41);
 
 select is(public.get_schema_version(), 27, 'schema version is the latest migration');
 
@@ -22,12 +23,17 @@ from unnest(array['public.location_opening_hours', 'public.web_ordering_settings
                   'public.web_order_contacts']) t;
 select has_column('public', 'orders', 'channel', 'orders record their channel');
 select has_column('public', 'items', 'prep_minutes', 'items carry pickup-day cook minutes');
-select ok(bool_and(has_function_privilege('authenticated', f, 'execute') and not has_function_privilege('anon', f, 'execute')),
-          'web functions are callable by signed-in sessions (incl. anonymous visitors), not by the bare anon key')
+select ok(bool_and(has_function_privilege('anon', f, 'execute') and has_function_privilege('authenticated', f, 'execute')),
+          'web functions are callable with the public anon key (visitors do not sign in)')
 from unnest(array['public.web_get_locations()', 'public.web_get_menu(text)', 'public.web_get_pickup_slots(text, jsonb)',
                   'public.web_place_order(uuid, text, jsonb, jsonb, timestamptz, text)', 'public.web_get_order(uuid)',
                   'public.web_get_request_result(uuid)']) f;
-select ok(not bool_or(has_function_privilege('authenticated', f, 'execute')), 'private web helpers are not callable')
+select ok(not bool_or(has_function_privilege('anon', f, 'execute')), 'owner web settings need a signed-in owner, never the anon key')
+from unnest(array['public.set_web_ordering_settings(uuid, text, boolean, integer, integer, integer)',
+                  'public.set_location_opening_hours(uuid, text, jsonb)', 'public.set_item_prep_minutes(uuid, text, integer)',
+                  'public.set_web_menu_content(uuid, text, text, text, text, text, boolean)']) f;
+select ok(not bool_or(has_function_privilege('anon', f, 'execute') or has_function_privilege('authenticated', f, 'execute')),
+          'private web helpers are not callable')
 from unnest(array['private.accept_order_core(text, uuid, text, jsonb, text, text, text, numeric, text, text, text, timestamptz)',
                   'private.web_pickup_slots(text, text[], timestamptz)', 'private.web_order_result(uuid)',
                   'private.require_order_gates(text)', 'private.portions_available(text)']) f;
@@ -47,26 +53,24 @@ select is((private.gate_precondition_failure(g)) ->> 'reason', 'web_settings_not
   'the web gate cannot be confirmed before the settings exist')
 from public.pilot_setup_gates g where g.gate_key = 'web_ordering_enabled' and g.scope_id = 'LOC-PRO';
 
--- Anonymous visitor: no table reads, ordering closed in a fresh pilot ----------
--- Calls every public function that signed-in sessions may execute, with null
--- arguments, as the authenticated role with the visitor's JWT. Returns the ones that answered with data instead of
--- refusing (an exception) or answering empty. The web functions and three
--- harmless public reads are expected to answer.
-create function pg_temp.functions_answering_anonymous() returns text[] language plpgsql as $f$
+-- What callers outside the staff can reach ---------------------------------------
+-- Calls every public function the given role may execute, with null arguments,
+-- as that role (and the current JWT claims). Returns the ones that answered
+-- with data instead of refusing (an exception) or answering empty.
+create function pg_temp.functions_answering(p_role text) returns text[] language plpgsql as $f$
 declare
   r record;
-  v_sql text;
   v_out text;
   v_rows bigint;
   v_hits text[] := '{}';
 begin
-  set local role authenticated;
+  execute format('set local role %I', p_role);
   for r in
     select p.oid, p.proname, p.proretset,
            coalesce((select string_agg('null::' || format_type(t, null), ', ' order by ord)
                      from unnest(p.proargtypes::oid[]) with ordinality a(t, ord)), '') as args
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute') and p.prokind = 'f'
+    where n.nspname = 'public' and has_function_privilege(p_role, p.oid, 'execute') and p.prokind = 'f'
     order by p.proname
   loop
     begin
@@ -88,31 +92,37 @@ begin
 end;
 $f$;
 
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-0000-0000-0000000a0001","role":"authenticated","is_anonymous":true}', true);
-set local role authenticated;
-select is((select count(*)::int from public.items), 0, 'an anonymous visitor reads no items');
-select is((select count(*)::int from public.recipe_components), 0, 'an anonymous visitor reads no recipes');
-select is((select count(*)::int from public.locations), 0, 'an anonymous visitor reads no locations table rows');
-select is((select count(*)::int from public.app_settings), 0, 'an anonymous visitor reads no app settings');
-select is((select count(*)::int from public.pilot_setup_gates), 0, 'an anonymous visitor reads no setup gates');
-select is((select count(*)::int from public.web_menu_content), 0, 'an anonymous visitor reads web content only through web_get_menu');
+-- A website visitor: the anon key, no JWT subject.
+select is(pg_temp.functions_answering('anon'),
+  array['get_public_app_mode', 'web_get_locations', 'web_get_request_result']::text[],
+  'with the anon key, only the app mode and the web functions answer');
+set local role anon;
+select throws_ok($$select count(*) from public.items$$, '42501', null, 'a visitor cannot read the items table');
+select throws_ok($$select count(*) from public.orders$$, '42501', null, 'a visitor cannot read orders');
+select throws_ok($$select public.list_stock_items('LOC-PRO')$$, '42501', null, 'a visitor cannot call staff functions');
 select is(jsonb_array_length(public.web_get_locations()), 3, 'web_get_locations lists the three locations');
 select ok((select bool_and((l ->> 'ordering_open')::boolean = false and l ->> 'status_reason' = 'posting_disabled')
            from jsonb_array_elements(public.web_get_locations()) l),
   'a fresh pilot shows every location as closed for web orders');
-select throws_ok($$select public.list_stock_items('LOC-PRO')$$,
-  'P0001', 'unauthorized', 'staff functions reject an anonymous visitor');
 select throws_ok($$select public.web_place_order(gen_random_uuid(), 'LOC-PRO', '[{"item_id":"FG-001","quantity":1}]',
     '{"name":"Ana","phone":"801-555-0100","email":"ana@example.com"}', now() + interval '1 day')$$,
   'P0001', 'setup_gate_closed:posting_enabled', 'a fresh pilot refuses web orders until posting is enabled');
 reset role;
-select is(pg_temp.functions_answering_anonymous(),
+
+-- Defense in depth: a signed-in account with no active employee (for example a
+-- deactivated staff member) reads no reference tables and no staff data.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000a0001","role":"authenticated"}', true);
+set local role authenticated;
+select is((select count(*)::int from public.items) + (select count(*)::int from public.recipe_components)
+          + (select count(*)::int from public.locations) + (select count(*)::int from public.app_settings)
+          + (select count(*)::int from public.pilot_setup_gates) + (select count(*)::int from public.web_menu_content), 0,
+  'an account without an employee reads no items, recipes, locations, settings, gates or web content');
+reset role;
+select is(pg_temp.functions_answering('authenticated'),
   array['get_my_context', 'get_public_app_mode', 'get_schema_version', 'web_get_locations',
         'web_get_request_result']::text[],
-  'with null arguments, only the public reads and web_get_locations answer an anonymous visitor');
+  'an account without an employee gets answers only from the public reads and the web functions');
 select set_config('request.jwt.claims', '', true);
-select throws_ok($$select public.web_get_locations()$$, 'P0001', 'unauthorized', 'web functions need a session');
 
 -- Pickup slots with a fixed clock -------------------------------------------------
 insert into public.items (item_id, name, item_type, category, base_unit, is_sellable, barcode, source, provenance,

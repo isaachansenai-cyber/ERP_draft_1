@@ -28,8 +28,9 @@ select is(
 select is(
   (select array_agg(p.proname::text order by p.proname::text) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname in ('public', 'private') and has_function_privilege('anon', p.oid, 'execute')),
-  array['get_public_app_mode']::text[],
-  'anon can execute only get_public_app_mode');
+  array['get_public_app_mode', 'web_get_locations', 'web_get_menu', 'web_get_order', 'web_get_pickup_slots',
+        'web_get_request_result', 'web_place_order']::text[],
+  'anon can execute only get_public_app_mode and the website visitor functions (D12)');
 
 select is(
   (select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
