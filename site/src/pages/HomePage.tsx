@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
-import { DishCard } from '../components/DishCard';
 import { Hero } from '../components/Hero';
 import { PlaceholderArt } from '../components/PlaceholderArt';
 import { SplitSection } from '../components/SplitSection';
-import { Eyebrow, LinkButton, Notice, TextLink } from '../components/ui';
+import { LiveMenu } from '../components/LiveMenu';
+import { Eyebrow, LinkButton, TextLink } from '../components/ui';
 import { countries } from '../content/countries';
-import { closingCta, countriesTeaser, ORDERING_OPEN, pickupSteps, storyTeaser } from '../content/site';
+import { closingCta, countriesTeaser, pickupSteps, storyTeaser } from '../content/site';
 
 export function HomePage() {
   return (
@@ -57,17 +57,8 @@ export function HomePage() {
           <h2 id="menu-preview" className="mt-2 font-display text-3xl font-bold">
             Our dishes
           </h2>
-          {!ORDERING_OPEN ? (
-            <div className="mt-4">
-              <Notice title="Online ordering opens soon">
-                Prices, availability and pickup times will appear here when ordering opens.
-              </Notice>
-            </div>
-          ) : null}
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {countries.map((c) => (
-              <DishCard key={c.id} country={c} />
-            ))}
+          <div className="mt-6">
+            <LiveMenu variant="dishes" />
           </div>
           <p className="mt-8">
             <LinkButton to="/menu">See the full menu</LinkButton>

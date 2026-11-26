@@ -93,3 +93,10 @@ export const countries: Country[] = [
 export function findCountry(id: string | null): Country | undefined {
   return countries.find((c) => c.id === id);
 }
+
+const SAUCE_TONE: ArtTone = { base: 'flame', accent: 'cream' };
+
+/** Placeholder colors for an ERP item: its country's, or the sauces'. */
+export function toneFor(itemId: string): ArtTone {
+  return countries.find((c) => c.dishId === itemId)?.tone ?? SAUCE_TONE;
+}

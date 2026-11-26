@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { WebApiError } from '../lib/webApi';
 
 const buttonBase =
   'inline-flex min-h-11 items-center justify-center rounded-full px-6 py-2 text-base font-semibold transition-colors focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-ultramarine';
@@ -60,5 +61,33 @@ export function Notice({ title, children }: { title: string; children: ReactNode
       <p className="font-bold">{title}</p>
       <div className="mt-1">{children}</div>
     </div>
+  );
+}
+
+/** A failed read from the ERP. Says plainly that nothing was ordered. */
+export function LoadFailure({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  const code = error instanceof WebApiError ? error.code : 'network';
+  if (code === 'not_configured') {
+    return (
+      <Notice title="Online ordering isn't available here">
+        This copy of the site is not connected to the restaurant. Visit us in person to order.
+      </Notice>
+    );
+  }
+  return (
+    <Notice title="We can't reach the restaurant right now">
+      Prices and availability will appear when the connection is back. Nothing was ordered.
+      {onRetry ? (
+        <span className="mt-2 block">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex min-h-11 items-center rounded-full bg-charcoal px-5 font-semibold text-cream focus-visible:outline focus-visible:outline-4 focus-visible:outline-ultramarine"
+          >
+            Try again
+          </button>
+        </span>
+      ) : null}
+    </Notice>
   );
 }

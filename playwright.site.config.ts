@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Public website (site/) tests. No database: W1 is static. The site is built
+// Public website (site/) tests with NO backend configured: content pages and the
+// honest "not connected" states. Live menu and cart tests: playwright.site-live.config.ts. The site is built
 // under its GitHub Pages base path and served with `vite preview`.
 export const SITE_BASE_PATH = '/ERP_draft_1/site/';
 
@@ -15,7 +16,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run site:build && npm run site:preview',
     url: `http://127.0.0.1:4174${SITE_BASE_PATH}`,
-    env: { VITE_SITE_BASE_PATH: SITE_BASE_PATH },
+    env: { VITE_SITE_BASE_PATH: SITE_BASE_PATH, VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' },
     reuseExistingServer: false,
     timeout: 120_000,
   },

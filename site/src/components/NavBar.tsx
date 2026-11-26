@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { brand } from '../content/site';
 import { LOGO_URL } from '../lib/assets';
 import { useScrolledPast } from '../lib/media';
+import { useShop } from '../state/shop';
 
 export const NAV_ITEMS = [
   { to: '/', label: 'Home' },
@@ -37,6 +38,7 @@ function CartIcon() {
  */
 export function NavBar() {
   const { pathname } = useLocation();
+  const { count } = useShop();
   const scrolled = useScrolledPast(40);
   const [open, setOpen] = useState(false);
   const overHero = pathname === '/' && !scrolled && !open;
@@ -94,10 +96,19 @@ export function NavBar() {
         </button>
         <NavLink
           to="/cart"
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-cream hover:text-saffron focus-visible:outline focus-visible:outline-2 focus-visible:outline-saffron md:ml-2"
+          className="relative flex min-h-11 min-w-11 items-center justify-center rounded-full text-cream hover:text-saffron focus-visible:outline focus-visible:outline-2 focus-visible:outline-saffron md:ml-2"
         >
           <CartIcon />
-          <span className="sr-only">Cart</span>
+          <span className="sr-only">{count > 0 ? `Cart, ${count} ${count === 1 ? 'item' : 'items'}` : 'Cart'}</span>
+          {count > 0 ? (
+            <span
+              aria-hidden="true"
+              data-testid="cart-count"
+              className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-saffron px-1 text-sm font-bold text-charcoal"
+            >
+              {count}
+            </span>
+          ) : null}
         </NavLink>
       </nav>
       {open ? (

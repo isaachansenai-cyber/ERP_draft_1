@@ -400,3 +400,24 @@ Existing tests changed only for intended effects: the setup-gate count (17 → 2
 ### Open items
 - Visitor sign-in: decided, none (ADR 0042). Accepted risk until W5: bogus orders under made-up contacts can hold stock until staff cancel them; slot capacity bounds it.
 - The local stack here pulled images from Docker Hub (`SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io`) because this session's network blocks the default registry's download host.
+
+## Public pickup website — W3 live menu and cart (operator request, 2026-11-26)
+
+Visitors don't sign in (ADR 0042), and W2 was pushed with that change. W3 (ADR 0043) connects the site to the ERP with the public anon key:
+
+- **Location picker**, remembered in the browser, showing each location's hours and whether it is taking online orders.
+- **Live menu** from `web_get_menu`, checked by Zod: price, Available / "Sold out — back soon", prep time, allergen note (or "please ask staff" until reviewed). It refreshes every 30 s and on tab focus, and shows when it last read the ERP.
+- **Cart** per location in the browser, labelled "Not ordered yet", with a count badge on the navigation bar. It is re-priced from the live menu, flags sold-out or over-limit lines, and caps quantities at what the ERP allows. Checkout is W4: the cart says so and nothing is ordered.
+- **Honest failure states**: a paused or closed location, an unreachable ERP ("Nothing was ordered", with a retry) and a build with no backend.
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `prettier --check src tests scripts site` | clean |
+| `npm run test:unit` | 82 passed, incl. `site-cart.test.ts` (cart rules, integer money formatting, wording, menu contract) |
+| `npm run test:site:e2e` (no backend) | 13 passed |
+| `npm run test:site:live` (local demo ERP) | 7 passed: live prices and remembered location; per-location cart priced by the ERP that survives a reload; the 10-per-line cap; a sold-out change in the database appears on its own refresh and clears again (a control run without the refresh fails, as expected); a paused location; an unreachable ERP with retry; 390 px width. axe finds no WCAG A/AA issues on the live menu or cart |
+
+CI runs `test:site:live` in the database job.
+

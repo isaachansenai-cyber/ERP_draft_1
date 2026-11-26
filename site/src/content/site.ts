@@ -3,9 +3,6 @@
 /** 'draft' shows a preview notice in the footer until the owner approves the copy. */
 export const CONTENT_STATUS: 'draft' | 'approved' = 'draft';
 
-/** Online ordering is connected to the ERP in milestone W3 (BUILD_PLAN §8). */
-export const ORDERING_OPEN = false;
-
 export const brand = {
   name: 'Meats Around the World',
   tagline: 'One table. Many homelands.',
@@ -80,7 +77,7 @@ export const mission = {
 
 export const sauces = {
   heading: 'Retail sauces',
-  body: 'Take a little of the journey home. Our bottled sauces will be available for pickup with any order or on their own.',
+  body: 'Take a little of the journey home. Our bottled sauces are available for pickup with any order or on their own.',
 };
 
 export interface Faq {

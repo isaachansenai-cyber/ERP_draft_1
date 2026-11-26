@@ -78,9 +78,9 @@ test('the navigation bar reaches every section and the cart', async ({ page }) =
   }
 });
 
-test('ordering is honestly marked as not open: no prices, no availability, empty cart', async ({ page }) => {
+test('without a backend the site says it is not connected: no prices, no availability, no cart', async ({ page }) => {
   await page.goto('#/menu');
-  await expect(page.getByText('Online ordering opens soon')).toBeVisible();
+  await expect(page.getByText("Online ordering isn't available here")).toBeVisible();
   await expect(page.getByRole('article')).toHaveCount(5);
   await expect(page.getByText(/\$\d/)).toHaveCount(0);
   await expect(page.getByText(/sold out|in stock/i)).toHaveCount(0);
@@ -88,8 +88,7 @@ test('ordering is honestly marked as not open: no prices, no availability, empty
   await expect(page.getByText('Prepared a day ahead: order by the day before.')).toBeVisible();
 
   await page.goto('#/cart');
-  await expect(page.getByText('Your cart is empty.')).toBeVisible();
-  await expect(page.getByText(/no order has been placed/)).toBeVisible();
+  await expect(page.getByText('This copy of the site is not connected to the restaurant.')).toBeVisible();
 });
 
 test('every image stand-in is labelled as a placeholder', async ({ page }) => {

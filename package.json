@@ -22,6 +22,7 @@
     "test:secrets": "node scripts/security/scan-secrets.mjs",
     "test:e2e": "playwright test --trace off",
     "test:site:e2e": "playwright test --config playwright.site.config.ts --trace off",
+    "test:site:live": "playwright test --config playwright.site-live.config.ts --trace off",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "node scripts/db/local-reset.mjs",

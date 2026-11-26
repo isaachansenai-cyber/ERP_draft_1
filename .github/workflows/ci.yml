@@ -49,3 +49,5 @@ jobs:
       - run: npm run test:integration
       - name: End-to-end tests (Playwright)
         run: npx playwright install --with-deps chromium && npm run test:e2e -- --trace off
+      - name: Public website against the local demo ERP (Playwright)
+        run: npm run test:site:live

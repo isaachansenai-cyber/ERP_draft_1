@@ -250,12 +250,13 @@ The integration and e2e suites **reset the local database** and refuse to run ag
 
 ### Public website (`site/`)
 
-The customer-facing pickup website is a separate Vite app in `site/` (CLAUDE.md D12, [build plan](docs/website/BUILD_PLAN.md)). It shares this repo's dependencies and lint/typecheck setup. In milestone W1 it is **static**: it has no ERP connection yet and shows no prices or availability. Online ordering arrives in W3–W4.
+The customer-facing pickup website is a separate Vite app in `site/` (CLAUDE.md D12, [build plan](docs/website/BUILD_PLAN.md)). It shares this repo's dependencies and lint/typecheck setup. Visitors never sign in: the site uses `VITE_SUPABASE_URL` and the public `VITE_SUPABASE_ANON_KEY` to call the ERP's `web_*` functions. Since W3 it shows each location's live prices and availability (refreshed every 30 s) and keeps a per-location cart in the browser. Checkout arrives in W4. Without those two variables the site still builds and says it is not connected.
 
 ```bash
 npm run site:dev                                   # http://127.0.0.1:5174/
 VITE_SITE_BASE_PATH=/ERP_draft_1/site/ npm run site:build   # outputs site/dist/
 npm run test:site:e2e                              # builds and serves site/ under its Pages path; no database needed
+npm run test:site:live                             # resets the LOCAL database to demo, builds site/ against it, tests menu and cart
 ```
 
 Site unit tests (palette contrast, hero rotation, content checked against the ERP source data) run in `npm run test:unit`.

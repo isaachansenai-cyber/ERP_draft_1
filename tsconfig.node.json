@@ -19,6 +19,7 @@
     "tests/**/*.ts",
     "site/vite.config.ts",
     "site/tailwind.config.ts",
-    "playwright.site.config.ts"
+    "playwright.site.config.ts",
+    "playwright.site-live.config.ts"
   ]
 }
