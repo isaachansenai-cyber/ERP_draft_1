@@ -89,6 +89,7 @@ test('without a backend the site says it is not connected: no prices, no availab
 
   await page.goto('#/cart');
   await expect(page.getByText('This copy of the site is not connected to the restaurant.')).toBeVisible();
+  await expect(page.getByTestId('demo-banner')).toHaveCount(0);
 });
 
 test('every photo has descriptive alt text, loads, and is served small for small screens', async ({ page }) => {

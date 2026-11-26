@@ -7,10 +7,10 @@ import { priceCart } from '../lib/cart';
 import { placementMessage, type ContactField } from '../lib/describe';
 import { estimateOrder, formatCents, formatRate } from '../lib/money';
 import { checkoutKey, forgetCheckoutKey, placeWithCheck, type PlaceOutcome } from '../lib/placement';
-import { useLocations, useMenu } from '../lib/queries';
+import { useAppMode, useLocations, useMenu } from '../lib/queries';
 import { supabase } from '../lib/supabase';
 import { formatDay, formatTime, groupByDay } from '../lib/time';
-import { getAppMode, getRequestResult, getSlots, WebApiError, webOrderSchema } from '../lib/webApi';
+import { getRequestResult, getSlots, WebApiError, webOrderSchema } from '../lib/webApi';
 import { useShop } from '../state/shop';
 
 // Client-side checks mirror the ERP's for a quicker answer; the ERP checks again.
@@ -79,7 +79,7 @@ export function CheckoutPage() {
   const queryClient = useQueryClient();
   const menu = useMenu(supabase ? locationId : null);
   const locations = useLocations();
-  const mode = useQuery({ queryKey: ['web', 'mode'], queryFn: getAppMode, staleTime: Infinity, enabled: !!supabase });
+  const mode = useAppMode();
   const itemIds = [...new Set(lines.map((l) => l.item_id))].sort();
   const slots = useQuery({
     queryKey: ['web', 'slots', locationId, itemIds],
