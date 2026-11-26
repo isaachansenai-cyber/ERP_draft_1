@@ -345,6 +345,15 @@ export function KitchenPage() {
           Refresh
         </Button>
       </div>
+      {isManager && queue.data ? (
+        <NoShowSweep
+          locationId={locationId}
+          overdue={queue.data.filter(
+            (o) =>
+              o.channel === 'web' && o.requested_pickup_at !== null && o.requested_pickup_at < new Date().toISOString(),
+          )}
+        />
+      ) : null}
       {queue.isPending ? (
         <Loading />
       ) : queue.error ? (
@@ -408,6 +417,77 @@ function ScheduledLane({
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/**
+ * End-of-day no-shows (owner decision; migration 0029): cancels this location's
+ * website orders whose pickup time has passed. Started or ready orders are
+ * recorded as waste; demo simulated payments get their simulated refund; a real
+ * recorded payment is left for the counter and listed.
+ */
+function NoShowSweep({ locationId, overdue }: { locationId: string; overdue: KitchenOrder[] }) {
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const sweep = useRpcMutation<{ cancelled: string[]; skipped: Array<{ order_number: string; reason: string }> }>(
+    'cancel_uncollected_web_orders',
+    `no-show:${locationId}`,
+    {
+      onSuccess: () => {
+        setConfirming(false);
+        void queryClient.invalidateQueries({ queryKey: ['kitchen', locationId] });
+      },
+    },
+  );
+  const result = 'kind' in sweep.state && sweep.state.kind === 'success' ? sweep.state.result : null;
+  if (overdue.length === 0 && !result) return null;
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-amber-700 bg-amber-50 p-3" data-testid="no-show-sweep">
+      {overdue.length > 0 ? (
+        <p className="font-semibold">
+          {overdue.length} website {overdue.length === 1 ? 'order is' : 'orders are'} past the pickup time and not
+          collected: {overdue.map((o) => o.pickup_code).join(', ')}.
+        </p>
+      ) : null}
+      {overdue.length > 0 && !confirming ? (
+        <div>
+          <Button variant="secondary" onClick={() => setConfirming(true)}>
+            Cancel uncollected website orders…
+          </Button>
+        </div>
+      ) : null}
+      {confirming ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm">
+            Not started: stock is released. Started or ready: the food is recorded as waste. Demo simulated payments are
+            refunded (simulated). Orders with a real recorded payment are left for you to handle at the counter.
+          </p>
+          <Button
+            variant="danger"
+            disabled={!sweep.canPost}
+            onClick={() => void sweep.submit({ p_location_id: locationId })}
+          >
+            Cancel {overdue.length} {overdue.length === 1 ? 'order' : 'orders'}
+          </Button>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>
+            Keep them
+          </Button>
+        </div>
+      ) : null}
+      <MutationStatus
+        state={sweep.state}
+        successText={
+          result
+            ? `Cancelled ${result.cancelled.length}${result.cancelled.length ? `: ${result.cancelled.join(', ')}` : ''}.` +
+              (result.skipped.length
+                ? ` Left for the counter: ${result.skipped.map((x) => x.order_number).join(', ')}.`
+                : '')
+            : 'Done.'
+        }
+        onRetry={() => void sweep.retry()}
+        onCheckAgain={() => void sweep.checkAgain()}
+      />
     </div>
   );
 }

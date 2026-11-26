@@ -2386,6 +2386,9 @@ isOneToOne: false
 "cancel_transfer":
 { Args: { "p_expected_version": number,"p_request_key": string,"p_transfer_id": string }; Returns: Json
                            },
+"cancel_uncollected_web_orders":
+{ Args: { "p_location_id": string,"p_request_key": string }; Returns: Json
+                           },
 "change_stock_condition":
 { Args: { "p_lot_id": string,"p_note"?: string,"p_quantity": number,"p_reason_code"?: string,"p_request_key": string,"p_to_condition": string }; Returns: Json
                            },

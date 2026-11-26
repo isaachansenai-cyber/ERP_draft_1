@@ -445,3 +445,32 @@ W3 was pushed first. W4 (migration 0028, ADR 0044):
 
 `foundation.spec.ts` (keyboard test) failed once in a full run because it pressed Tab before the login form rendered; it now waits for the form. It passed 3 of 3 alone before the fix and in the full run after.
 
+## Public pickup website — W5 hardening and launch preparation (operator request, 2026-11-26)
+
+W4 was pushed first. W5 (migration 0029, ADR 0045):
+
+- **End-of-day no-shows** (owner decision): managers cancel a location's uncollected website orders from the kitchen page in one confirmed step, through the existing cancellation rules (stock released, cooked food as waste, demo simulated refund). Orders with a real recorded payment are left for the counter.
+- **Lighter, self-contained site**: the PostgREST client instead of full supabase-js (bundle 585 → 374 KB), fonts bundled instead of Google Fonts, and a build-time Content-Security-Policy that allows network calls to the ERP only.
+- **Measured**: 20 concurrent website visitors on the local stack, reads p95 126 ms (100% within 2 s), order placement p95 165 ms, 0 unexpected errors, all invariants 0 (`docs/acceptance/evidence/perf-web.md`).
+- **Keyboard-only**: a live test places a whole order by focus and keys alone.
+- **Deployment prepared, not run**: `pages.yml` builds the site under `/<repo>/site/`; the secret scan covers both bundles. The workflow's Supabase URL and key are fixed values, not the chosen environment's variables, so a "pilot" run would still use that fixed project: flagged in `docs/ops/deployment.md` for the operator to fix before a pilot deployment.
+- **Runbook**: `docs/ops/website-runbook.md` (owner setup, daily operations, privacy, accepted risks).
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `supabase db lint`, typecheck, lint, prettier | clean |
+| secret scan of the repository, `dist/` and `site/dist/` | passed |
+| `npm run test:unit` | 91 passed |
+| `npm run test:db` | 226 passed, incl. `011_web_no_show.test.sql` |
+| `npm run test:integration` | pilot 49, ops 89, demo 41 (incl. the no-show action: managers only, overdue orders cancelled with the simulated refund and released stock, later pickups untouched) |
+| `npm run test:e2e` (staff app) | 44 passed (incl. the kitchen no-show button) |
+| `npm run test:site:e2e` / `test:site:live` | 13 / 13 passed (incl. keyboard-only checkout) |
+| `npm run perf:web` (demo, local) | targets met |
+
+### Open items (operator)
+- Approve the site copy and allergen notes; supply photos.
+- Decide on publishing (`pages.yml`, after fixing its fixed Supabase values) and on a load test against the hosted demo project.
+- Accepted pilot risk: no captcha, so fake orders under made-up contacts are possible within the per-contact and per-slot limits.
+

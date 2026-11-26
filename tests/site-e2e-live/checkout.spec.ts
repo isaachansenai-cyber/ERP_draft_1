@@ -163,3 +163,34 @@ test('a time taken by someone else meanwhile is refused and must be chosen again
     await sql(`update public.web_ordering_settings set orders_per_slot = 4 where location_id = 'LOC-SFO'`);
   }
 });
+
+test('the whole order can be placed with the keyboard alone', async ({ page }) => {
+  await page.goto('#/menu');
+  const press = async (locator: ReturnType<Page['getByRole']>, key: string) => {
+    await locator.focus();
+    await expect(locator).toBeFocused();
+    await page.keyboard.press(key);
+  };
+  await press(page.getByRole('radio', { name: 'Provo' }), 'Space');
+  await expect(page.getByRole('radio', { name: 'Provo' })).toBeChecked();
+  await press(
+    page.getByRole('article', { name: 'Korean Fried Chicken with Rice' }).getByRole('button', { name: 'Add to cart' }),
+    'Enter',
+  );
+  await press(page.getByRole('link', { name: 'Cart, 1 item' }), 'Enter');
+  await press(page.getByRole('link', { name: 'Continue to checkout' }), 'Enter');
+  await press(page.getByLabel('Day', { exact: true }), 'ArrowDown');
+  await expect(page.getByLabel('Day', { exact: true })).not.toHaveValue('');
+  await press(page.getByLabel('Time', { exact: true }), 'ArrowDown');
+  await expect(page.getByLabel('Time', { exact: true })).not.toHaveValue('');
+  for (const [label, text] of [
+    ['Name for pickup', 'Kai'],
+    ['Phone', '801-555-3030'],
+    ['E-mail', 'kai@example.com'],
+  ] as const) {
+    await page.getByLabel(label).focus();
+    await page.keyboard.type(text);
+  }
+  await press(page.getByRole('button', { name: /^Place order/ }), 'Enter');
+  await expect(page.getByTestId('pickup-code')).toHaveText(/^PRO-\d{4}$/);
+});

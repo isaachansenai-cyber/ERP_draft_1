@@ -53,7 +53,7 @@ async function placeWebOrder(locationId: string, itemId: string, name: string) {
     p_pickup_at: slot.pickup_at,
   });
   expect(placed.error).toBeNull();
-  return placed.data as { pickup_code: string; requested_pickup_at: string };
+  return placed.data as { pickup_code: string; order_number: string; requested_pickup_at: string; web_token: string };
 }
 
 test('a web order for tomorrow waits in the Scheduled lane with its pickup and start-by times', async ({ page }) => {
@@ -77,6 +77,27 @@ test('a web order for tomorrow waits in the Scheduled lane with its pickup and s
   ).toHaveCount(0);
   // Contact details are for managers: the employee's card shows only the pickup name.
   await expect(card).not.toContainText('rosa@example.com');
+});
+
+test('at closing, a manager cancels the website orders nobody collected', async ({ page }) => {
+  const order = await placeWebOrder('LOC-SLC', 'RET-001', 'Noel');
+  // Test only: the pickup time is now an hour ago.
+  await query(`update public.orders set requested_pickup_at = now() - interval '1 hour' where web_token = $1`, [
+    order.web_token,
+  ]);
+  await signIn(page, 'DEMO-LOC-SLC-MAN-1');
+  await page.getByRole('link', { name: 'Kitchen' }).click();
+  const sweep = page.getByTestId('no-show-sweep');
+  await expect(sweep).toContainText('past the pickup time and not collected');
+  await expect(sweep).toContainText(order.pickup_code);
+  await sweep.getByRole('button', { name: 'Cancel uncollected website orders…' }).click();
+  await sweep.getByRole('button', { name: /^Cancel \d+ orders?$/ }).click();
+  await expect(sweep).toContainText(`Cancelled`);
+  await expect(sweep).toContainText(order.order_number);
+  await expect(page.getByTestId(`kitchen-${order.pickup_code}`)).toHaveCount(0);
+  expect(await query(`select status from public.orders where web_token = $1`, [order.web_token])).toEqual([
+    { status: 'cancelled' },
+  ]);
 });
 
 test('the owner edits website settings, hours, cook times and allergen notes; confirmations stay visible', async ({

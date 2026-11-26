@@ -152,6 +152,7 @@ Money rules:
 | `0026_supplier_edits.sql` | Owner supplier contact and lead-time edits, manager change requests and owner decisions; demo reset clears requests (ADR 0038) |
 | `0027_web_ordering.sql` | Public pickup website: reference tables become staff-only (defense in depth); shared order-acceptance core; system actor `EMP-WEB`; opening hours, web settings, website content, web order contacts; `web_ordering_enabled` gate; `web_*` functions for website visitors and owner web settings (ADR 0042) |
 | `0028_web_checkout_tax.sql` | `web_get_menu` returns the current tax rate (exact checkout totals); `set_web_menu_content` treats blank text as none (ADR 0044) |
+| `0029_web_no_show.sql` | `NO_SHOW` reason and the managers' end-of-day `cancel_uncollected_web_orders` (ADR 0045) |
 
 ### RPCs available to signed-in staff (each authorizes server-side)
 
@@ -251,13 +252,14 @@ The integration and e2e suites **reset the local database** and refuse to run ag
 
 ### Public website (`site/`)
 
-The customer-facing pickup website is a separate Vite app in `site/` (CLAUDE.md D12, [build plan](docs/website/BUILD_PLAN.md)). It shares this repo's dependencies and lint/typecheck setup. Visitors never sign in: the site uses `VITE_SUPABASE_URL` and the public `VITE_SUPABASE_ANON_KEY` to call the ERP's `web_*` functions. It shows each location's live prices and availability (refreshed every 30 s), keeps a per-location cart in the browser, and since W4 takes pickup orders: checkout with pickup times and the exact total, a simulated payment (demo) or "Pay at pickup" (pilot), and a printable receipt at `#/order/<token>`. Staff see web orders in the kitchen with their pickup and start-by times; the owner manages the website under **Settings → Website**. Without those two variables the site still builds and says it is not connected.
+The customer-facing pickup website is a separate Vite app in `site/` (CLAUDE.md D12, [build plan](docs/website/BUILD_PLAN.md)). It shares this repo's dependencies and lint/typecheck setup. Visitors never sign in: the site uses `VITE_SUPABASE_URL` and the public `VITE_SUPABASE_ANON_KEY` to call the ERP's `web_*` functions. It shows each location's live prices and availability (refreshed every 30 s), keeps a per-location cart in the browser, and since W4 takes pickup orders: checkout with pickup times and the exact total, a simulated payment (demo) or "Pay at pickup" (pilot), and a printable receipt at `#/order/<token>`. Staff see web orders in the kitchen with their pickup and start-by times; the owner manages the website under **Settings → Website**. Managers cancel uncollected website orders at closing from the kitchen page. Launch steps: [`docs/ops/website-runbook.md`](docs/ops/website-runbook.md); publishing: [`docs/ops/deployment.md`](docs/ops/deployment.md). Without those two variables the site still builds and says it is not connected.
 
 ```bash
 npm run site:dev                                   # http://127.0.0.1:5174/
 VITE_SITE_BASE_PATH=/ERP_draft_1/site/ npm run site:build   # outputs site/dist/
 npm run test:site:e2e                              # builds and serves site/ under its Pages path; no database needed
 npm run test:site:live                             # resets the LOCAL database to demo, builds site/ against it, tests menu and cart
+npm run perf:web                                   # 20 concurrent visitors, demo databases only; writes docs/acceptance/evidence/perf-web.md
 ```
 
 Site unit tests (palette contrast, hero rotation, content checked against the ERP source data) run in `npm run test:unit`.

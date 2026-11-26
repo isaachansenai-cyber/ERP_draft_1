@@ -1,0 +1,10 @@
+# 0045 Website hardening and launch preparation (W5)
+
+Operator request (session, 2026-11-26): build W5. Choices not settled by ADRs 0040–0044:
+
+- **No-shows** (owner decision: cancel at end of day): `cancel_uncollected_web_orders` (migration 0029, managers) cancels a location's web orders whose pickup time has passed, one by one through `cancel_order` with the new reason `NO_SHOW`. Release, waste and demo simulated refunds follow the existing rules. A pilot order with a recorded real payment is skipped and listed, so no refund is ever automatic. The kitchen shows overdue web orders and a confirm-first button.
+- **Smaller client.** The site calls only RPCs with the anon key, so it uses `@supabase/postgrest-js` directly instead of the full `supabase-js` (no auth, realtime or storage code): 585 → 374 KB minified (170 → 117 KB gzipped). The lost-connection behavior is unchanged and still tested.
+- **No third-party requests.** Fonts are bundled from `@fontsource` (latin subset) instead of Google Fonts. A `<meta>` Content-Security-Policy, generated at build time, allows scripts, styles, fonts and images from the site only and network calls to the configured Supabase project only. GitHub Pages cannot send headers, so `frame-ancestors` is not available.
+- **Abuse limits.** No visitor sign-in (ADR 0042) means no per-visitor identity. The limits stay at 3 open orders per phone/e-mail and 4 web orders per 15-minute slot; a captcha would need a server function, which needs operator approval. Recorded as an accepted pilot risk in `docs/ops/website-runbook.md`.
+- **Load measurement.** `scripts/perf/web-load-test.ts` (demo databases only) runs 20 concurrent anon-key visitors through locations, menu, slots and placement, and checks invariants (no slot over capacity, every web order has contact details, demo orders fully simulated-paid, reservations never above on-hand, unique pickup codes).
+- **Deployment prepared, not run.** `pages.yml` also builds the site under `/<repo>/site/`; the secret scan covers `site/dist`. Publishing stays an operator action.

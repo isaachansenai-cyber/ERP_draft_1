@@ -7,5 +7,5 @@ Operator request (session, 2026-11-26): start W1 with placeholder images. Choice
 - **Palette in code, checked by a test.** `site/src/theme/palette.ts` feeds Tailwind, and `tests/unit/site-content.test.ts` asserts WCAG AA contrast for every text pair. Flame (`#D4502E`) is 4.1:1 on charcoal, so it is used only for large text and decoration.
 - **Content in typed modules** (`site/src/content/`), copied from the owner-review drafts. A test ties every dish to its ERP item ID and checks each "order a day ahead" flag against `prep_lead_days`. The footer shows a preview notice while `CONTENT_STATUS = 'draft'`.
 - **Honest pre-ordering state.** While `ORDERING_OPEN = false` (until W3), the Menu and Cart pages say online ordering opens soon and show no prices, availability or cart totals. Those only ever come from the ERP.
-- **Web fonts** (Playfair Display, Source Sans 3) load from Google Fonts with system fallbacks, so each visitor's browser contacts Google. Self-hosting them is an option before launch (W5).
+- **Web fonts** (Playfair Display, Source Sans 3) loaded from Google Fonts in W1. *(Superseded by ADR 0045: bundled with the site since W5.)*
 - **Hash routing** as in the ERP. The skip link is a button that focuses `<main>`, because an in-page `#main` link would change the route.

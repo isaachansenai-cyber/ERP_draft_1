@@ -54,6 +54,21 @@ npm run test:secrets -- --require-dist
 
 Then publish `dist/` with any static host.
 
+### Public pickup website (`site/`, CLAUDE.md D12)
+
+The same workflow also builds the public website under `/<repo>/site/` (`VITE_SITE_BASE_PATH`), against the same Supabase project, and publishes it next to the staff app: `https://<user>.github.io/<repo>/site/`. The site needs only the project URL and the publishable/anon key, which can reach the `web_*` functions and nothing else. Its `<meta>` Content-Security-Policy allows network calls to that project only. The secret scan covers both bundles.
+
+By hand:
+
+```bash
+VITE_SITE_BASE_PATH=/ERP_draft_1/site/ VITE_SUPABASE_URL=https://<ref>.supabase.co VITE_SUPABASE_ANON_KEY=<publishable key> npm run site:build
+npm run test:secrets
+```
+
+Then publish `site/dist/` under `<repo>/site/`. Before the pilot site takes orders, follow `website-runbook.md`.
+
+> **Check before running the workflow:** `pages.yml` currently sets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as fixed values at the top of the build job instead of reading the chosen environment's variables, so choosing `pilot` would still build against that fixed project. Confirm which project those values belong to, and switch them to `${{ vars.VITE_SUPABASE_URL }}` / `${{ vars.VITE_SUPABASE_ANON_KEY }}` before a pilot deployment.
+
 ### After publishing
 
 - Open `https://<user>.github.io/<repo>/#/login`, sign in, then reload on a deep link such as `#/kitchen`. You should stay on that screen (AC30). The automated equivalent runs against a local static preview under the same base path (`tests/e2e/foundation.spec.ts`).

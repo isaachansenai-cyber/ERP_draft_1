@@ -6,7 +6,7 @@ set search_path = public, extensions;
 
 select plan(4);
 
-select is(public.get_schema_version(), 28, 'schema version is the latest migration');
+select ok(public.get_schema_version() >= 28, 'schema version includes 0028 (011 checks the latest)');
 select ok(has_function_privilege('anon', 'public.web_get_menu(text)', 'execute'), 'visitors can still read the menu');
 
 set local role anon;

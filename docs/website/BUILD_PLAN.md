@@ -1,6 +1,6 @@
 # Public pickup website: build plan
 
-Status: **W0–W4 complete (static site, ERP database, live menu and cart, checkout and staff side). W5 not started.** W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). W2 decisions: [ADR 0042](../decisions/0042-web-ordering-database.md). W3 decisions: [ADR 0043](../decisions/0043-site-live-menu-and-cart.md). W4 decisions: [ADR 0044](../decisions/0044-site-checkout-and-staff-side.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
+Status: **W0–W5 built (static site, ERP database, live menu and cart, checkout and staff side, hardening). Publishing the site and the pilot launch wait for the operator** (`docs/ops/website-runbook.md`). W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). W2 decisions: [ADR 0042](../decisions/0042-web-ordering-database.md). W3 decisions: [ADR 0043](../decisions/0043-site-live-menu-and-cart.md). W4 decisions: [ADR 0044](../decisions/0044-site-checkout-and-staff-side.md). W5 decisions: [ADR 0045](../decisions/0045-website-hardening.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
 
 This plan adds a public website for Meats Around the World. Customers can browse it, see live availability, and order dishes or retail sauces **for pickup only**. Every order goes straight into the ERP, which handles reservations, the kitchen queue, sales and the accounting effects with the same rules as a POS order.
 
@@ -149,7 +149,7 @@ The palette starts from the supplied logo (charcoal, cream, brick red, flame ora
 | Jade | `#0B7A5A` | Country accent; "Available" badge, with text |
 | Ultramarine | `#1F4E9C` | Country accent; focus ring |
 
-Type: a sturdy serif for headings, matching the logo's "MEATS" lettering, and a clean sans-serif for body text. Both are Google Fonts, chosen in W1.
+Type: a sturdy serif for headings, matching the logo's "MEATS" lettering, and a clean sans-serif for body text. Both are bundled with the site (`@fontsource`, since W5), so no third-party font request is made.
 
 ### 6.2 Layout
 - **Navigation bar (top):** charcoal, semi-transparent over the hero, solid after scrolling.
@@ -185,7 +185,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 - Rate limits and slot capacity enforced on the server.
 - Input length and format checks.
 - Contact details returned only through the order's own token.
-- A strict Content-Security-Policy.
+- A strict Content-Security-Policy (a `<meta>` tag, since Pages cannot send headers): site resources only, network calls to the ERP only.
 - The secrets scan extended to `site/dist`.
 
 **Tests**
@@ -207,7 +207,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 | W2 | ERP database | **Done 2026-11-26** (migration 0027, ADR 0042). §3 migrations, `accept_order_core` refactor (POS tests still green), `web_*` functions, pgTAP and the anonymous-access audit. |
 | W3 | Live menu (demo) | **Done 2026-11-26** (ADR 0043). Location picker, live availability and caps, 30 s refresh, cart. |
 | W4 | Checkout to kitchen (demo) | **Done 2026-11-26** (migration 0028, ADR 0044). Slots, placement, simulated tender, confirmation and status; ERP kitchen badge, Scheduled lane, Settings → Website. |
-| W5 | Hardening and pilot | Rate limits, performance, full e2e and accessibility, Pages deployment of `/site`, runbook. The pilot opens with "Pay at pickup" once its gates are confirmed. |
+| W5 | Hardening and pilot | **Built 2026-11-26** (migration 0029, ADR 0045): end-of-day no-show cancellation, smaller client, bundled fonts, CSP, 20-visitor load test, keyboard-only checkout test, Pages workflow prepared, runbook. **Not done (operator):** publishing, hosted load test, pilot go-live. Planned: | Rate limits, performance, full e2e and accessibility, Pages deployment of `/site`, runbook. The pilot opens with "Pay at pickup" once its gates are confirmed. |
 
 ---
 

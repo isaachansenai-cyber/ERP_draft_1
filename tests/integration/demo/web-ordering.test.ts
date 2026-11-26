@@ -388,6 +388,55 @@ describe('capacity and limits', () => {
   });
 });
 
+describe('end-of-day no-shows (0029)', () => {
+  it('a manager cancels web orders whose pickup time passed, with the simulated refund; later pickups are untouched', async () => {
+    const v = await visitor();
+    const overdue = await place(v, SLC, [{ item_id: 'RET-001', quantity: 1 }]);
+    const later = await place(v, SLC, [{ item_id: 'FG-002', quantity: 1 }]);
+    expect(overdue.code).toBeNull();
+    expect(later.code).toBeNull();
+    const ids = await sql<{ order_id: string; web_token: string }>(
+      'select order_id, web_token from public.orders where web_token = any($1::uuid[])',
+      [[overdue.data.web_token, later.data.web_token]],
+    );
+    created.push(...ids.map((r) => r.order_id));
+    const overdueId = ids.find((r) => r.web_token === overdue.data.web_token)!.order_id;
+    // Test only: the customer's pickup time is now two hours ago.
+    await sql(`update public.orders set requested_pickup_at = now() - interval '2 hours' where order_id = $1`, [
+      overdueId,
+    ]);
+
+    const sweep = (client: SupabaseClient, location = SLC) =>
+      rpc(client, 'cancel_uncollected_web_orders', { p_request_key: randomUUID(), p_location_id: location });
+    expect((await sweep(await as('DEMO-LOC-SLC-EMP-1'))).code).toBe('unauthorized');
+    expect((await sweep(await as('DEMO-LOC-SFO-MAN-1'))).code).toBe('unauthorized');
+
+    const r = await sweep(await as('DEMO-LOC-SLC-MAN-1'));
+    expect(r.code).toBeNull();
+    expect(r.data.cancelled).toContain(overdue.data.order_number);
+    expect(r.data.cancelled).not.toContain(later.data.order_number);
+
+    const [state] = await sql<{ status: string; active: number; refund_cents: number; reason: string }>(
+      `select o.status,
+              (select count(*)::int from public.reservation_allocations a where a.order_id = o.order_id and a.status = 'active') active,
+              (select coalesce(sum(f.amount_cents), 0)::int from public.refunds f where f.order_id = o.order_id) refund_cents,
+              (select f.reason_code from public.refunds f where f.order_id = o.order_id) reason
+         from public.orders o where o.order_id = $1`,
+      [overdueId],
+    );
+    expect(state).toEqual({
+      status: 'cancelled',
+      active: 0,
+      refund_cents: overdue.data.total_cents,
+      reason: 'NO_SHOW',
+    });
+    expect((await rpc(v, 'web_get_order', { p_web_token: overdue.data.web_token })).data.status).toBe('cancelled');
+    expect((await rpc(v, 'web_get_order', { p_web_token: later.data.web_token })).data.status).toBe('accepted');
+    // Running it again finds nothing more to cancel.
+    expect((await sweep(await as('DEMO-LOC-SLC-MAN-1'))).data.cancelled).not.toContain(overdue.data.order_number);
+  });
+});
+
 describe('owner website content (0028)', () => {
   it('blank fields mean "none", an allergen note is published only when reviewed, and staff other than the owner are refused', async () => {
     const owner = await as('DEMO-OWNER');
