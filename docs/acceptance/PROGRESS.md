@@ -343,3 +343,16 @@ Checklist evidence added to AC03, AC07, AC09, AC31 and AC32 (all still PASS). AC
 ### Open items
 
 - Hosted demo: run Demo project setup, then deploy Pages, after the fix is on `main`.
+
+## Public pickup website — W0 decisions (operator request, 2026-11-26)
+
+Scope change approved in session: a public pickup-ordering website under `/site` (ADR 0040, CLAUDE.md D12). W0 is decisions and drafts only. No code, migrations or tests have changed, so ERP acceptance statuses are unchanged.
+
+- `docs/website/BUILD_PLAN.md`: architecture, `web_*` functions, ERP changes, slot rule, design, tests, milestones W1–W5.
+- `docs/website/content-drafts.md`: site copy on a cultural-exploration theme. **Draft, awaiting owner review**, with bracketed placeholders for facts only the owner can supply.
+- `docs/website/allergen-notes-draft.md`: dairy/nut/wheat notes auto-drafted from recipe ingredient names. **Draft, awaiting owner review**; hidden on the site until approved.
+- `docs/website/brand/logo.webp`: supplied logo.
+
+### Open items (owner)
+- Approve the copy and allergen drafts; confirm the draft `prep_minutes` (two are assumptions) and that web orders don't start before 12:00.
+- Supply licensed food photos, or approve placeholders for the demo.
