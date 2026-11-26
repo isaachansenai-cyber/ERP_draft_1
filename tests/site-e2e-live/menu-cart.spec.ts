@@ -24,7 +24,7 @@ async function axeViolations(page: Page) {
 }
 
 test('choosing a location shows live prices and availability, and the choice is remembered', async ({ page }) => {
-  await page.goto('#/menu');
+  await page.goto('/menu');
   // The demo database says so on every page (the mode comes from the database).
   await expect(page.getByTestId('demo-banner')).toHaveText(/orders and payments are simulated/);
   await expect(page.getByText('Choose a pickup location to see prices')).toBeVisible();
@@ -48,7 +48,7 @@ test('choosing a location shows live prices and availability, and the choice is 
 });
 
 test('the cart keeps each location separate, survives a reload and is priced by the ERP', async ({ page }) => {
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await chooseLocation(page, 'Salt Lake City');
   const strogonoff = card(page, 'Brazilian Chicken Strogonoff');
   await strogonoff.getByRole('button', { name: 'More' }).click();
@@ -65,7 +65,7 @@ test('the cart keeps each location separate, survives a reload and is priced by 
   await page.reload();
   await expect(page.getByTestId('cart-subtotal')).toHaveText('$31.98');
 
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await chooseLocation(page, 'Provo');
   await expect(page.getByTestId('cart-count')).toHaveCount(0);
   await chooseLocation(page, 'Salt Lake City');
@@ -73,7 +73,7 @@ test('the cart keeps each location separate, survives a reload and is priced by 
 });
 
 test('quantities are whole numbers capped at what the ERP allows (10 per line)', async ({ page }) => {
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await chooseLocation(page, 'Provo');
   const khorkhog = card(page, 'Mongolian Khorkhog');
   const qty = khorkhog.getByRole('spinbutton', { name: 'Quantity of Mongolian Khorkhog' });
@@ -87,7 +87,7 @@ test('quantities are whole numbers capped at what the ERP allows (10 per line)',
 
 test('sold out in the ERP shows on the website within one refresh, then comes back by itself', async ({ page }) => {
   await page.clock.install();
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await chooseLocation(page, 'Salt Lake City');
   const chicken = card(page, 'Korean Fried Chicken with Rice');
   await chicken.getByRole('button', { name: 'Add to cart' }).click();
@@ -102,7 +102,7 @@ test('sold out in the ERP shows on the website within one refresh, then comes ba
     await page.clock.runFor(31_000);
     await expect(chicken.getByText('Sold out — back soon')).toBeVisible();
     await expect(chicken.getByRole('button', { name: 'Add to cart' })).toHaveCount(0);
-    await page.goto('#/cart');
+    await page.goto('/cart');
     await expect(page.getByRole('alert')).toHaveText('Sold out right now. Remove it to continue.');
     await expect(page.getByText('Some items need your attention')).toBeVisible();
   } finally {
@@ -117,7 +117,7 @@ test('sold out in the ERP shows on the website within one refresh, then comes ba
 test('a location that is not taking orders says so and offers nothing to add', async ({ page }) => {
   await sql(`update public.web_ordering_settings set enabled = false where location_id = 'LOC-SFO'`);
   try {
-    await page.goto('#/menu');
+    await page.goto('/menu');
     await expect(page.getByRole('radio', { name: 'Spanish Fork' }).locator('..').locator('..')).toContainText(
       'Online ordering is paused',
     );
@@ -132,7 +132,7 @@ test('a location that is not taking orders says so and offers nothing to add', a
 
 test('when the ERP cannot be reached, the page says nothing was ordered and recovers on retry', async ({ page }) => {
   await page.route('**/rest/v1/rpc/web_get_menu', (route) => route.abort());
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await chooseLocation(page, 'Provo');
   await expect(page.getByText("We can't reach the restaurant right now")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Nothing was ordered.')).toBeVisible();
@@ -145,10 +145,10 @@ test.describe('phone width', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('the live menu and cart fit without sideways scrolling', async ({ page }) => {
-    await page.goto('#/menu');
+    await page.goto('/menu');
     await chooseLocation(page, 'Provo');
     await card(page, 'Brazilian Chicken Strogonoff').getByRole('button', { name: 'Add to cart' }).click();
-    for (const path of ['#/menu', '#/cart', '#/']) {
+    for (const path of ['/menu', '/cart', '/']) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

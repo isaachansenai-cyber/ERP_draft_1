@@ -1,21 +1,25 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { titleFor } from '../seo/meta';
 import { Footer } from './Footer';
 import { NavBar } from './NavBar';
 
 /**
  * Page frame. On every route change it scrolls to the top and moves focus to
  * the main region, so keyboard and screen-reader users start on the new page.
- * The skip link is a button: with hash routing an in-page "#main" href would
- * change the route instead of jumping. It is a layout effect so it runs before
- * a page's own effects (the Countries page scrolls to a chosen country).
+ * The skip link is a button, so it moves focus without changing the address.
+ * It is a layout effect so it runs before a page's own effects (the Countries page scrolls to a chosen country).
  */
+// The build-time pre-render has no layout phase; use a plain effect there.
+const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 export function Layout() {
   const { pathname } = useLocation();
   const main = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
 
-  useLayoutEffect(() => {
+  useBrowserLayoutEffect(() => {
+    document.title = titleFor(pathname);
     if (firstRender.current) {
       firstRender.current = false;
       return;

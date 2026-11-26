@@ -29,7 +29,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: ${{ inputs.target }}
-    # Shared by the staff app and the public website (site/), which call the same project.
+    # The public website is not published here: it lives on Vercel (ADR 0047).
     env:
       VITE_SUPABASE_URL: https://qfvtpgxguaftrprxprof.supabase.co
       VITE_SUPABASE_ANON_KEY: sb_publishable_D04zoHXkbSd0eFb5LtGW5g_8bXXufVb
@@ -47,11 +47,7 @@ jobs:
           VITE_DATA_MODE_HINT: ${{ inputs.target }}
           # Shown as a link under Settings → Website. The public site itself is on Vercel.
           VITE_PUBLIC_SITE_URL: https://www.meatsaroundtheworld.site
-      - name: Build the public pickup website under <repo>/site/ (CLAUDE.md D12)
-        run: npm run site:build && mkdir -p dist/site && cp -r site/dist/. dist/site/
-        env:
-          VITE_SITE_BASE_PATH: /${{ github.event.repository.name }}/site/
-      - name: Refuse to publish if either bundle contains a secret (AC30)
+      - name: Refuse to publish if the bundle contains a secret (AC30)
         run: npm run test:secrets -- --require-dist
       - uses: actions/upload-pages-artifact@v3
         with:

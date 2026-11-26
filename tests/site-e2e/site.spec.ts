@@ -12,12 +12,12 @@ async function axeViolations(page: Page) {
 }
 
 const PAGES = [
-  { path: '#/', heading: 'Meats Around the World' },
-  { path: '#/menu', heading: 'Menu' },
-  { path: '#/countries', heading: 'Five kitchens, five stories' },
-  { path: '#/story', heading: 'A world of welcome' },
-  { path: '#/faq', heading: 'Questions and answers' },
-  { path: '#/cart', heading: 'Your cart' },
+  { path: '/', heading: 'Meats Around the World' },
+  { path: '/menu', heading: 'Menu' },
+  { path: '/countries', heading: 'Five kitchens, five stories' },
+  { path: '/story', heading: 'A world of welcome' },
+  { path: '/faq', heading: 'Questions and answers' },
+  { path: '/cart', heading: 'Your cart' },
 ];
 
 test.describe('every page', () => {
@@ -35,7 +35,7 @@ test.describe('every page', () => {
 
 test('the hero fills most of the screen and rotates every 5 seconds until paused', async ({ page }) => {
   await page.clock.install();
-  await page.goto('#/');
+  await page.goto('/');
   const hero = page.getByRole('region', { name: 'Dishes from around the world' });
   const box = (await hero.boundingBox())!;
   expect(box.height).toBeGreaterThanOrEqual(800 * 0.85);
@@ -56,14 +56,14 @@ test('the hero fills most of the screen and rotates every 5 seconds until paused
 test('reduced-motion visitors get a still hero', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install();
-  await page.goto('#/');
+  await page.goto('/');
   await page.clock.runFor(12_000);
   await expect(page.getByText('Now showing: Chicken Strogonoff from Brazil')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Play slideshow' })).toBeVisible();
 });
 
 test('the navigation bar reaches every section and the cart', async ({ page }) => {
-  await page.goto('#/');
+  await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Main' });
   for (const [link, heading] of [
     ['Menu', 'Menu'],
@@ -79,7 +79,7 @@ test('the navigation bar reaches every section and the cart', async ({ page }) =
 });
 
 test('without a backend the site says it is not connected: no prices, no availability, no cart', async ({ page }) => {
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await expect(page.getByText("Online ordering isn't available here")).toBeVisible();
   await expect(page.getByRole('article')).toHaveCount(5);
   await expect(page.getByText(/\$\d/)).toHaveCount(0);
@@ -87,13 +87,13 @@ test('without a backend the site says it is not connected: no prices, no availab
   await expect(page.getByText('Allergen information: please ask staff.')).toHaveCount(5);
   await expect(page.getByText('Prepared a day ahead: order by the day before.')).toBeVisible();
 
-  await page.goto('#/cart');
+  await page.goto('/cart');
   await expect(page.getByText('This copy of the site is not connected to the restaurant.')).toBeVisible();
   await expect(page.getByTestId('demo-banner')).toHaveCount(0);
 });
 
 test('every photo has descriptive alt text, loads, and is served small for small screens', async ({ page }) => {
-  for (const path of ['#/', '#/countries', '#/story']) {
+  for (const path of ['/', '/countries', '/story']) {
     await page.goto(path);
     const imgs = page.locator('main img');
     expect(await imgs.count(), path).toBeGreaterThan(2);
@@ -114,7 +114,7 @@ test('every photo has descriptive alt text, loads, and is served small for small
 });
 
 test('a home-page country tile opens that country on the Countries page', async ({ page }) => {
-  await page.goto('#/');
+  await page.goto('/');
   await page.getByRole('link', { name: /^Korean fried chicken.*Korea$/ }).click();
   await expect(page.getByRole('heading', { level: 2, name: 'Korean Fried Chicken with Rice' })).toBeInViewport();
 });
@@ -129,7 +129,7 @@ test.describe('phone width', () => {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow, p.path).toBeLessThanOrEqual(0);
     }
-    await page.goto('#/');
+    await page.goto('/');
     const order = (await page.getByRole('link', { name: 'Order for pickup' }).first().boundingBox())!;
     const dot = (await page.getByRole('button', { name: /Show slide 1/ }).boundingBox())!;
     expect(order.y + order.height, 'hero controls must not overlap the order button').toBeLessThanOrEqual(dot.y);

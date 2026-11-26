@@ -34,7 +34,7 @@ This plan adds a public website for Meats Around the World. Customers can browse
 
 ```
 Browser (public site, /site)          Supabase (same project as the ERP)
-  React + Vite, HashRouter     ──▶    no sign-in: public anon key only
+  React + Vite, BrowserRouter  ──▶    no sign-in: public anon key only
   anon key + URL only                 public.web_* functions (security definer)
   polls menu every 30 s                 └─▶ private.accept_order_core (shared with POS)
                                             └─▶ reservations, order lines, tax snapshot,
@@ -159,17 +159,17 @@ Type: a sturdy serif for headings, matching the logo's "MEATS" lettering, and a 
 - **Sections:** full-width horizontal bands alternating image-left/text-right and the reverse, about half and half. On phones they stack, image first.
 - **Accessibility:** 44 px touch targets, visible focus rings, status shown as text plus color, and alt text for every photo.
 
-### 6.3 Pages (hash routes for GitHub Pages)
+### 6.3 Pages (real addresses on Vercel since ADR 0047; earlier hash routes still redirect)
 
 | Route | Content |
 |---|---|
-| `#/` Home | 1. **Hero, about 90% of the viewport:** full-bleed photos cross-fading every 5 s; logo and "Meats Around the World" small in the lower left with an "Order for pickup" button; a pause/play control (WCAG 2.2.2), and no rotation for reduced-motion users. 2. Our Story teaser. 3. Countries we cover (5 tiles). 4. Menu preview with live availability. 5. How pickup works. 6. Final call to action and footer (locations, hours 12–8, FAQ). |
-| `#/menu` | Location picker, then **Dishes** and **Retail sauces**. Item detail panel: description, country, prep note ("order a day ahead"), allergen note and quantity (capped). |
-| `#/countries` | One alternating section per country and its dish. |
-| `#/story` | Story and mission sections. |
-| `#/faq` | Accordion. |
-| `#/checkout` | Cart lines, location, slot picker, contact details (name, phone, e-mail), note, totals with tax, **"Simulated payment"** (demo) or **"Pay at pickup"** (pilot), Place order. |
-| `#/order/<token>` | Confirmation: order number, **pickup code**, time and location, lines, tax, total, payment label, live status, printable receipt. |
+| `/` Home | 1. **Hero, about 90% of the viewport:** full-bleed photos cross-fading every 5 s; logo and "Meats Around the World" small in the lower left with an "Order for pickup" button; a pause/play control (WCAG 2.2.2), and no rotation for reduced-motion users. 2. Our Story teaser. 3. Countries we cover (5 tiles). 4. Menu preview with live availability. 5. How pickup works. 6. Final call to action and footer (locations, hours 12–8, FAQ). |
+| `/menu` | Location picker, then **Dishes** and **Retail sauces**. Item detail panel: description, country, prep note ("order a day ahead"), allergen note and quantity (capped). |
+| `/countries` | One alternating section per country and its dish. |
+| `/story` | Story and mission sections. |
+| `/faq` | Accordion. |
+| `/checkout` | Cart lines, location, slot picker, contact details (name, phone, e-mail), note, totals with tax, **"Simulated payment"** (demo) or **"Pay at pickup"** (pilot), Place order. |
+| `/order/<token>` | Confirmation: order number, **pickup code**, time and location, lines, tax, total, payment label, live status, printable receipt. |
 
 The cart is saved in the browser per location and labelled "Not ordered yet". Prices and availability are always re-checked on the server, and the server's totals are the only ones that count.
 

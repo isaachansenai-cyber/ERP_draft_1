@@ -77,6 +77,8 @@ Vercel project settings: production branch `main`; environment variables `VITE_S
 
 Current setup: Vercel project `erp-draft-1` (team `case-improvement`), live at `https://www.meatsaroundtheworld.site`; the bare domain redirects there (308). DNS is at Cloudflare with **DNS only** records (A `@` → Vercel's IPs, CNAME `www` → Vercel), so Vercel issues the certificate. Both variables must be ticked for **Production and Preview**. They are read at build time, so after adding or changing one, redeploy. A Vercel build without them now fails on purpose (ADR 0046) rather than publishing a site that cannot take orders. The staff ERP links to the live site under Settings → Website (`VITE_PUBLIC_SITE_URL` in `pages.yml`); the public site has no link to the staff app.
 
+Since ADR 0047 the website uses real page addresses (`/menu`) and is pre-rendered at build time; `vercel.json` serves `menu.html` at `/menu` (`cleanUrls`), sends `/cart`, `/checkout` and `/order/…` to the app shell, and answers unknown addresses with the 404 page. The website is no longer part of the GitHub Pages workflow. Search setup steps for the owner: `docs/website/seo-launch-checklist.md`.
+
 ### After publishing
 
 - Open `https://<user>.github.io/<repo>/#/login`, sign in, then reload on a deep link such as `#/kitchen`. You should stay on that screen (AC30). The automated equivalent runs against a local static preview under the same base path (`tests/e2e/foundation.spec.ts`).

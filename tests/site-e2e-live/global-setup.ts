@@ -1,13 +1,13 @@
 // Live website tests: a fresh local DEMO database (demo seed incl. website
-// settings), then the public site built against it under its Pages base path
-// and served with `vite preview`. No staff users are needed: visitors never sign in.
+// settings), then the public site built (and pre-rendered) against it at the
+// domain root, as on Vercel, and served with `vite preview`. No staff users are needed: visitors never sign in.
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { localStack, resetLocalDatabase, ROOT, runScript } from '../integration/helpers/stack';
 
-export const SITE_BASE_PATH = '/ERP_draft_1/site/';
+export const SITE_BASE_PATH = '/';
 export const LIVE_PORT = 4175;
 
 export default async function globalSetup() {
@@ -22,7 +22,7 @@ export default async function globalSetup() {
     if (r.status !== 0) throw new Error(`${label} failed: ${r.stderr || r.stdout}`);
   }
 
-  const build = spawnSync('npx', ['vite', 'build', '--config', 'site/vite.config.ts'], {
+  const build = spawnSync('npm', ['run', 'site:build'], {
     cwd: ROOT,
     encoding: 'utf8',
     env: {
@@ -32,7 +32,7 @@ export default async function globalSetup() {
       VITE_SITE_BASE_PATH: SITE_BASE_PATH,
     },
   });
-  if (build.status !== 0) throw new Error(`site build failed: ${build.stderr}`);
+  if (build.status !== 0) throw new Error(`site build failed: ${build.stderr || build.stdout}`);
 
   const dir = mkdtempSync(join(tmpdir(), 'site-live-'));
   const server = spawn(
