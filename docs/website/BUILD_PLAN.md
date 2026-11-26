@@ -174,7 +174,7 @@ Type: a sturdy serif for headings, matching the logo's "MEATS" lettering, and a 
 The cart is saved in the browser per location and labelled "Not ordered yet". Prices and availability are always re-checked on the server, and the server's totals are the only ones that count.
 
 ### 6.4 Images
-No licensed food photos have been supplied yet. W1 uses clearly labelled placeholders, and the hero and item images are swapped through `web_menu_content` and `site/public/images/` when real photos arrive.
+The owner supplied 12 generated illustrations (2026-11-26): the five dishes (used in the hero, country tiles, menu cards and Countries page), both sauce bottles, the kitchen team, the pickup counter and the three Story scenes. They live in `site/public/images/` as WebP at 800 and 1600 px (about 1.8 MB for all 24 files), each with descriptive alt text in `site/src/content/`. Menu items are matched to photos by ERP item ID; a future item without a photo falls back to the labelled placeholder art. The footer says "Food images are illustrations; your order may look different." Known differences from the recipes (noted for the owner): bone-in lamb in the Khorkhog images, four tacos where an order has three, and cilantro on the Story garnish shot.
 
 ---
 

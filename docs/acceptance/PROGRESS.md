@@ -474,3 +474,9 @@ W4 was pushed first. W5 (migration 0029, ADR 0045):
 - Decide on publishing (`pages.yml`, after fixing its fixed Supabase values) and on a load test against the hosted demo project.
 - Accepted pilot risk: no captcha, so fake orders under made-up contacts are possible within the per-contact and per-slot limits.
 
+## Public pickup website — photos (operator request, 2026-11-26)
+
+The 12 owner-supplied images replace every placeholder (hero, country tiles, menu cards including the sauces, Countries and Story pages, kitchen team, pickup counter). Each is WebP at 800/1600 px with descriptive alt text; the browser picks the size it needs and loads off-screen images only when they come near. The footer notes that food images are illustrations. Placeholder art remains only for future menu items without a photo.
+
+Evidence: typecheck, lint and prettier clean; `test:unit` 93 passed (new: every photo exists in both sizes with real alt text; every ERP dish and sauce has one); `test:site:e2e` 13 passed (every photo has alt text and loads); `test:site:live` 13 passed; secret scan of both bundles passed. Site-only change: no ERP code or migrations changed.
+

@@ -1,4 +1,5 @@
 // Site copy from docs/website/content-drafts.md (DRAFT, awaiting owner review).
+import type { SitePhoto } from '../lib/photo';
 
 /** 'draft' shows a preview notice in the footer until the owner approves the copy. */
 export const CONTENT_STATUS: 'draft' | 'approved' = 'draft';
@@ -40,7 +41,21 @@ export const closingCta = {
 export interface StorySection {
   heading: string;
   paragraphs: string[];
+  photo: SitePhoto;
 }
+
+export const homePhotos: Record<'kitchen' | 'pickup', SitePhoto> = {
+  kitchen: {
+    name: 'kitchen-team',
+    alt: 'Cooks plating colorful dishes together at the kitchen pass',
+    position: 'object-[60%_50%]',
+  },
+  pickup: {
+    name: 'pickup-counter',
+    alt: 'A staff member handing a paper takeout bag to a smiling customer at the pickup counter',
+    position: 'object-[65%_50%]',
+  },
+};
 
 export const story: StorySection[] = [
   {
@@ -48,18 +63,32 @@ export const story: StorySection[] = [
     paragraphs: [
       'We started with a simple belief: the fastest way to understand someone is to share their food. So we built a kitchen where a Brazilian Sunday lunch, a Mexico City taco stand, a Seoul chicken spot, a Burgundy farmhouse and a Mongolian steppe gathering can all live on one menu.',
     ],
+    photo: {
+      name: 'story-world-of-welcome',
+      alt: 'An overhead view of a wooden table shared by friends, with strogonoff, tacos, Korean fried chicken, beef bourguignon and khorkhog',
+    },
   },
   {
     heading: 'Our take, and our thanks',
     paragraphs: [
       "We don't claim to cook anyone's grandmother's recipe better than she did. Each dish is our interpretation, cooked with care and with credit to the cooks and cultures who created it. When we learn something new about a dish, we change how we make it.",
     ],
+    photo: {
+      name: 'story-our-take',
+      alt: 'A cook carefully garnishing a plate of glazed fried chicken in the kitchen',
+      position: 'object-[65%_50%]',
+    },
   },
   {
     heading: 'Everyone at the table',
     paragraphs: [
       'Exploring the world shouldn’t require a passport, a big budget or a particular background. We keep the menu clear, the portions honest and the welcome the same for everyone. Allergen notes are on every dish, and our team is always happy to answer questions.',
     ],
+    photo: {
+      name: 'story-everyone-at-the-table',
+      alt: 'Friends and families of different ages laughing and passing dishes along a long restaurant table',
+      position: 'object-[60%_50%]',
+    },
   },
 ];
 

@@ -34,9 +34,10 @@ export function Footer() {
           </ul>
         </nav>
       </div>
+      <p className="mx-auto mt-8 max-w-6xl text-sm">Food images are illustrations; your order may look different.</p>
       {CONTENT_STATUS === 'draft' ? (
         <p className="mx-auto mt-8 max-w-6xl border-t border-cream/20 pt-4 text-sm" data-testid="draft-notice">
-          Preview: the text on this site is a draft awaiting owner review, and the photos are placeholders.
+          Preview: the text on this site is a draft awaiting owner review.
         </p>
       ) : null}
     </footer>

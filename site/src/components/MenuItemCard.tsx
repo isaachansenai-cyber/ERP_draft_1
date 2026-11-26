@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ALLERGEN_PENDING } from '../content/site';
-import { toneFor } from '../content/countries';
+import { photoFor, toneFor } from '../content/countries';
 import { prepNote } from '../lib/describe';
 import { formatCents } from '../lib/money';
 import type { MenuItem } from '../lib/webApi';
 import { useShop } from '../state/shop';
+import { Photo } from './Photo';
 import { PlaceholderArt } from './PlaceholderArt';
 import { QuantityStepper } from './QuantityStepper';
 
@@ -20,6 +21,7 @@ export function MenuItemCard({ item, orderingOpen }: { item: MenuItem; orderingO
   const [added, setAdded] = useState<number | null>(null);
   const note = prepNote(item);
   const canAdd = orderingOpen && item.available && room > 0;
+  const photo = photoFor(item.item_id);
 
   return (
     <article
@@ -27,7 +29,11 @@ export function MenuItemCard({ item, orderingOpen }: { item: MenuItem; orderingO
       className="flex flex-col overflow-hidden rounded-xl border border-charcoal/15 bg-paper shadow-sm"
     >
       <div className="aspect-[4/3]">
-        <PlaceholderArt tone={toneFor(item.item_id)} subject={item.name} />
+        {photo ? (
+          <Photo photo={photo} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
+        ) : (
+          <PlaceholderArt tone={toneFor(item.item_id)} subject={item.name} />
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         {item.country ? <p className="text-sm font-bold uppercase tracking-wider text-brick">{item.country}</p> : null}

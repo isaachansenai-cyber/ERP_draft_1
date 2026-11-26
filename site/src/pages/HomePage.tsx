@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Hero } from '../components/Hero';
-import { PlaceholderArt } from '../components/PlaceholderArt';
+import { Photo } from '../components/Photo';
 import { SplitSection } from '../components/SplitSection';
 import { LiveMenu } from '../components/LiveMenu';
 import { Eyebrow, LinkButton, TextLink } from '../components/ui';
 import { countries } from '../content/countries';
-import { closingCta, countriesTeaser, pickupSteps, storyTeaser } from '../content/site';
+import { closingCta, countriesTeaser, homePhotos, pickupSteps, storyTeaser } from '../content/site';
 
 export function HomePage() {
   return (
@@ -14,7 +14,7 @@ export function HomePage() {
 
       <SplitSection
         labelledBy="story-teaser"
-        art={<PlaceholderArt tone={{ base: 'brick', accent: 'saffron' }} subject="our kitchen and team" />}
+        art={<Photo photo={homePhotos.kitchen} sizes="(min-width: 768px) 50vw, 100vw" />}
       >
         <Eyebrow>Our story</Eyebrow>
         <h2 id="story-teaser" className="font-display text-3xl font-bold">
@@ -41,7 +41,7 @@ export function HomePage() {
                   className="group block overflow-hidden rounded-xl bg-charcoal text-cream focus-visible:outline focus-visible:outline-4 focus-visible:outline-ultramarine"
                 >
                   <div className="aspect-square">
-                    <PlaceholderArt tone={c.tone} subject={`${c.dishName} from ${c.name}`} />
+                    <Photo photo={c.photo} sizes="(min-width: 768px) 20vw, 50vw" />
                   </div>
                   <p className="px-3 py-2 font-display text-lg font-bold group-hover:underline">{c.name}</p>
                 </Link>
@@ -70,7 +70,7 @@ export function HomePage() {
         reverse
         tone="cream"
         labelledBy="how-pickup"
-        art={<PlaceholderArt tone={{ base: 'ultramarine', accent: 'saffron' }} subject="the pickup counter" />}
+        art={<Photo photo={homePhotos.pickup} sizes="(min-width: 768px) 50vw, 100vw" />}
       >
         <Eyebrow>Pickup only</Eyebrow>
         <h2 id="how-pickup" className="font-display text-3xl font-bold">

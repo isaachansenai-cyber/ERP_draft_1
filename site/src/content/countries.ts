@@ -1,6 +1,7 @@
 // Country and dish copy from docs/website/content-drafts.md (DRAFT, awaiting
 // owner review). dishId is the ERP item ID: W3 joins live price and
 // availability to these entries by ID, never by name.
+import type { SitePhoto } from '../lib/photo';
 import type { ArtTone } from '../theme/palette';
 
 export interface Country {
@@ -15,6 +16,7 @@ export interface Country {
   /** Ready from the next day: the dish needs overnight prep (ERP prep_lead_days = 1). */
   prepAhead: boolean;
   tone: ArtTone;
+  photo: SitePhoto;
 }
 
 export const countries: Country[] = [
@@ -31,6 +33,11 @@ export const countries: Country[] = [
     prepNote: 'Ready in about 25 minutes.',
     prepAhead: false,
     tone: { base: 'jade', accent: 'saffron' },
+    photo: {
+      name: 'dish-strogonoff',
+      alt: 'Chicken strogonoff in a creamy sauce with mushrooms, beside white rice topped with crunchy shoestring potatoes',
+      position: 'object-[70%_50%]',
+    },
   },
   {
     id: 'mexico',
@@ -45,6 +52,11 @@ export const countries: Country[] = [
     prepNote: 'Prepared a day ahead: order by the day before.',
     prepAhead: true,
     tone: { base: 'flame', accent: 'saffron' },
+    photo: {
+      name: 'dish-tacos',
+      alt: 'Tacos al pastor on corn tortillas with marinated pork, pineapple, onion, cilantro and lime wedges',
+      position: 'object-[75%_50%]',
+    },
   },
   {
     id: 'korea',
@@ -59,6 +71,11 @@ export const countries: Country[] = [
     prepNote: 'Ready in about 20 minutes.',
     prepAhead: false,
     tone: { base: 'ultramarine', accent: 'flame' },
+    photo: {
+      name: 'dish-korean-chicken',
+      alt: 'Korean fried chicken in a glossy red gochujang glaze with sesame seeds and scallions, with a bowl of rice',
+      position: 'object-[70%_50%]',
+    },
   },
   {
     id: 'france',
@@ -73,6 +90,11 @@ export const countries: Country[] = [
     prepNote: 'Braised a day ahead: order by the day before.',
     prepAhead: true,
     tone: { base: 'brick', accent: 'cream' },
+    photo: {
+      name: 'dish-bourguignon',
+      alt: 'Beef bourguignon with mushrooms, carrots and pearl onions, served with boiled potatoes',
+      position: 'object-[70%_50%]',
+    },
   },
   {
     id: 'mongolia',
@@ -87,6 +109,11 @@ export const countries: Country[] = [
     prepNote: 'Cooked fresh the same day: about 2 hours.',
     prepAhead: false,
     tone: { base: 'saffron', accent: 'charcoal' },
+    photo: {
+      name: 'dish-khorkhog',
+      alt: 'Khorkhog: lamb with potatoes, carrots and onion in a metal pot beside the hot stones it was cooked with, inside a ger',
+      position: 'object-[68%_50%]',
+    },
   },
 ];
 
@@ -99,4 +126,22 @@ const SAUCE_TONE: ArtTone = { base: 'flame', accent: 'cream' };
 /** Placeholder colors for an ERP item: its country's, or the sauces'. */
 export function toneFor(itemId: string): ArtTone {
   return countries.find((c) => c.dishId === itemId)?.tone ?? SAUCE_TONE;
+}
+
+const SAUCE_PHOTOS: Record<string, SitePhoto> = {
+  'RET-001': {
+    name: 'sauce-barbecue',
+    alt: 'A bottle of dark barbecue sauce with a small dish of sauce on a wooden table',
+    position: 'object-[62%_50%]',
+  },
+  'RET-002': {
+    name: 'sauce-chili',
+    alt: 'A bottle of red chili sauce with dried chiles on a wooden table',
+    position: 'object-[62%_50%]',
+  },
+};
+
+/** The photo for an ERP item, by item ID. Items without one keep the placeholder art. */
+export function photoFor(itemId: string): SitePhoto | undefined {
+  return countries.find((c) => c.dishId === itemId)?.photo ?? SAUCE_PHOTOS[itemId];
 }
