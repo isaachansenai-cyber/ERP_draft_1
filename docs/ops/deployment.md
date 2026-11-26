@@ -69,6 +69,12 @@ Then publish `site/dist/` under `<repo>/site/`. Before the pilot site takes orde
 
 > **Check before running the workflow:** `pages.yml` currently sets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as fixed values at the top of the build job instead of reading the chosen environment's variables, so choosing `pilot` would still build against that fixed project. Confirm which project those values belong to, and switch them to `${{ vars.VITE_SUPABASE_URL }}` / `${{ vars.VITE_SUPABASE_ANON_KEY }}` before a pilot deployment.
 
+### Public website on Vercel (custom domain)
+
+The public website can also be served by Vercel (operator decision, 2026-11-26), with the staff ERP staying on GitHub Pages. `vercel.json` makes Vercel build **only** the site: `npm ci`, then `npm run site:build`, publishing `site/dist` from the domain root. It also sends security headers (no framing, `nosniff`, a strict referrer policy, no camera/microphone/location/payment access) and caching for the hashed bundles and photos.
+
+Vercel project settings: production branch `main`; environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the chosen Supabase project (public values; `VITE_SITE_BASE_PATH` stays unset so the site serves from `/`). The custom domain is added in the project's Domains settings; when it was bought elsewhere, the registrar needs the DNS records Vercel shows. While the site talks to the demo project, every page shows a "Demo site" banner, driven by the database's data mode.
+
 ### After publishing
 
 - Open `https://<user>.github.io/<repo>/#/login`, sign in, then reload on a deep link such as `#/kitchen`. You should stay on that screen (AC30). The automated equivalent runs against a local static preview under the same base path (`tests/e2e/foundation.spec.ts`).

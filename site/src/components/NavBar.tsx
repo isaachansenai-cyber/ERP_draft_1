@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { brand } from '../content/site';
 import { LOGO_URL } from '../lib/assets';
 import { useScrolledPast } from '../lib/media';
+import { useAppMode } from '../lib/queries';
 import { useShop } from '../state/shop';
 
 export const NAV_ITEMS = [
@@ -39,6 +40,7 @@ function CartIcon() {
 export function NavBar() {
   const { pathname } = useLocation();
   const { count } = useShop();
+  const demo = useAppMode().data?.data_mode === 'demo';
   const scrolled = useScrolledPast(40);
   const [open, setOpen] = useState(false);
   const overHero = pathname === '/' && !scrolled && !open;
@@ -57,6 +59,11 @@ export function NavBar() {
         overHero ? 'bg-charcoal/55 backdrop-blur-sm' : 'bg-charcoal shadow-md'
       }`}
     >
+      {demo ? (
+        <p className="bg-saffron px-4 py-1 text-center text-sm font-semibold text-charcoal" data-testid="demo-banner">
+          Demo site: orders and payments are simulated, and nothing is prepared.
+        </p>
+      ) : null}
       <nav aria-label="Main" className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
         <Link
           to="/"

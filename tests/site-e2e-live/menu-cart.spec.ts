@@ -25,6 +25,8 @@ async function axeViolations(page: Page) {
 
 test('choosing a location shows live prices and availability, and the choice is remembered', async ({ page }) => {
   await page.goto('#/menu');
+  // The demo database says so on every page (the mode comes from the database).
+  await expect(page.getByTestId('demo-banner')).toHaveText(/orders and payments are simulated/);
   await expect(page.getByText('Choose a pickup location to see prices')).toBeVisible();
   await expect(page.getByText(/\$\d/)).toHaveCount(0);
   await expect(page.getByText('Open daily 12pm–8pm')).toHaveCount(3);
