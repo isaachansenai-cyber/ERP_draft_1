@@ -13,6 +13,12 @@ import { useRpcMutation } from '../../lib/useRpcMutation';
 // Forms are keyed by location or item only, so a save never remounts them and
 // wipes the confirmation (the earlier recipe/supplier form bug).
 
+/** Address of the public website, set at build time (VITE_PUBLIC_SITE_URL); shown only when it is a web address. */
+const PUBLIC_SITE_URL = (() => {
+  const raw = (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined)?.trim();
+  return raw && /^https?:\/\//.test(raw) ? raw : null;
+})();
+
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const keys = {
   settings: ['web-settings'],
@@ -426,6 +432,22 @@ export function WebsitePanel() {
       <Notice tone="info" title="Public pickup website">
         These values drive the website. Each location takes online orders only when it is switched on here, has opening
         hours, and (in the pilot) the owner has confirmed “Website ordering ready” under Pilot setup.
+        {PUBLIC_SITE_URL && (
+          <>
+            {' '}
+            Live site:{' '}
+            <a
+              href={PUBLIC_SITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline"
+              data-testid="public-site-link"
+            >
+              {PUBLIC_SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </a>{' '}
+            (opens in a new tab).
+          </>
+        )}
       </Notice>
 
       <section aria-labelledby="web-ordering-heading" className="flex flex-col gap-3">

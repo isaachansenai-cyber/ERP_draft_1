@@ -75,6 +75,8 @@ The public website can also be served by Vercel (operator decision, 2026-11-26),
 
 Vercel project settings: production branch `main`; environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the chosen Supabase project (public values; `VITE_SITE_BASE_PATH` stays unset so the site serves from `/`). The custom domain is added in the project's Domains settings; when it was bought elsewhere, the registrar needs the DNS records Vercel shows. While the site talks to the demo project, every page shows a "Demo site" banner, driven by the database's data mode.
 
+Current setup: Vercel project `erp-draft-1` (team `case-improvement`), live at `https://www.meatsaroundtheworld.site`; the bare domain redirects there (308). DNS is at Cloudflare with **DNS only** records (A `@` → Vercel's IPs, CNAME `www` → Vercel), so Vercel issues the certificate. Both variables must be ticked for **Production and Preview**. They are read at build time, so after adding or changing one, redeploy. A Vercel build without them now fails on purpose (ADR 0046) rather than publishing a site that cannot take orders. The staff ERP links to the live site under Settings → Website (`VITE_PUBLIC_SITE_URL` in `pages.yml`); the public site has no link to the staff app.
+
 ### After publishing
 
 - Open `https://<user>.github.io/<repo>/#/login`, sign in, then reload on a deep link such as `#/kitchen`. You should stay on that screen (AC30). The automated equivalent runs against a local static preview under the same base path (`tests/e2e/foundation.spec.ts`).

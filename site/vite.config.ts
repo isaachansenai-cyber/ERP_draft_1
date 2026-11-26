@@ -38,8 +38,27 @@ function contentSecurityPolicy(supabaseUrl: string | undefined): Plugin {
   };
 }
 
-export default defineConfig(({ mode }) => {
+/**
+ * A hosted build (Vercel sets VERCEL=1) must know which ERP it talks to.
+ * Without these values the site would go live unable to show prices or take
+ * orders, so the build stops instead (ADR 0046).
+ */
+export function missingHostedConfig(env: Record<string, string | undefined>): string[] {
+  if (!env.VERCEL) return [];
+  return ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'].filter((k) => !env[k]?.trim());
+}
+
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
+  if (command === 'build') {
+    const missing = missingHostedConfig({ ...env, VERCEL: process.env.VERCEL });
+    if (missing.length) {
+      throw new Error(
+        `The website build needs ${missing.join(' and ')} (Vercel → Settings → Environment Variables, ` +
+          'ticked for this environment). Nothing was deployed.',
+      );
+    }
+  }
   const base = env.VITE_SITE_BASE_PATH || '/';
   return {
     root: siteRoot,
