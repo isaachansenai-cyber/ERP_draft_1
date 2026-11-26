@@ -45,6 +45,8 @@ jobs:
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
           VITE_DATA_MODE_HINT: ${{ inputs.target }}
+          # Shown as a link under Settings → Website. The public site itself is on Vercel.
+          VITE_PUBLIC_SITE_URL: https://www.meatsaroundtheworld.site
       - name: Build the public pickup website under <repo>/site/ (CLAUDE.md D12)
         run: npm run site:build && mkdir -p dist/site && cp -r site/dist/. dist/site/
         env:
