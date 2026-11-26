@@ -3,6 +3,7 @@
 // through the real API as signed-in local users in a pilot database.
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { readdirSync } from 'node:fs';
 import { as, code, key, ok, sql, stack, type OrderResult } from './helpers';
 
 const PRO = 'LOC-PRO';
@@ -36,11 +37,18 @@ interface Recipes {
 const toLines = (lines: Line[]) =>
   lines.map((l) => ({ item_id: l.item_id, quantity_per_serving: l.quantity_per_serving }));
 
+// The schema version is the number of the latest migration file.
+const LATEST_MIGRATION = Math.max(
+  ...readdirSync('supabase/migrations')
+    .map((f) => Number.parseInt(f.slice(0, 4), 10))
+    .filter(Number.isFinite),
+);
+
 describe('schema version (ADR 0036)', () => {
   it('reports the migration number to signed-in users only', async () => {
     const anon = createClient(stack.apiUrl, stack.anonKey, { auth: { persistSession: false } });
     expect((await anon.rpc('get_schema_version')).error).not.toBeNull();
-    expect((await (await as('proEmployee')).rpc('get_schema_version')).data).toBe(26);
+    expect((await (await as('proEmployee')).rpc('get_schema_version')).data).toBe(LATEST_MIGRATION);
   });
 });
 

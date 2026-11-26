@@ -372,3 +372,31 @@ Scope change approved in session: a public pickup-ordering website under `/site`
 | `test:db`, `test:integration`, `test:e2e` | **not run**: Docker isn't available in this session. W1 changes no ERP code or migrations. |
 
 CI now also checks `site/` formatting and runs the site browser tests (no database) in the `static` job.
+
+## Public pickup website — W2 ERP database (operator request, 2026-11-26)
+
+Migration `0027_web_ordering.sql` (ADR 0042) connects the website to the ERP. Nothing on the website calls it yet (W3).
+
+- **Lock-down first.** Ten reference tables that any signed-in session could read are now staff-only, because website visitors are signed-in anonymous sessions.
+- **One acceptance path.** `accept_order` and the new `web_place_order` share `private.accept_order_core` (snapshot, all-or-nothing reservation, state event, audit). The POS suites are unchanged and still pass.
+- **Visitor functions:** `web_get_locations`, `web_get_menu` (prices, Available/Sold out, capped quantity, no costs or exact stock), `web_get_pickup_slots`, `web_place_order` (contact details, slot capacity, 3-open-order limit, demo simulated tender by `EMP-WEB`), `web_get_order` (by random token) and `web_get_request_result`.
+- **Owner settings RPCs** for hours, slot capacity, cook minutes and website content. Gate `web_ordering_enabled` per location.
+- Demo values in `data/demo/web_demo_seed.json` (12–8 daily, 4 orders per 15-minute slot, owner-confirmed cook minutes).
+- Correction to the plan: a cart with an overnight dish and Khorkhog is ready from 14:00 the next day, not 12:15 (BUILD_PLAN §4).
+
+### Evidence (local Supabase stack, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `supabase db lint --level warning --fail-on warning` | no findings |
+| `npm run test:db` | 219 passed, incl. `009_web_ordering.test.sql` (43): anonymous visitor reads no rows from protected tables; **every** function signed-in sessions can execute was called as a visitor and only the public reads answered; slot rule incl. closures and both DST changes |
+| `npm run test:integration` | pilot 49, ops 89, demo 39 (incl. `web-ordering.test.ts`, 11: placement through the shared core, kitchen visibility, contact privacy, retry, validation, slot capacity, open-order limit, manager sold-out toggle, web-vs-POS race for the last bottle) |
+| `npm run test:e2e` (staff app) | 40 passed |
+| typecheck, lint, prettier, `test:unit` (75), secret scan | clean |
+
+Existing tests changed only for intended effects: the setup-gate count (17 → 20) and the schema version (now read from the latest migration file).
+
+### Open items
+- **Owner decision:** Supabase Auth sign-ups must be on for anonymous visitors in the hosted projects (ADR 0042). Locally they are on.
+- The hosted projects also need anonymous sign-ins, captcha and rate limits configured (W5).
+- The local stack here pulled images from Docker Hub (`SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io`) because this session's network blocks the default registry's download host.

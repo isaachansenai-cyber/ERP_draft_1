@@ -150,6 +150,7 @@ Money rules:
 | `0024_schema_version.sql` | `get_schema_version` so the app can warn when its database is behind (ADR 0036) |
 | `0025_recipe_editing.sql` | Owner recipe drafts, activation and discard; `get_recipes` (ADR 0037) |
 | `0026_supplier_edits.sql` | Owner supplier contact and lead-time edits, manager change requests and owner decisions; demo reset clears requests (ADR 0038) |
+| `0027_web_ordering.sql` | Public pickup website: reference tables become staff-only; shared order-acceptance core; system actor `EMP-WEB`; opening hours, web settings, website content, web order contacts; `web_ordering_enabled` gate; `web_*` functions for anonymous visitors and owner web settings (ADR 0042) |
 
 ### RPCs available to signed-in staff (each authorizes server-side)
 
@@ -170,6 +171,11 @@ Money rules:
 | Planning | `get_demand_forecast`, `set_forecast_override`, `get_replenishment_plan`, `calculate_eoq`, `get_eoq_inputs`, `set_location_item_settings`, `get_serve_view`, `simulate_menu_mix` |
 | Staff time | `create_shift`, `update_shift`, `publish_shift`, `cancel_shift`, `clock_in`, `clock_out`, `start_break`, `end_break`, `correct_time_entry`, `get_my_time_status`, `get_hours_report`, `list_location_staff` |
 | Reporting | `get_sales_summary` |
+| Website settings (owner) | `set_web_ordering_settings`, `set_location_opening_hours`, `set_item_prep_minutes`, `set_web_menu_content` |
+
+### Functions for website visitors (anonymous sign-in; CLAUDE.md D12)
+
+`web_get_locations`, `web_get_menu`, `web_get_pickup_slots`, `web_place_order`, `web_get_order`, `web_get_request_result`. Visitors read no tables, and every staff RPC refuses them (pgTAP `009_web_ordering.test.sql`). Local Auth has sign-ups and anonymous sign-ins on for this (ADR 0042).
 
 The operator-only functions (`private.bootstrap_owner`, `private.enable_demo_mode`, `private.reset_demo_data`) are not reachable through the API at all.
 

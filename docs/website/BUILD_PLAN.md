@@ -1,6 +1,6 @@
 # Public pickup website: build plan
 
-Status: **W0 (decisions) and W1 (static site, placeholder images) complete. W2 not started.** W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
+Status: **W0, W1 (static site) and W2 (ERP database) complete. W3 not started.** W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). W2 decisions: [ADR 0042](../decisions/0042-web-ordering-database.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
 
 This plan adds a public website for Meats Around the World. Customers can browse it, see live availability, and order dishes or retail sauces **for pickup only**. Every order goes straight into the ERP, which handles reservations, the kitchen queue, sales and the accounting effects with the same rules as a POS order.
 
@@ -51,11 +51,12 @@ Staff ERP (/src) ◀── same tables ──   kitchen queue, POS, dashboards, 
 
 | Function | Returns / does |
 |---|---|
-| `web_get_locations()` | Locations with web ordering enabled: name, address line, hours, today's open/closed state. |
+| `web_get_locations()` | Every location with `ordering_open`, a `status_reason` when closed (`posting_disabled`, `setup_incomplete`, `paused`, `no_hours`) and its weekly hours. |
 | `web_get_menu(p_location_id)` | Per sellable item that has website content: id, name, type (dish or sauce), country, description, image, allergen note, price, `available` (boolean) and `max_orderable` (0–10). |
 | `web_get_pickup_slots(p_location_id, p_lines)` | The 15-minute slots this cart can actually be ready for, with capacity left (as available or full only). |
 | `web_place_order(p_request_key, p_location_id, p_lines, p_contact, p_pickup_at, p_note)` | Validates, re-checks slot and capacity, accepts through the shared core (all-or-nothing reservation), records the simulated tender in demo mode, and returns the order number, pickup code, totals and a `web_token`. Retrying with the same key returns the same result. |
-| `web_get_order(p_web_token)` | Status (Received, Preparing, Ready, Picked up, Cancelled), pickup time and location, lines, tax, total and payment label. It is found only by the 128-bit random token, never by the guessable pickup code. |
+| `web_get_order(p_web_token)` | Status (Received, Preparing, Ready, Picked up, Cancelled), pickup time and location, lines, tax, total and payment label. It is found only by a random UUID token, never by the guessable pickup code, and never returns contact details. |
+| `web_get_request_result(p_request_key)` | The stored outcome of this visitor's own request, for a placement whose response was lost (AC29). |
 
 Errors use the ERP's stable codes, for example `insufficient_stock` (naming the item), `slot_unavailable`, `setup_gate_closed:web_ordering_enabled` and `validation:<field>`.
 
@@ -73,16 +74,16 @@ Errors use the ERP's stable codes, for example `insufficient_stock` (naming the 
 | `web_menu_content(item_id, country, description, image_path, allergen_note, allergen_reviewed_by/at)` | Website copy per item. An item without reviewed content is hidden from the site. |
 | Gate `web_ordering_enabled` (per location) | Blocks `web_place_order` until the owner confirms. The existing gates (prices, tax, recipes, opening counts) still apply through the shared core. |
 | System employee `EMP-WEB` "Online ordering" | Actor for web acceptance. It has no Auth user and cannot sign in. |
-| Rate-limit table (private) | Per visitor: at most 3 open web orders and 10 placement attempts per hour. Per phone and per e-mail: at most 3 open orders. |
+| Open-order limit (in `web_place_order`) | At most 3 open web orders per visitor, per phone number and per e-mail. Built: W2. An attempts-per-hour counter was dropped, because a refused attempt rolls back its own count; Supabase Auth's captcha and sign-in rate limits cover repeated attempts (W5). |
 
-Draft `prep_minutes` and lead days for owner confirmation (from the ERP's lead-time notes; the finishing times for the two prep-ahead dishes are **assumptions**):
+`prep_minutes` and lead days (owner confirmed 2026-11-26, including both 15-minute finishing times). The demo seed loads them from `data/demo/web_demo_seed.json`; the pilot owner enters them with `set_item_prep_minutes`:
 
 | Dish | `prep_lead_days` | `prep_minutes` (pickup day) | Basis |
 |---|---|---|---|
 | FG-001 Brazilian Chicken Strogonoff | 0 | 25 | ERP note "Made to order (~25 min)" |
-| FG-002 Tacos al Pastor | 1 | 15 | Note "Pork marinates overnight"; 15 min finish is an assumption |
+| FG-002 Tacos al Pastor | 1 | 15 | Note "Pork marinates overnight"; 15 min finish confirmed by the owner |
 | FG-003 Korean Fried Chicken | 0 | 20 | ERP note "Made to order (~20 min)" |
-| FG-004 Beef Bourguignon | 1 | 15 | Note "Braised the day before (~3 hrs)"; 15 min reheat is an assumption |
+| FG-004 Beef Bourguignon | 1 | 15 | Note "Braised the day before (~3 hrs)"; 15 min reheat confirmed by the owner |
 | FG-005 Mongolian Khorkhog | 0 | 120 | ERP note "Cooked same day (~2 hrs)" |
 | RET-001/002 sauces | — | 0 | Retail, handed over as is |
 
@@ -98,8 +99,8 @@ All times are America/Denver, and slot generation is tested across DST changes.
    - a dish with `prep_lead_days = n` is ready at 12:00 on the n-th following open day, plus `prep_minutes`.
 3. The cart's earliest slot is the **latest** of those times, rounded up to the next 15-minute mark. Any later open slot is also allowed.
 4. A slot with 4 web orders already is shown as full.
-5. Example: at 17:00 on a Tuesday, a cart with Khorkhog and Tacos al Pastor can be picked up from **Wednesday 12:15** (tacos: next day + 15 min). Khorkhog alone ordered at 17:00 is ready from 19:00 the same day; ordered at 18:00 it rolls to Wednesday 14:00.
-6. **Assumption to confirm in W2:** the kitchen does not start web orders before opening at 12:00.
+5. Example: at 17:00 on a Tuesday, Tacos al Pastor alone can be picked up from **Wednesday 12:15** (next day + 15 min). A cart with Tacos al Pastor **and** Khorkhog is ready from **Wednesday 14:00**: on Wednesday the kitchen starts at noon and Khorkhog takes 2 hours. (An earlier draft said 12:15 for that cart, which was wrong.) Khorkhog alone ordered at 17:00 is ready from 19:00 the same day; ordered at 18:00 it rolls to Wednesday 14:00.
+6. The kitchen does not start web orders before opening at 12:00 (owner confirmed, 2026-11-26).
 
 ---
 
@@ -203,7 +204,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 |---|---|---|
 | **W0** | Decisions | **Done 2026-11-26:** this plan, ADR 0040, CLAUDE.md D12, logo, copy and allergen drafts. |
 | W1 | Static site and design system | **Done 2026-11-26** (placeholder images, draft copy). `/site` app, palette, hero rotation, navigation, all content pages from the approved drafts, responsive and accessible. No ERP connection yet. Lint, typecheck, unit tests and axe pass. |
-| W2 | ERP database | §3 migrations, `accept_order_core` refactor (POS tests still green), `web_*` functions, pgTAP and the anonymous-access audit. |
+| W2 | ERP database | **Done 2026-11-26** (migration 0027, ADR 0042). §3 migrations, `accept_order_core` refactor (POS tests still green), `web_*` functions, pgTAP and the anonymous-access audit. |
 | W3 | Live menu (demo) | Location picker, live availability and caps, 30 s refresh, cart. |
 | W4 | Checkout to kitchen (demo) | Slots, placement, simulated tender, confirmation and status; ERP kitchen badge, Scheduled lane, Settings → Website. |
 | W5 | Hardening and pilot | Rate limits, performance, full e2e and accessibility, Pages deployment of `/site`, runbook. The pilot opens with "Pay at pickup" once its gates are confirmed. |
@@ -213,7 +214,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 ## 9. Open items for the owner
 1. Review and approve the [content drafts](content-drafts.md).
 2. Review and approve the [allergen notes](allergen-notes-draft.md). Each note says "please ask staff" until it is approved.
-3. Confirm the draft `prep_minutes` in §3, especially the two 15-minute assumptions.
-4. Confirm that the kitchen does not start web orders before 12:00 (§4.6).
+3. ~~Confirm the draft `prep_minutes`~~ and ~~the noon kitchen start~~: confirmed 2026-11-26.
+4. Decide whether to keep Supabase Auth sign-ups on for the hosted projects (needed for anonymous website visitors; ADR 0042).
 5. Supply licensed food photos (hero rotation plus one per item), or approve the placeholders for the demo.
 6. Real retail-sauce products and labels for the pilot. RET-001 and RET-002 are synthetic demo items.

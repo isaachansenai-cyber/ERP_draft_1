@@ -59,7 +59,7 @@ select is((select posting_enabled from public.app_settings), false, 'posting is 
 
 select is(
   (select count(*)::int from public.pilot_setup_gates),
-  17, 'company (5) and location (4 x 3) setup gates exist after migration, all open');
+  20, 'company (5) and location (5 x 3) setup gates exist after migration, all open');
 
 select * from finish();
 rollback;

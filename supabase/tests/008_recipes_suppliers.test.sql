@@ -7,7 +7,7 @@ set search_path = public, extensions;
 select plan(20);
 
 -- Schema version ------------------------------------------------------------
-select is(public.get_schema_version(), 26, 'schema version is the latest migration');
+select ok(public.get_schema_version() >= 26, 'schema version includes 0026 (009 checks the latest)');
 select ok(not has_function_privilege('anon', 'public.get_schema_version()', 'execute')
   and has_function_privilege('authenticated', 'public.get_schema_version()', 'execute'), 'signed-in users read the schema version');
 
