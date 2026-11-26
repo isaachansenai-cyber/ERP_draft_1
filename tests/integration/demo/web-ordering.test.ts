@@ -68,8 +68,14 @@ async function slots(v: SupabaseClient, location: string, items: string[]): Prom
   return r.data.slots as Slot[];
 }
 
+/**
+ * The first open time at least 30 minutes away. Today's earliest time expires
+ * every 15 minutes (prep time counted from now), so a test that lists it just
+ * before a cutoff and books it just after would be refused, correctly.
+ */
 async function firstOpenSlot(v: SupabaseClient, location: string, items: string[]): Promise<string> {
-  const s = (await slots(v, location, items)).find((x) => x.available);
+  const safe = Date.now() + 30 * 60_000;
+  const s = (await slots(v, location, items)).find((x) => x.available && Date.parse(x.pickup_at) >= safe);
   if (!s) throw new Error(`no open slot at ${location} for ${items.join(',')}`);
   return s.pickup_at;
 }

@@ -40,11 +40,17 @@ async function fillCart(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Checkout' })).toBeVisible();
 }
 
-/** Pick the first open day and its first open time; returns the chosen ISO time. */
+/**
+ * Pick the second open day and its first open time; returns the chosen ISO time.
+ * Not today: today's earliest time expires every 15 minutes (prep time from
+ * "now"), and a test that reads the list just before a cutoff and orders just
+ * after it is rightly refused by the ERP. A later day cannot expire mid-test.
+ */
 async function chooseFirstSlot(page: Page): Promise<string> {
   const day = page.getByLabel('Day', { exact: true });
-  await expect(day.locator('option')).not.toHaveCount(1);
-  const dayValue = await day.locator('option:not([disabled]):not([value=""])').first().getAttribute('value');
+  const days = day.locator('option:not([disabled]):not([value=""])');
+  await expect.poll(() => days.count()).toBeGreaterThanOrEqual(2);
+  const dayValue = await days.nth(1).getAttribute('value');
   await day.selectOption(dayValue!);
   const time = page.getByLabel('Time', { exact: true });
   const timeValue = await time.locator('option:not([disabled]):not([value=""])').first().getAttribute('value');
@@ -179,8 +185,13 @@ test('the whole order can be placed with the keyboard alone', async ({ page }) =
   );
   await press(page.getByRole('link', { name: 'Cart, 1 item' }), 'Enter');
   await press(page.getByRole('link', { name: 'Continue to checkout' }), 'Enter');
-  await press(page.getByLabel('Day', { exact: true }), 'ArrowDown');
-  await expect(page.getByLabel('Day', { exact: true })).not.toHaveValue('');
+  // The second day, not today: today's earliest time can expire mid-test (see chooseFirstSlot).
+  const day = page.getByLabel('Day', { exact: true });
+  await expect.poll(() => day.locator('option:not([disabled]):not([value=""])').count()).toBeGreaterThanOrEqual(2);
+  await press(day, 'ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  const secondDay = await day.locator('option:not([disabled]):not([value=""])').nth(1).getAttribute('value');
+  await expect(day).toHaveValue(secondDay!);
   await press(page.getByLabel('Time', { exact: true }), 'ArrowDown');
   await expect(page.getByLabel('Time', { exact: true })).not.toHaveValue('');
   for (const [label, text] of [
