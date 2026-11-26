@@ -2,8 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Public website (site/) tests with NO backend configured: content pages and the
 // honest "not connected" states. Live menu and cart tests: playwright.site-live.config.ts. The site is built
-// under its GitHub Pages base path and served with `vite preview`.
-export const SITE_BASE_PATH = '/ERP_draft_1/site/';
+// at the domain root, as on Vercel, and served with `vite preview`.
+export const SITE_BASE_PATH = '/';
 
 export default defineConfig({
   testDir: 'tests/site-e2e',

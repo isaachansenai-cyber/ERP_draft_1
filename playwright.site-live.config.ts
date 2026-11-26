@@ -11,6 +11,6 @@ export default defineConfig({
   workers: 1,
   timeout: 60_000,
   reporter: [['list']],
-  use: { baseURL: 'http://127.0.0.1:4175/ERP_draft_1/site/', trace: 'off' },
+  use: { baseURL: 'http://127.0.0.1:4175/', trace: 'off' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } }],
 });

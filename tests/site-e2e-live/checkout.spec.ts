@@ -26,7 +26,7 @@ async function axeViolations(page: Page) {
 
 /** Strogonoff × 2 and a barbecue sauce in the Spanish Fork cart, then open checkout. */
 async function fillCart(page: Page) {
-  await page.goto('#/menu');
+  await page.goto('/menu');
   await page.getByRole('radio', { name: 'Spanish Fork' }).check();
   const dish = page.getByRole('article', { name: 'Brazilian Chicken Strogonoff' });
   await dish.getByRole('button', { name: 'More' }).click();
@@ -35,7 +35,7 @@ async function fillCart(page: Page) {
     .getByRole('article', { name: 'Demo bottled barbecue sauce 250 mL' })
     .getByRole('button', { name: 'Add to cart' })
     .click();
-  await page.goto('#/cart');
+  await page.goto('/cart');
   await page.getByRole('link', { name: 'Continue to checkout' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Checkout' })).toBeVisible();
 }
@@ -73,7 +73,7 @@ test('checkout shows the exact total, places the order and opens a receipt with 
   await page.getByLabel('Note for the kitchen (optional)').fill('Extra lime, please');
   await page.getByRole('button', { name: /^Place order/ }).click();
 
-  await expect(page).toHaveURL(/#\/order\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(/\/order\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('pickup-code')).toHaveText(/^SFO-\d{4}$/);
   await expect(page.getByTestId('order-total')).toHaveText('$41.80'); // the ERP's total matches the estimate
   await expect(page.getByTestId('order-balance')).toHaveText('$0.00');
@@ -165,7 +165,7 @@ test('a time taken by someone else meanwhile is refused and must be chosen again
 });
 
 test('the whole order can be placed with the keyboard alone', async ({ page }) => {
-  await page.goto('#/menu');
+  await page.goto('/menu');
   const press = async (locator: ReturnType<Page['getByRole']>, key: string) => {
     await locator.focus();
     await expect(locator).toBeFocused();

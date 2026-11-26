@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "site:dev": "vite --config site/vite.config.ts",
-    "site:build": "tsc -p tsconfig.site.json --noEmit && vite build --config site/vite.config.ts",
+    "site:build": "tsc -p tsconfig.site.json --noEmit && vite build --config site/vite.config.ts && vite build --config site/vite.config.ts --ssr src/entry-server.tsx --outDir dist-server --emptyOutDir && node scripts/site/prerender.mjs",
     "site:preview": "vite preview --config site/vite.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.site.json --noEmit",
