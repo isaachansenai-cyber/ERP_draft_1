@@ -58,7 +58,7 @@ test('the cart keeps each location separate, survives a reload and is priced by 
   await expect(page.getByText('Pickup at Salt Lake City.')).toBeVisible();
   await expect(page.getByTestId('cart-status')).toHaveText(/Not ordered yet/);
   await expect(page.getByTestId('cart-subtotal')).toHaveText('$31.98');
-  await expect(page.getByText('Checkout is not open yet')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Continue to checkout' })).toBeVisible();
   expect(await axeViolations(page)).toEqual([]);
   await page.reload();
   await expect(page.getByTestId('cart-subtotal')).toHaveText('$31.98');
@@ -109,7 +109,7 @@ test('sold out in the ERP shows on the website within one refresh, then comes ba
   }
   await page.clock.runFor(31_000);
   await expect(page.getByRole('alert')).toHaveCount(0);
-  await expect(page.getByText('Checkout is not open yet')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Continue to checkout' })).toBeVisible();
 });
 
 test('a location that is not taking orders says so and offers nothing to add', async ({ page }) => {

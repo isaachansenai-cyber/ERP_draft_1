@@ -8,7 +8,7 @@ set search_path = public, extensions;
 
 select plan(41);
 
-select is(public.get_schema_version(), 27, 'schema version is the latest migration');
+select ok(public.get_schema_version() >= 27, 'schema version includes 0027 (010 checks the latest)');
 
 -- Schema, RLS and grants ------------------------------------------------------
 select has_table('public', t, t || ' exists')

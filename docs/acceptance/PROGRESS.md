@@ -421,3 +421,27 @@ Visitors don't sign in (ADR 0042), and W2 was pushed with that change. W3 (ADR 0
 
 CI runs `test:site:live` in the database job.
 
+## Public pickup website — W4 checkout and staff side (operator request, 2026-11-26)
+
+W3 was pushed first. W4 (migration 0028, ADR 0044):
+
+- **Checkout** (`#/checkout`): order summary with the exact subtotal, tax and total (the menu now carries the location's tax rate); a pickup day and time from the ERP's slots (full slots marked); name, phone, e-mail and an optional note, checked in the browser and again by the ERP; "Simulated payment (demo)" or "Pay at pickup", chosen by the server's data mode. No card fields.
+- **Safe placement**: one request key per checkout. A lost answer is checked with the ERP before anything is shown: placed → receipt; not placed → "you can safely try again"; unknown → "please do not order again yet". Refusals (sold out, slot taken, three open orders, location paused) are explained plainly.
+- **Receipt** (`#/order/<token>`): pickup code, pickup time in Mountain Time, status that refreshes, lines, tax, total and payment; printable.
+- **Kitchen**: a "Web order" badge, pickup and start-by times, a prep-ahead flag, and a "Scheduled for later days" lane; queues sort by pickup time.
+- **Settings → Website** (owner; managers read-only): ordering switch and limits per location, weekly hours, cook minutes, and website text with an allergen note published only after the owner confirms the label check. The Pilot setup list now names the "Website ordering ready" gate.
+
+### Evidence (local, 2026-11-26)
+
+| Step | Result |
+|---|---|
+| `supabase db lint`, typecheck, lint, prettier, secret scan | clean |
+| `npm run test:unit` | 91 passed, incl. `site-checkout.test.ts` (placement outcomes, half-up tax per line, Mountain Time grouping, kitchen start-by) |
+| `npm run test:db` | 221 passed, incl. `010_web_checkout.test.sql` (tax rate in force today, as exact text) |
+| `npm run test:integration` | pilot 49, ops 89, demo 40 (incl. blank-means-none website content, allergen publishing only when reviewed, owner-only) |
+| `npm run test:e2e` (staff app) | 43 passed, incl. `website-staff.spec.ts`: a web order waits in the Scheduled lane with pickup 12:15 and start by 12:00; the owner edits limits, hours, cook time and allergen notes with confirmations staying visible; a manager is read-only |
+| `npm run test:site:e2e` (no backend) | 13 passed |
+| `npm run test:site:live` (demo ERP) | 12 passed, incl. `checkout.spec.ts`: total $41.80 shown at checkout equals the ERP's; missing details; a request that never arrives (not placed, retry places once); an answer lost after commit (found, not placed twice); a slot taken meanwhile |
+
+`foundation.spec.ts` (keyboard test) failed once in a full run because it pressed Tab before the login form rendered; it now waits for the form. It passed 3 of 3 alone before the fix and in the full run after.
+

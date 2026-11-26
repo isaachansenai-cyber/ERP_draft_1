@@ -95,7 +95,14 @@ describe('display helpers', () => {
 
 describe('web API contract', () => {
   it('accepts the ERP menu shape and rejects anything with cost or stock fields mistyped', () => {
-    const ok = { location_id: 'LOC-SLC', ordering_open: true, status_reason: null, max_per_line: 10, items: [item()] };
+    const ok = {
+      location_id: 'LOC-SLC',
+      ordering_open: true,
+      status_reason: null,
+      max_per_line: 10,
+      tax_rate: '0.072500',
+      items: [item()],
+    };
     expect(menuSchema.safeParse(ok).success).toBe(true);
     expect(menuSchema.safeParse({ ...ok, items: [{ ...item(), price_cents: '15.99' }] }).success).toBe(false);
     expect(menuSchema.safeParse({ ...ok, items: [{ ...item(), item_type: 'ingredient' }] }).success).toBe(false);

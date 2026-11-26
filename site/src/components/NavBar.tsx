@@ -53,7 +53,7 @@ export function NavBar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-30 transition-colors ${
+      className={`fixed inset-x-0 top-0 z-30 transition-colors print:hidden ${
         overHero ? 'bg-charcoal/55 backdrop-blur-sm' : 'bg-charcoal shadow-md'
       }`}
     >

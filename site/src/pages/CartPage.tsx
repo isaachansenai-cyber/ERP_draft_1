@@ -55,7 +55,7 @@ function CartLineRow({ line }: { line: PricedLine }) {
   );
 }
 
-/** The browser-side draft for the chosen location. Checkout arrives in W4 (BUILD_PLAN §8). */
+/** The browser-side draft for the chosen location, before checkout. */
 export function CartPage() {
   const { locationId, lines } = useShop();
   const locations = useLocations();
@@ -109,9 +109,9 @@ export function CartPage() {
         ) : !cart.ok ? (
           <Notice title="Some items need your attention">Fix the items marked above before checking out.</Notice>
         ) : (
-          <Notice title="Checkout is not open yet">
-            Online checkout arrives in the next update. Nothing has been ordered.
-          </Notice>
+          <p>
+            <LinkButton to="/checkout">Continue to checkout</LinkButton>
+          </p>
         )}
       </>
     );

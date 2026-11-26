@@ -21,6 +21,8 @@ interface Shop {
   count: number;
   add: (itemId: string, quantity: number, max: number) => void;
   setLineQuantity: (itemId: string, quantity: number, max: number) => void;
+  /** Empty this location's cart (after its order is placed). */
+  clearCart: () => void;
 }
 
 const ShopContext = createContext<Shop | null>(null);
@@ -52,9 +54,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const clearCart = useCallback(() => setLines([]), []);
+
   const value = useMemo(
-    () => ({ locationId, chooseLocation, lines, count: cartCount(lines), add, setLineQuantity }),
-    [locationId, chooseLocation, lines, add, setLineQuantity],
+    () => ({ locationId, chooseLocation, lines, count: cartCount(lines), add, setLineQuantity, clearCart }),
+    [locationId, chooseLocation, lines, add, setLineQuantity, clearCart],
   );
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 }

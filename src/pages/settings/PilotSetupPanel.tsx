@@ -53,6 +53,11 @@ const GATE_TEXT: Record<string, { title: string; blocks: string }> = {
     title: 'Planning inputs confirmed',
     blocks: 'Saving approved ROP/EOQ settings at this location (previews stay available under Planning).',
   },
+  web_ordering_enabled: {
+    title: 'Website ordering ready',
+    blocks:
+      'Online pickup orders at this location. Enter hours, cook times and website text under Settings → Website first.',
+  },
   supplier_master_verified: {
     title: 'Supplier details verified',
     blocks: 'Submitting purchase orders to this supplier.',

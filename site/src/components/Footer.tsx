@@ -5,7 +5,7 @@ import { NAV_ITEMS } from './NavBar';
 
 export function Footer() {
   return (
-    <footer className="bg-charcoal px-4 py-12 text-cream md:px-8">
+    <footer className="bg-charcoal px-4 py-12 text-cream md:px-8 print:hidden">
       <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
         <div className="flex items-center gap-3">
           <img src={LOGO_URL} alt="" className="h-16 w-16" width={64} height={64} />

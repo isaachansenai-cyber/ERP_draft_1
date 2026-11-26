@@ -2,11 +2,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { CartPage } from './pages/CartPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { CountriesPage } from './pages/CountriesPage';
 import { FaqPage } from './pages/FaqPage';
 import { HomePage } from './pages/HomePage';
 import { MenuPage } from './pages/MenuPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { OrderPage } from './pages/OrderPage';
 import { StoryPage } from './pages/StoryPage';
 import { ShopProvider } from './state/shop';
 
@@ -26,6 +28,8 @@ export function App() {
               <Route path="story" element={<StoryPage />} />
               <Route path="faq" element={<FaqPage />} />
               <Route path="cart" element={<CartPage />} />
+              <Route path="checkout" element={<CheckoutPage />} />
+              <Route path="order/:token" element={<OrderPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

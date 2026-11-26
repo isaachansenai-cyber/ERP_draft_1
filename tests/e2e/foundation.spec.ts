@@ -102,6 +102,8 @@ test('a write that never reached the server is reported as not saved and can be 
 
 test('primary controls are keyboard reachable with visible labels and ≥44px targets', async ({ page }) => {
   await page.goto('./#/login');
+  // Wait for the form: pressing Tab before React renders it focused nothing (flaky in a full run).
+  await expect(page.getByLabel('Email')).toBeVisible();
   await page.keyboard.press('Tab');
   await expect(page.getByLabel('Email')).toBeFocused();
   const box = await page.getByRole('button', { name: 'Sign in' }).boundingBox();

@@ -143,7 +143,13 @@ describe('menu and locations for a visitor', () => {
     const v = await visitor();
     const r = await rpc(v, 'web_get_menu', { p_location_id: SLC });
     expect(r.code).toBeNull();
-    expect(r.data).toMatchObject({ location_id: SLC, ordering_open: true, status_reason: null, max_per_line: 10 });
+    expect(r.data).toMatchObject({
+      location_id: SLC,
+      ordering_open: true,
+      status_reason: null,
+      max_per_line: 10,
+      tax_rate: '0.072500', // the demo rate, as exact text, so checkout can show the real total
+    });
     const items = r.data.items as MenuItem[];
     expect(items.map((i) => i.item_id)).toEqual([
       'FG-001',
@@ -379,6 +385,39 @@ describe('capacity and limits', () => {
       (await place(v, SFO, [{ item_id: 'RET-002', quantity: 1 }], { p_contact: { ...same, phone: '801-555-9999' } }))
         .code,
     ).toBe('rate_limited:open_orders');
+  });
+});
+
+describe('owner website content (0028)', () => {
+  it('blank fields mean "none", an allergen note is published only when reviewed, and staff other than the owner are refused', async () => {
+    const owner = await as('DEMO-OWNER');
+    const save = (client: SupabaseClient, over: Record<string, unknown>) =>
+      rpc(client, 'set_web_menu_content', {
+        p_request_key: randomUUID(),
+        p_item_id: 'RET-002',
+        p_country: '',
+        p_description: 'Demo bottled chili sauce (synthetic demo product).',
+        p_image_path: '',
+        p_allergen_note: '',
+        p_allergen_reviewed: false,
+        ...over,
+      });
+    expect((await save(owner, {})).code).toBeNull();
+    const [row] = await sql<{ country: string | null; image_path: string | null; allergen_note: string | null }>(
+      `select country, image_path, allergen_note from public.web_menu_content where item_id = 'RET-002'`,
+    );
+    expect(row).toEqual({ country: null, image_path: null, allergen_note: null });
+    expect((await save(owner, { p_allergen_reviewed: true })).code).toBe('validation:allergen_note');
+    expect(
+      (await save(owner, { p_allergen_note: 'Contains no dairy, nuts or wheat.', p_allergen_reviewed: true })).code,
+    ).toBeNull();
+    const item = ((await rpc(await visitor(), 'web_get_menu', { p_location_id: SFO })).data.items as MenuItem[]).find(
+      (i) => i.item_id === 'RET-002',
+    );
+    expect(item?.allergen_note).toBe('Contains no dairy, nuts or wheat.');
+    expect((await save(await as('DEMO-LOC-SFO-MAN-1'), {})).code).toBe('unauthorized');
+    // Back to the seeded state: unreviewed, no note.
+    expect((await save(owner, {})).code).toBeNull();
   });
 });
 

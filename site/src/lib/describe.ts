@@ -46,3 +46,42 @@ export function prepNote(item: MenuItem): string | null {
   }
   return `Ready in about ${minutes} minutes.`;
 }
+
+export type ContactField = 'name' | 'phone' | 'email' | 'note';
+
+/** What to tell the visitor when the ERP refuses an order, and which field (if any) to point at. */
+export function placementMessage(code: string): { text: string; field?: ContactField; refresh?: 'menu' | 'slots' } {
+  if (
+    code === 'insufficient_stock' ||
+    code === 'validation:item_unavailable' ||
+    code === 'validation:item_not_offered'
+  ) {
+    return {
+      text: 'Some items in your cart just sold out. Your cart has been updated: please review it.',
+      refresh: 'menu',
+    };
+  }
+  if (code === 'validation:quantity') {
+    return { text: 'We can make fewer of an item than your cart asks for. Please review your cart.', refresh: 'menu' };
+  }
+  if (code === 'slot_unavailable') {
+    return {
+      text: 'That pickup time was just taken or is no longer possible. Please choose another time.',
+      refresh: 'slots',
+    };
+  }
+  if (code === 'rate_limited:open_orders') {
+    return {
+      text: 'This phone number or e-mail already has 3 orders waiting for pickup. Please collect those first, or call us.',
+    };
+  }
+  if (code === 'web_ordering_paused' || code.startsWith('setup_gate_closed')) {
+    return { text: 'This location stopped taking online orders just now. Nothing was ordered.', refresh: 'menu' };
+  }
+  if (code === 'validation:contact_name')
+    return { text: 'Please enter your name (up to 80 characters).', field: 'name' };
+  if (code === 'validation:contact_phone') return { text: 'Please enter a phone number we can call.', field: 'phone' };
+  if (code === 'validation:contact_email') return { text: 'Please enter a valid e-mail address.', field: 'email' };
+  if (code === 'validation:note') return { text: 'Please keep the note to 300 characters.', field: 'note' };
+  return { text: 'We could not place the order. Nothing was ordered. Please try again or call us.' };
+}

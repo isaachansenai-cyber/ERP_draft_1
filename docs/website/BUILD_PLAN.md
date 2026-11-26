@@ -1,6 +1,6 @@
 # Public pickup website: build plan
 
-Status: **W0–W3 complete (static site, ERP database, live menu and cart). W4 not started.** W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). W2 decisions: [ADR 0042](../decisions/0042-web-ordering-database.md). W3 decisions: [ADR 0043](../decisions/0043-site-live-menu-and-cart.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
+Status: **W0–W4 complete (static site, ERP database, live menu and cart, checkout and staff side). W5 not started.** W1 scaffold choices: [ADR 0041](../decisions/0041-site-scaffold.md). W2 decisions: [ADR 0042](../decisions/0042-web-ordering-database.md). W3 decisions: [ADR 0043](../decisions/0043-site-live-menu-and-cart.md). W4 decisions: [ADR 0044](../decisions/0044-site-checkout-and-staff-side.md). Decision record: [ADR 0040](../decisions/0040-public-pickup-website.md). Drafts for owner review: [content drafts](content-drafts.md) and [allergen notes](allergen-notes-draft.md).
 
 This plan adds a public website for Meats Around the World. Customers can browse it, see live availability, and order dishes or retail sauces **for pickup only**. Every order goes straight into the ERP, which handles reservations, the kitchen queue, sales and the accounting effects with the same rules as a POS order.
 
@@ -206,7 +206,7 @@ No licensed food photos have been supplied yet. W1 uses clearly labelled placeho
 | W1 | Static site and design system | **Done 2026-11-26** (placeholder images, draft copy). `/site` app, palette, hero rotation, navigation, all content pages from the approved drafts, responsive and accessible. No ERP connection yet. Lint, typecheck, unit tests and axe pass. |
 | W2 | ERP database | **Done 2026-11-26** (migration 0027, ADR 0042). §3 migrations, `accept_order_core` refactor (POS tests still green), `web_*` functions, pgTAP and the anonymous-access audit. |
 | W3 | Live menu (demo) | **Done 2026-11-26** (ADR 0043). Location picker, live availability and caps, 30 s refresh, cart. |
-| W4 | Checkout to kitchen (demo) | Slots, placement, simulated tender, confirmation and status; ERP kitchen badge, Scheduled lane, Settings → Website. |
+| W4 | Checkout to kitchen (demo) | **Done 2026-11-26** (migration 0028, ADR 0044). Slots, placement, simulated tender, confirmation and status; ERP kitchen badge, Scheduled lane, Settings → Website. |
 | W5 | Hardening and pilot | Rate limits, performance, full e2e and accessibility, Pages deployment of `/site`, runbook. The pilot opens with "Pay at pickup" once its gates are confirmed. |
 
 ---
