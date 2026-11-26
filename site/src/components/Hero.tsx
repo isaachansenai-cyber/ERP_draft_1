@@ -3,10 +3,10 @@ import { brand } from '../content/site';
 import { LOGO_URL } from '../lib/assets';
 import { usePrefersReducedMotion } from '../lib/media';
 import { useRotation } from '../lib/rotation';
-import { PlaceholderArt } from './PlaceholderArt';
+import { Photo } from './Photo';
 import { LinkButton } from './ui';
 
-const slides = countries.map((c) => ({ id: c.id, label: `${c.dishName} from ${c.name}`, tone: c.tone }));
+const slides = countries.map((c) => ({ id: c.id, label: `${c.dishName} from ${c.name}`, photo: c.photo }));
 
 /**
  * Full-screen rotating photo hero (BUILD_PLAN §6.3). Slides cross-fade every
@@ -35,7 +35,7 @@ export function Hero() {
               i === index ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <PlaceholderArt tone={s.tone} subject={s.label} tagPosition="below-nav" />
+            <Photo photo={s.photo} sizes="100vw" eager={i === 0} />
           </div>
         ))}
       </div>

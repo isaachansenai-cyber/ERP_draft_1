@@ -7,7 +7,7 @@ const tones = {
 };
 
 interface Props {
-  /** The image half: a photo, or a PlaceholderArt until photos arrive. */
+  /** The image half (a Photo). */
   art: ReactNode;
   children: ReactNode;
   /** Put the image on the right on wide screens. Phones always show the image first. */

@@ -91,16 +91,30 @@ test('without a backend the site says it is not connected: no prices, no availab
   await expect(page.getByText('This copy of the site is not connected to the restaurant.')).toBeVisible();
 });
 
-test('every image stand-in is labelled as a placeholder', async ({ page }) => {
-  await page.goto('#/');
-  const art = page.getByRole('img', { name: /^Placeholder for a photo of/ });
-  expect(await art.count()).toBeGreaterThan(10);
-  await expect(page.getByText('Placeholder photo').first()).toBeVisible();
+test('every photo has descriptive alt text, loads, and is served small for small screens', async ({ page }) => {
+  for (const path of ['#/', '#/countries', '#/story']) {
+    await page.goto(path);
+    const imgs = page.locator('main img');
+    expect(await imgs.count(), path).toBeGreaterThan(2);
+    for (const img of await imgs.all()) {
+      await img.scrollIntoViewIfNeeded();
+      const alt = (await img.getAttribute('alt')) ?? '';
+      const src = (await img.getAttribute('src')) ?? '';
+      if (src.includes('brand/logo')) continue; // the logo is decorative (alt="")
+      expect(alt.length, `${path} ${src}`).toBeGreaterThan(20);
+      expect(await img.getAttribute('srcset'), src).toContain('1600w');
+      await expect
+        .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0), { message: src })
+        .toBe(true);
+    }
+  }
+  await expect(page.getByText('Placeholder photo')).toHaveCount(0);
+  await expect(page.getByText('Food images are illustrations')).toBeVisible();
 });
 
 test('a home-page country tile opens that country on the Countries page', async ({ page }) => {
   await page.goto('#/');
-  await page.getByRole('link', { name: /^Placeholder for a photo of Korean Fried Chicken.*Korea$/ }).click();
+  await page.getByRole('link', { name: /^Korean fried chicken.*Korea$/ }).click();
   await expect(page.getByRole('heading', { level: 2, name: 'Korean Fried Chicken with Rice' })).toBeInViewport();
 });
 

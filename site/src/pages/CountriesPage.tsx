@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PlaceholderArt } from '../components/PlaceholderArt';
+import { Photo } from '../components/Photo';
 import { SplitSection } from '../components/SplitSection';
 import { Eyebrow, PageHeader, TextLink } from '../components/ui';
 import { countries, findCountry } from '../content/countries';
@@ -28,7 +28,7 @@ export function CountriesPage() {
           labelledBy={`${c.id}-heading`}
           reverse={i % 2 === 1}
           tone={i % 2 === 0 ? 'paper' : 'cream'}
-          art={<PlaceholderArt tone={c.tone} subject={`${c.dishName} from ${c.name}`} />}
+          art={<Photo photo={c.photo} sizes="(min-width: 768px) 50vw, 100vw" />}
         >
           <Eyebrow>{c.name}</Eyebrow>
           <h2 id={`${c.id}-heading`} className="font-display text-3xl font-bold">

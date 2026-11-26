@@ -1,14 +1,7 @@
-import { PlaceholderArt } from '../components/PlaceholderArt';
+import { Photo } from '../components/Photo';
 import { SplitSection } from '../components/SplitSection';
 import { PageHeader } from '../components/ui';
 import { mission, story } from '../content/site';
-import type { ArtTone } from '../theme/palette';
-
-const tones: ArtTone[] = [
-  { base: 'jade', accent: 'cream' },
-  { base: 'brick', accent: 'saffron' },
-  { base: 'ultramarine', accent: 'cream' },
-];
 
 export function StoryPage() {
   return (
@@ -20,7 +13,7 @@ export function StoryPage() {
           labelledBy={`story-${i}`}
           reverse={i % 2 === 1}
           tone={i % 2 === 0 ? 'paper' : 'cream'}
-          art={<PlaceholderArt tone={tones[i % tones.length]!} subject={section.heading.toLowerCase()} />}
+          art={<Photo photo={section.photo} sizes="(min-width: 768px) 50vw, 100vw" />}
         >
           <h2 id={`story-${i}`} className="font-display text-3xl font-bold">
             {section.heading}
